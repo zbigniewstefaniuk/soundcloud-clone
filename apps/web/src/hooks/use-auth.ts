@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { register, login, getCurrentUser, getUserById, type User, type RegisterInput, type LoginInput, AuthError } from '../api/auth';
-import { setToken, getToken, setCachedUser, clearAuth } from '../lib/auth-storage';
+import { authStorage } from '../lib/auth-storage';
 import { useCallback, useMemo } from 'react';
 
 const USER_QUERY_KEY = ['current-user'] as const;
@@ -10,7 +10,7 @@ const USER_QUERY_KEY = ['current-user'] as const;
 export function useAccount() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const token = getToken();
+  const token = authStorage.token.get();
 
   const query = useQuery({
     queryKey: USER_QUERY_KEY,
@@ -21,7 +21,7 @@ export function useAccount() {
   });
 
   const logout = useCallback(() => {
-    clearAuth();
+    authStorage.clear();
     queryClient.clear();
     navigate({ to: '/auth/login' });
   }, [queryClient, navigate]);
@@ -50,8 +50,7 @@ export function useRegister() {
   return useMutation({
     mutationFn: (data: RegisterInput) => register(data),
     onSuccess: (data) => {
-      setToken(data.data.token);
-      setCachedUser(data.data.user);
+      authStorage.setAuth(data.data.token, data.data.user);
       queryClient.setQueryData(USER_QUERY_KEY, data.data.user);
       navigate({ to: '/' });
     },
@@ -66,8 +65,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: (data: LoginInput) => login(data),
     onSuccess: (data) => {
-      setToken(data.data.token);
-      setCachedUser(data.data.user);
+      authStorage.setAuth(data.data.token, data.data.user);
       queryClient.setQueryData(USER_QUERY_KEY, data.data.user);
       navigate({ to: '/' });
     },
