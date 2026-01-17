@@ -6,6 +6,7 @@ import TanStackQueryDevtools from '../integrations/tanstack-query/devtools';
 
 import type { QueryClient } from '@tanstack/react-query';
 import Header from '@/components/common/header';
+import { Toaster } from '@/components/ui/sonner';
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -16,6 +17,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     <>
       <Header />
       <Outlet />
+      <Toaster />
       <TanStackDevtools
         config={{
           position: 'bottom-right',
