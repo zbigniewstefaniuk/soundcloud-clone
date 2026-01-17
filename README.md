@@ -18,6 +18,7 @@ elysia-monorepo/
 ## Apps
 
 ### Backend (`@repo/backend`)
+
 - **Framework**: Elysia.js
 - **Database**: PostgreSQL with Drizzle ORM
 - **Auth**: JWT authentication
@@ -26,6 +27,7 @@ elysia-monorepo/
 - **Runtime**: Bun
 
 ### Frontend (`@repo/web`)
+
 - **Framework**: React 19
 - **Build Tool**: Vite
 - **Language**: TypeScript
@@ -42,12 +44,14 @@ elysia-monorepo/
 ### Installation
 
 1. **Install dependencies**:
+
    ```bash
    cd elysia-monorepo
    bun install
    ```
 
 2. **Setup backend environment**:
+
    ```bash
    cd apps/backend
    cp .env.example .env
@@ -55,12 +59,14 @@ elysia-monorepo/
    ```
 
 3. **Start PostgreSQL** (using Docker):
+
    ```bash
    cd apps/backend
    docker-compose up -d
    ```
 
 4. **Run migrations**:
+
    ```bash
    cd apps/backend
    bun run db:migrate
@@ -68,23 +74,27 @@ elysia-monorepo/
 
 ## Development
 
-### Run all apps in development mode:
+### Run all apps in development mode
+
 ```bash
 bun run dev
 ```
 
 This starts:
-- Backend on `http://localhost:3000`
-- Frontend on `http://localhost:3001`
 
-### Run individual apps:
+- Backend on `http://localhost:8000`
+- Frontend on `http://localhost:3000`
+
+### Run individual apps
 
 **Backend only:**
+
 ```bash
 turbo run dev --filter=@repo/backend
 ```
 
 **Frontend only:**
+
 ```bash
 turbo run dev --filter=@repo/web
 ```
@@ -120,6 +130,7 @@ turbo run dev --filter=@repo/web
 ## Tech Stack
 
 ### Backend
+
 - **Runtime**: Bun
 - **Framework**: Elysia.js
 - **Database**: PostgreSQL
@@ -130,12 +141,14 @@ turbo run dev --filter=@repo/web
 - **Linter**: oxlint
 
 ### Frontend
+
 - **Framework**: React 19
 - **Build**: Vite 7
 - **Language**: TypeScript 5
 - **Linter**: ESLint 9
 
 ### Monorepo
+
 - **Tool**: Turborepo 2.7
 - **Package Manager**: Bun
 
@@ -160,23 +173,27 @@ PORT=3000
 ## API Documentation
 
 Backend API documentation is available at:
-- `http://localhost:3000/swagger` (Swagger UI)
+
+- `http://localhost:8000/openapi` (openapi UI)
 
 ## Database Management
 
 **Generate migration:**
+
 ```bash
 cd apps/backend
 bun run db:generate
 ```
 
 **Run migrations:**
+
 ```bash
 cd apps/backend
 bun run db:migrate
 ```
 
 **Open Drizzle Studio:**
+
 ```bash
 cd apps/backend
 bun run db:studio
@@ -199,7 +216,8 @@ bun run preview
 
 ## Adding Packages
 
-### Add to specific app:
+### Add to specific app
+
 ```bash
 # Backend
 bun add <package> --filter=@repo/backend
@@ -208,7 +226,8 @@ bun add <package> --filter=@repo/backend
 bun add <package> --filter=@repo/web
 ```
 
-### Add to root:
+### Add to root
+
 ```bash
 bun add <package> -D
 ```
