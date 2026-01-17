@@ -34,8 +34,8 @@ A SoundCloud-like music streaming backend built with Elysia.js, PostgreSQL, and 
    bun run dev
    ```
 
-The API will be available at `http://localhost:3000`
-API Documentation: `http://localhost:3000/swagger`
+The API will be available at `http://localhost:8000`
+API Documentation: `http://localhost:8000/swagger`
 
 ---
 

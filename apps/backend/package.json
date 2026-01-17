@@ -25,10 +25,12 @@
     "postgres": "^3.4.8"
   },
   "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
     "@types/bcrypt": "^6.0.0",
     "bun-types": "latest",
     "drizzle-kit": "^0.31.8",
-    "oxlint": "^1.39.0"
+    "oxlint": "^1.39.0",
+    "typescript": "^5.9.3"
   },
   "module": "src/index.js",
   "overrides": {
