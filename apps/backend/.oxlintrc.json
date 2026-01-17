@@ -1,0 +1,19 @@
+{
+  "$schema": "https://oxc.rs/schemas/oxlintrc.json",
+  "categories": {
+    "correctness": "warn",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "rules": {
+    "no-debugger": "warn",
+    "no-console": "off",
+    "eqeqeq": "warn"
+  },
+  "env": {
+    "node": true
+  },
+  "globals": {
+    "Bun": "readonly"
+  }
+}

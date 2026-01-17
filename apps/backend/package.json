@@ -1,0 +1,37 @@
+{
+  "name": "@repo/backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bun run dist/index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "lint": "oxlint src",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.4.1",
+    "@elysiajs/jwt": "^1.4.0",
+    "@elysiajs/openapi": "^1.4.13",
+    "@paralleldrive/cuid2": "^3.0.6",
+    "bcrypt": "^6.0.0",
+    "drizzle-orm": "^0.45.1",
+    "drizzle-typebox": "^0.3.3",
+    "elysia": "latest",
+    "postgres": "^3.4.8"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "bun-types": "latest",
+    "drizzle-kit": "^0.31.8",
+    "oxlint": "^1.39.0"
+  },
+  "module": "src/index.js",
+  "overrides": {
+    "@sinclair/typebox": "0.34.47"
+  }
+}
