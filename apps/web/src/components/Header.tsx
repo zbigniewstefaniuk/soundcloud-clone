@@ -1,10 +1,14 @@
 import { Link } from '@tanstack/react-router'
 
 import { useState } from 'react'
-import { ClipboardType, Home, Menu, Network, X } from 'lucide-react'
+import { ClipboardType, Home, LogIn, LogOut, Menu, Network, UserPlus, X } from 'lucide-react'
+import { useCurrentUser, useLogout } from '../hooks/use-auth'
+import { Button } from './ui/button'
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
+  const { data: user, isLoading } = useCurrentUser()
+  const logout = useLogout()
 
   return (
     <>
@@ -100,6 +104,48 @@ export default function Header() {
 
           {/* Demo Links End */}
         </nav>
+
+        <div className="p-4 border-t border-gray-700">
+          {!isLoading && user ? (
+            <div className="space-y-3">
+              <div className="px-3 py-2 bg-gray-800 rounded-lg">
+                <p className="text-sm text-gray-400">Signed in as</p>
+                <p className="font-medium truncate">{user.username}</p>
+                <p className="text-sm text-gray-400 truncate">{user.email}</p>
+              </div>
+              <Button
+                onClick={() => {
+                  logout()
+                  setIsOpen(false)
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                <LogOut size={16} className="mr-2" />
+                Sign out
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Link
+                to="/auth/login"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-center gap-2 w-full p-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors font-medium"
+              >
+                <LogIn size={16} />
+                Sign in
+              </Link>
+              <Link
+                to="/auth/register"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-center gap-2 w-full p-2 rounded-lg border border-gray-600 hover:bg-gray-800 transition-colors font-medium"
+              >
+                <UserPlus size={16} />
+                Create account
+              </Link>
+            </div>
+          )}
+        </div>
       </aside>
     </>
   )

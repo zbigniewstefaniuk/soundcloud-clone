@@ -1,17 +1,17 @@
-import { useStore } from '@tanstack/react-form'
+import { useFieldContext, useFormContext } from '@/hooks/demo.form-context';
 
-import { useFieldContext, useFormContext } from '@/hooks/demo.form-context'
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea as ShadcnTextarea } from '@/components/ui/textarea';
+import * as ShadcnSelect from '@/components/ui/select';
+import { Slider as ShadcnSlider } from '@/components/ui/slider';
+import { Switch as ShadcnSwitch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import type { ZodError } from 'zod';
+import type { ComponentProps } from 'react';
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea as ShadcnTextarea } from '@/components/ui/textarea'
-import * as ShadcnSelect from '@/components/ui/select'
-import { Slider as ShadcnSlider } from '@/components/ui/slider'
-import { Switch as ShadcnSwitch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-
-export function SubscribeButton({ label }: { label: string }) {
-  const form = useFormContext()
+export function SubmitButton({ label }: { label: string }) {
+  const form = useFormContext();
   return (
     <form.Subscribe selector={(state) => state.isSubmitting}>
       {(isSubmitting) => (
@@ -20,37 +20,38 @@ export function SubscribeButton({ label }: { label: string }) {
         </Button>
       )}
     </form.Subscribe>
-  )
+  );
 }
 
-function ErrorMessages({
-  errors,
-}: {
-  errors: Array<string | { message: string }>
-}) {
+function ErrorMessages({ errors }: { errors: (string | ZodError)[] }) {
   return (
     <>
-      {errors.map((error) => (
+      {errors.map((error, index) => (
         <div
-          key={typeof error === 'string' ? error : error.message}
-          className="text-red-500 mt-1 font-bold"
+          key={
+            typeof error === 'string'
+              ? `${error}_${index}`
+              : `${error.message}_${index}`
+          }
+          className="mt-1 text-sm text-error"
         >
           {typeof error === 'string' ? error : error.message}
         </div>
       ))}
     </>
-  )
+  );
 }
 
 export function TextField({
   label,
   placeholder,
+  ...rest
 }: {
-  label: string
-  placeholder?: string
-}) {
-  const field = useFieldContext<string>()
-  const errors = useStore(field.store, (state) => state.meta.errors)
+  label: string;
+  placeholder?: string;
+} & ComponentProps<typeof Input>) {
+  const field = useFieldContext<string>();
+  const errors = field.state.meta.errors as (string | ZodError)[];
 
   return (
     <div>
@@ -62,21 +63,22 @@ export function TextField({
         placeholder={placeholder}
         onBlur={field.handleBlur}
         onChange={(e) => field.handleChange(e.target.value)}
+        {...rest}
       />
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
-  )
+  );
 }
 
 export function TextArea({
   label,
   rows = 3,
 }: {
-  label: string
-  rows?: number
+  label: string;
+  rows?: number;
 }) {
-  const field = useFieldContext<string>()
-  const errors = useStore(field.store, (state) => state.meta.errors)
+  const field = useFieldContext<string>();
+  const errors = field.state.meta.errors as (string | ZodError)[];
 
   return (
     <div>
@@ -92,7 +94,7 @@ export function TextArea({
       />
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
-  )
+  );
 }
 
 export function Select({
@@ -100,12 +102,12 @@ export function Select({
   values,
   placeholder,
 }: {
-  label: string
-  values: Array<{ label: string; value: string }>
-  placeholder?: string
+  label: string;
+  values: Array<{ label: string; value: string }>;
+  placeholder?: string;
 }) {
-  const field = useFieldContext<string>()
-  const errors = useStore(field.store, (state) => state.meta.errors)
+  const field = useFieldContext<string>();
+  const errors = field.state.meta.errors as (string | ZodError)[];
 
   return (
     <div>
@@ -130,12 +132,12 @@ export function Select({
       </ShadcnSelect.Select>
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
-  )
+  );
 }
 
 export function Slider({ label }: { label: string }) {
-  const field = useFieldContext<number>()
-  const errors = useStore(field.store, (state) => state.meta.errors)
+  const field = useFieldContext<number>();
+  const errors = field.state.meta.errors as (string | ZodError)[];
 
   return (
     <div>
@@ -150,12 +152,12 @@ export function Slider({ label }: { label: string }) {
       />
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
-  )
+  );
 }
 
 export function Switch({ label }: { label: string }) {
-  const field = useFieldContext<boolean>()
-  const errors = useStore(field.store, (state) => state.meta.errors)
+  const field = useFieldContext<boolean>();
+  const errors = field.state.meta.errors as (string | ZodError)[];
 
   return (
     <div>
@@ -170,5 +172,5 @@ export function Switch({ label }: { label: string }) {
       </div>
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
-  )
+  );
 }

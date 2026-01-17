@@ -1,0 +1,1071 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Elysia Music API",
+        "description": "A SoundCloud-like music streaming backend built with Elysia.js",
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Authentication endpoints"
+        },
+        {
+            "name": "Users",
+            "description": "User management endpoints"
+        },
+        {
+            "name": "Tracks",
+            "description": "Music track endpoints"
+        },
+        {
+            "name": "Likes",
+            "description": "Track likes/favorites endpoints"
+        },
+        {
+            "name": "Comments",
+            "description": "Track comments endpoints"
+        }
+    ],
+    "paths": {
+        "/": {
+            "get": {
+                "operationId": "getIndex"
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register a new user",
+                "description": "Create a new user account with username, email, and password",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "username",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "maxLength": 30,
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "format": "email",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "minLength": 8,
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "username",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "maxLength": 30,
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "format": "email",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "minLength": 8,
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "username",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "maxLength": 30,
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "format": "email",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "minLength": 8,
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "postAuthRegister"
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login user",
+                "description": "Authenticate user and receive JWT token",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "format": "email",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "minLength": 1,
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "format": "email",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "minLength": 1,
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "format": "email",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "minLength": 1,
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "postAuthLogin"
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get current user",
+                "description": "Get currently authenticated user profile",
+                "operationId": "getAuthMe"
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user profile",
+                "description": "Get public user profile by ID",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "operationId": "getUsersById"
+            }
+        },
+        "/users/{id}/tracks": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user tracks",
+                "description": "Get public tracks for a user",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "operationId": "getUsersByIdTracks"
+            }
+        },
+        "/users/me": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get own profile",
+                "description": "Get authenticated user profile",
+                "operationId": "getUsersMe"
+            },
+            "patch": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update own profile",
+                "description": "Update authenticated user profile",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "bio": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 50,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "location": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 100,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "website": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 255,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "bio": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 50,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "location": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 100,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "website": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 255,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "bio": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 50,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "location": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 100,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "website": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 255,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "patchUsersMe"
+            }
+        },
+        "/users/me/tracks": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get own tracks",
+                "description": "Get all tracks including private for authenticated user",
+                "operationId": "getUsersMeTracks"
+            }
+        },
+        "/tracks/": {
+            "get": {
+                "tags": [
+                    "Tracks"
+                ],
+                "summary": "List tracks",
+                "description": "Get paginated list of public tracks with filters",
+                "operationId": "getTracks"
+            },
+            "post": {
+                "tags": [
+                    "Tracks"
+                ],
+                "summary": "Upload track",
+                "description": "Upload a new music track",
+                "operationId": "postTracks"
+            }
+        },
+        "/tracks/{id}": {
+            "get": {
+                "tags": [
+                    "Tracks"
+                ],
+                "summary": "Get track",
+                "description": "Get single track by ID",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "operationId": "getTracksById"
+            },
+            "patch": {
+                "tags": [
+                    "Tracks"
+                ],
+                "summary": "Update track",
+                "description": "Update track metadata (owner only)",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "maxLength": 255,
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "genre": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 50,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "mainArtist": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 100,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "isPublic": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "maxLength": 255,
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "genre": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 50,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "mainArtist": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 100,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "isPublic": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "maxLength": 255,
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "genre": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 50,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "mainArtist": {
+                                        "anyOf": [
+                                            {
+                                                "maxLength": 100,
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    },
+                                    "isPublic": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "patchTracksById"
+            },
+            "delete": {
+                "tags": [
+                    "Tracks"
+                ],
+                "summary": "Delete track",
+                "description": "Delete track and associated files (owner only)",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "operationId": "deleteTracksById"
+            }
+        },
+        "/tracks/{id}/stream": {
+            "get": {
+                "tags": [
+                    "Tracks"
+                ],
+                "summary": "Stream track",
+                "description": "Stream audio file",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "operationId": "getTracksByIdStream"
+            }
+        },
+        "/tracks/{id}/like": {
+            "post": {
+                "tags": [
+                    "Likes"
+                ],
+                "summary": "Like track",
+                "description": "Add track to favorites",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "operationId": "postTracksByIdLike"
+            },
+            "delete": {
+                "tags": [
+                    "Likes"
+                ],
+                "summary": "Unlike track",
+                "description": "Remove track from favorites",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "operationId": "deleteTracksByIdLike"
+            }
+        },
+        "/tracks/{id}/likes": {
+            "get": {
+                "tags": [
+                    "Likes"
+                ],
+                "summary": "Get track likes",
+                "description": "Get list of users who liked the track",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "minimum": 1,
+                            "anyOf": [
+                                {
+                                    "format": "integer",
+                                    "default": 0,
+                                    "type": "string"
+                                },
+                                {
+                                    "minimum": 1,
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
+                            "anyOf": [
+                                {
+                                    "format": "integer",
+                                    "default": 0,
+                                    "type": "string"
+                                },
+                                {
+                                    "minimum": 1,
+                                    "maximum": 100,
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "operationId": "getTracksByIdLikes"
+            }
+        },
+        "/users/me/likes": {
+            "get": {
+                "tags": [
+                    "Likes"
+                ],
+                "summary": "Get user likes",
+                "description": "Get authenticated user liked tracks",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "minimum": 1,
+                            "anyOf": [
+                                {
+                                    "format": "integer",
+                                    "default": 0,
+                                    "type": "string"
+                                },
+                                {
+                                    "minimum": 1,
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
+                            "anyOf": [
+                                {
+                                    "format": "integer",
+                                    "default": 0,
+                                    "type": "string"
+                                },
+                                {
+                                    "minimum": 1,
+                                    "maximum": 100,
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "operationId": "getUsersMeLikes"
+            }
+        },
+        "/tracks/{id}/comments": {
+            "get": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Get track comments",
+                "description": "Get paginated comments for a track",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "minimum": 1,
+                            "anyOf": [
+                                {
+                                    "format": "integer",
+                                    "default": 0,
+                                    "type": "string"
+                                },
+                                {
+                                    "minimum": 1,
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
+                            "anyOf": [
+                                {
+                                    "format": "integer",
+                                    "default": 0,
+                                    "type": "string"
+                                },
+                                {
+                                    "minimum": 1,
+                                    "maximum": 100,
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "operationId": "getTracksByIdComments"
+            },
+            "post": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Add comment",
+                "description": "Add a comment to a track",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "minLength": 1,
+                                        "maxLength": 1000,
+                                        "type": "string"
+                                    },
+                                    "timestamp": {
+                                        "anyOf": [
+                                            {
+                                                "minimum": -2147483648,
+                                                "maximum": 2147483647,
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "minLength": 1,
+                                        "maxLength": 1000,
+                                        "type": "string"
+                                    },
+                                    "timestamp": {
+                                        "anyOf": [
+                                            {
+                                                "minimum": -2147483648,
+                                                "maximum": 2147483647,
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "minLength": 1,
+                                        "maxLength": 1000,
+                                        "type": "string"
+                                    },
+                                    "timestamp": {
+                                        "anyOf": [
+                                            {
+                                                "minimum": -2147483648,
+                                                "maximum": 2147483647,
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "postTracksByIdComments"
+            }
+        },
+        "/comments/{id}": {
+            "patch": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Update comment",
+                "description": "Update own comment",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "minLength": 1,
+                                        "maxLength": 1000,
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "minLength": 1,
+                                        "maxLength": 1000,
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "minLength": 1,
+                                        "maxLength": 1000,
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "patchCommentsById"
+            },
+            "delete": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Delete comment",
+                "description": "Delete own comment",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "operationId": "deleteCommentsById"
+            }
+        }
+    },
+    "components": {
+        "schemas": {}
+    }
+}

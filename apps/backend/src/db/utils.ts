@@ -17,16 +17,16 @@ type Spread<
   Mode extends 'select' | 'insert' | undefined,
 > =
   T extends TObject<infer Fields>
-    ? {
-        [K in keyof Fields]: Fields[K];
-      }
-    : T extends Table
-      ? Mode extends 'select'
-        ? BuildSchema<'select', T['_']['columns'], undefined>['properties']
-        : Mode extends 'insert'
-          ? BuildSchema<'insert', T['_']['columns'], undefined>['properties']
-          : {}
-      : {};
+  ? {
+    [K in keyof Fields]: Fields[K];
+  }
+  : T extends Table
+  ? Mode extends 'select'
+  ? BuildSchema<'select', T['_']['columns'], undefined>['properties']
+  : Mode extends 'insert'
+  ? BuildSchema<'insert', T['_']['columns'], undefined>['properties']
+  : {}
+  : {};
 
 /**
  * Spread a Drizzle schema into a plain object
@@ -81,8 +81,8 @@ export const spreads = <
   models: T,
   mode?: Mode,
 ): {
-  [K in keyof T]: Spread<T[K], Mode>;
-} => {
+    [K in keyof T]: Spread<T[K], Mode>;
+  } => {
   const newSchema: Record<string, unknown> = {};
   const keys = Object.keys(models);
 
