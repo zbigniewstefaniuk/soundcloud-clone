@@ -102,3 +102,25 @@ export async function getCurrentUser(): Promise<User> {
 
   return (response as any).data as User
 }
+
+export async function getUserById(id: string): Promise<User> {
+  const { data: response, error } = await apiClient.GET('/users/{id}', {
+    params: {
+      path: { id },
+    },
+  })
+
+  if (error) {
+    const errorData = error as unknown as ApiErrorResponse
+    if (errorData?.error?.code && errorData?.error?.message) {
+      throw new AuthError(errorData.error)
+    }
+    throw new Error('Failed to fetch user')
+  }
+
+  if (!response) {
+    throw new Error('Failed to fetch user')
+  }
+
+  return (response as any).data as User
+}

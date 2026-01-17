@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useAppForm } from '@/hooks/form';
 
-import { useAppForm } from '@/hooks/demo.form'
 
 export const Route = createFileRoute('/demo/form/address')({
   component: AddressForm,
@@ -190,7 +190,7 @@ function AddressForm() {
 
           <div className="flex justify-end">
             <form.AppForm>
-              <form.SubscribeButton label="Submit" />
+              <form.SubmitButton label="Submit" />
             </form.AppForm>
           </div>
         </form>
