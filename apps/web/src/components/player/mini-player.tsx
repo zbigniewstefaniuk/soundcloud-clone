@@ -3,6 +3,7 @@ import { Play, Pause, SkipForward, SkipBack, Music, Volume2, VolumeX } from 'luc
 import { Link } from '@tanstack/react-router'
 import { Slider } from '@/components/ui/slider'
 import { extractColorsFromImage } from '@/lib/color-extraction'
+import { getAssetUrl } from '@/lib/utils'
 import { useState, useEffect } from 'react'
 
 export function MiniPlayer() {
@@ -29,11 +30,13 @@ export function MiniPlayer() {
 
   const [isMuted, setIsMuted] = useState(false)
 
+  const coverUrl = getAssetUrl(currentTrack?.coverArtUrl)
+
   useEffect(() => {
-    if (currentTrack?.coverArtUrl) {
-      extractColorsFromImage(currentTrack.coverArtUrl).then(setColors)
+    if (coverUrl) {
+      extractColorsFromImage(coverUrl).then(setColors)
     }
-  }, [currentTrack?.coverArtUrl])
+  }, [coverUrl])
 
   if (!currentTrack) {
     return null
@@ -72,9 +75,9 @@ export function MiniPlayer() {
             to="/player"
             className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
           >
-            {currentTrack.coverArtUrl ? (
+            {coverUrl ? (
               <img
-                src={currentTrack.coverArtUrl}
+                src={coverUrl}
                 alt={currentTrack.title}
                 className="w-12 h-12 rounded object-cover"
               />

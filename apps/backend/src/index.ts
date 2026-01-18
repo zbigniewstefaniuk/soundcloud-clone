@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
+import { staticPlugin } from '@elysiajs/static';
 import openapi from '@elysiajs/openapi';
 import { env, validateEnv } from './config/env';
 import { testConnection } from './config/database';
@@ -48,13 +49,17 @@ const app = new Elysia()
     }),
   )
   .use(cors())
+  .use(staticPlugin({
+    assets: 'uploads',
+    prefix: '/uploads',
+  }))
   .onError(({ error }) => {
     return errorHandler(error);
   })
   .get('/', () => ({
     message: 'Elysia Music API',
     version: '1.0.0',
-    docs: '/swagger',
+    docs: '/openapi',
   }));
 
 app

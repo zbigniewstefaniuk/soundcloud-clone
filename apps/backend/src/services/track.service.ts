@@ -11,29 +11,42 @@ import type {
 } from '../types/track.types';
 
 export class TrackService {
-  async uploadTrack(
+  async uploadTrack({ file, input, userId, coverArtFile }: {
     file: File,
     userId: string,
     input: CreateTrackInput
-  ) {
+    coverArtFile?: File
+  }) {
     const audioUrl = await fileService.uploadAudio(file, userId);
 
-    const [track] = await db
-      .insert(tracks)
-      .values({
-        userId,
-        title: input.title,
-        description: input.description,
-        genre: input.genre,
-        mainArtist: input.mainArtist,
-        audioUrl,
-        fileSize: file.size,
-        mimeType: file.type,
-        isPublic: input.isPublic ?? true,
-      })
-      .returning();
+    return await db.transaction(async (tx) => {
+      const [track] = await tx
+        .insert(tracks)
+        .values({
+          userId,
+          title: input.title,
+          description: input.description,
+          genre: input.genre,
+          mainArtist: input.mainArtist,
+          audioUrl,
+          fileSize: file.size,
+          mimeType: file.type,
+          isPublic: input.isPublic ?? true,
+        })
+        .returning();
 
-    return track;
+      if (coverArtFile && coverArtFile instanceof File) {
+        const coverArtUrl = await fileService.uploadCover(coverArtFile, track.id);
+        const [updatedTrack] = await tx
+          .update(tracks)
+          .set({ coverArtUrl })
+          .where(eq(tracks.id, track.id))
+          .returning();
+        return updatedTrack;
+      }
+
+      return track;
+    });
   }
 
   async getTracks(query: TrackQueryParams, _currentUserId?: string) {
@@ -170,16 +183,26 @@ export class TrackService {
       throw new ForbiddenError('You can only update your own tracks');
     }
 
-    const [updated] = await db
-      .update(tracks)
-      .set({
-        ...input,
-        updatedAt: new Date(),
-      })
-      .where(eq(tracks.id, trackId))
-      .returning();
+    const { coverArt, ...updateData } = input as UpdateTrackInput & { coverArt?: File };
 
-    return updated;
+    return await db.transaction(async (tx) => {
+      let coverArtUrl: string | undefined;
+      if (coverArt && coverArt instanceof File) {
+        coverArtUrl = await fileService.uploadCover(coverArt, trackId);
+      }
+
+      const [updated] = await tx
+        .update(tracks)
+        .set({
+          ...updateData,
+          ...(coverArtUrl && { coverArtUrl }),
+          updatedAt: new Date(),
+        })
+        .where(eq(tracks.id, trackId))
+        .returning();
+
+      return updated;
+    });
   }
 
   async deleteTrack(trackId: string, userId: string) {

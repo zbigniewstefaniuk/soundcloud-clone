@@ -2,6 +2,7 @@ import { usePlayer } from '@/contexts/player-context'
 import { Play, Pause, SkipForward, SkipBack, Music, Volume2, VolumeX } from 'lucide-react'
 import { Slider } from '@/components/ui/slider'
 import { extractColorsFromImage } from '@/lib/color-extraction'
+import { getAssetUrl } from '@/lib/utils'
 import { useState, useEffect } from 'react'
 
 export function FullPlayer() {
@@ -28,11 +29,13 @@ export function FullPlayer() {
 
   const [isMuted, setIsMuted] = useState(false)
 
+  const coverUrl = getAssetUrl(currentTrack?.coverArtUrl)
+
   useEffect(() => {
-    if (currentTrack?.coverArtUrl) {
-      extractColorsFromImage(currentTrack.coverArtUrl).then(setColors)
+    if (coverUrl) {
+      extractColorsFromImage(coverUrl).then(setColors)
     }
-  }, [currentTrack?.coverArtUrl])
+  }, [coverUrl])
 
   if (!currentTrack) {
     return null
@@ -68,9 +71,9 @@ export function FullPlayer() {
         <div className="w-full max-w-4xl space-y-8">
           {/* Cover Art */}
           <div className="flex justify-center">
-            {currentTrack.coverArtUrl ? (
+            {coverUrl ? (
               <img
-                src={currentTrack.coverArtUrl}
+                src={coverUrl}
                 alt={currentTrack.title}
                 className="w-96 h-96 rounded-2xl shadow-2xl object-cover"
               />

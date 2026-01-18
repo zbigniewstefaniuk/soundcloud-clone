@@ -10,7 +10,6 @@ import {
 import { relations } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 
-// Users table
 export const users = pgTable('users', {
   id: varchar('id')
     .$defaultFn(() => createId())
@@ -23,7 +22,6 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// User profiles table
 export const userProfiles = pgTable('user_profiles', {
   id: varchar('id')
     .$defaultFn(() => createId())
@@ -41,7 +39,6 @@ export const userProfiles = pgTable('user_profiles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Tracks table
 export const tracks = pgTable('tracks', {
   id: varchar('id')
     .$defaultFn(() => createId())
@@ -64,7 +61,6 @@ export const tracks = pgTable('tracks', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Likes table
 export const likes = pgTable(
   'likes',
   {
@@ -84,7 +80,6 @@ export const likes = pgTable(
   })
 );
 
-// Comments table
 export const comments = pgTable('comments', {
   id: varchar('id')
     .$defaultFn(() => createId())
@@ -101,7 +96,6 @@ export const comments = pgTable('comments', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(userProfiles, {
     fields: [users.id],

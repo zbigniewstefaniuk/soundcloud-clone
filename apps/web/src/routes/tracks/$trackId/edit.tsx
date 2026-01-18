@@ -5,6 +5,7 @@ import { useAppForm } from '@/hooks/form'
 import { z } from 'zod'
 import { Spinner } from '@/components/ui/spinner'
 import { Suspense } from 'react'
+import { getAssetUrl } from '@/lib/utils';
 
 export const Route = createFileRoute('/tracks/$trackId/edit')({
   component: EditTrackPage,
@@ -73,17 +74,19 @@ function EditTrackPage() {
     )
   }
 
+  const coverArtURL = getAssetUrl(track.coverArtUrl);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
       <div className="w-full max-w-2xl mx-auto space-y-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Edit Track</h1>
           <p className="text-gray-500">Update your track information</p>
-          {track.coverArtUrl && (
+          {coverArtURL && (
             <div className="mt-4">
               <p className="text-sm text-gray-600 mb-2">Current cover art:</p>
               <img
-                src={track.coverArtUrl}
+                src={coverArtURL}
                 alt={track.title}
                 className="w-32 h-32 object-cover rounded-lg"
               />

@@ -14,7 +14,7 @@ const uploadTrackSchema = z.object({
     .refine(
       (file) =>
         ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/m4a', 'audio/x-m4a', 'audio/aac', 'audio/flac', 'audio/x-wav'].includes(file.type),
-      'Must be MP3, WAV, FLAC, or M4A'
+      'Must be MP3, WAV, FLAC, AAC or M4A'
     ),
   coverArt: z
     .instanceof(File)

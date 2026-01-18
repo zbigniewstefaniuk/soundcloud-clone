@@ -2,10 +2,7 @@ import { Elysia, t } from 'elysia';
 import { jwtPlugin, authMiddleware } from '../middleware/auth';
 import { trackService } from '../services/track.service';
 import { success, paginated } from '../utils/response';
-import {
-  UpdateTrackSchema,
-  TrackQuerySchema,
-} from '../utils/validation';
+import { TrackQuerySchema } from '../utils/validation';
 
 export const trackRoutes = new Elysia({ prefix: '/tracks' })
   .use(jwtPlugin)
@@ -69,7 +66,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
   .post(
     '/',
     async ({ body, user }) => {
-      const { file, title, description, genre, mainArtist, isPublic } =
+      const { file, title, description, genre, mainArtist, isPublic, coverArt } =
         body as any;
 
       console.log('body', body);
@@ -78,12 +75,17 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
         throw new Error('Audio file is required');
       }
 
-      const track = await trackService.uploadTrack(file, user.userId, {
-        title: title || file.name,
-        description,
-        genre,
-        mainArtist,
-        isPublic: isPublic === 'true' || isPublic === true,
+      const track = await trackService.uploadTrack({
+        file, 
+        userId: user.userId,
+        coverArtFile: coverArt, 
+        input: {
+          title: title || file.name,
+          description,
+          genre,
+          mainArtist,
+          isPublic: isPublic === 'true' || isPublic === true,
+        }
       });
 
       return success(track);
@@ -100,10 +102,21 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
   .patch(
     '/:id',
     async ({ params, body, user }) => {
+      const { isPublic, ...rest } = body as any;
+
+      const updateData = {
+        ...rest,
+        ...(isPublic !== undefined && {
+          isPublic: isPublic === 'true' || isPublic === true,
+        }),
+      };
+
+      console.log('updateData', updateData)
+
       const updated = await trackService.updateTrack(
         params.id,
         user.userId,
-        body,
+        updateData,
       );
       return success(updated);
     },
@@ -111,7 +124,6 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       params: t.Object({
         id: t.String(),
       }),
-      body: UpdateTrackSchema,
       detail: {
         tags: ['Tracks'],
         summary: 'Update track',
