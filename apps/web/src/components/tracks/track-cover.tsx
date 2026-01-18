@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Music } from 'lucide-react'
 import { cn, getAssetUrl } from '@/lib/utils'
 
@@ -24,14 +25,25 @@ const iconSizes = {
 
 export function TrackCover({ coverArtUrl, title, size = 'md', className }: TrackCoverProps) {
   const coverUrl = getAssetUrl(coverArtUrl)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   if (coverUrl) {
     return (
-      <img
-        src={coverUrl}
-        alt={title}
-        className={cn('rounded object-cover', sizeClasses[size], className)}
-      />
+      <div className={cn('relative overflow-hidden rounded bg-muted', sizeClasses[size], className)}>
+        <img
+          src={coverUrl}
+          alt={title}
+          loading="lazy"
+          onLoad={() => setIsLoaded(true)}
+          className={cn(
+            'absolute inset-0 w-full h-full object-cover transition-opacity duration-300',
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          )}
+        />
+        {!isLoaded && (
+          <div className="absolute inset-0 animate-pulse bg-muted" />
+        )}
+      </div>
     )
   }
 

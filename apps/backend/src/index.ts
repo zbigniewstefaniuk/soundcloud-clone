@@ -55,6 +55,9 @@ const app = new Elysia()
     staticPlugin({
       assets: 'uploads',
       prefix: '/uploads',
+      headers: {
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
     })
   )
   .onError(({ error }) => {

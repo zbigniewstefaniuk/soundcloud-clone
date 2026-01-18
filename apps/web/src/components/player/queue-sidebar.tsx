@@ -122,8 +122,8 @@ function QueueItem({ track, isActive, isPlaying, onClick, index }: QueueItemProp
       className={cn(
         'w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left group',
         isActive
-          ? 'bg-primary/10 border border-primary/20'
-          : 'hover:bg-accent'
+          ? 'bg-accent border border-border'
+          : 'hover:bg-accent/50'
       )}
     >
       <div className="relative">
