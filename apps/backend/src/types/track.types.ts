@@ -1,50 +1,25 @@
-export interface Track {
-  id: string;
-  userId: string;
-  title: string;
-  description?: string | null;
-  genre?: string | null;
-  mainArtist?: string | null;
-  audioUrl: string;
-  coverArtUrl?: string | null;
-  fileSize: number;
-  mimeType: string;
-  playCount: number;
-  isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import type { tracks, users } from '../db/schema';
 
-export interface CreateTrackInput {
-  title: string;
-  description?: string;
-  genre?: string;
-  mainArtist?: string;
-  isPublic?: boolean;
-}
+export type Track = typeof tracks.$inferSelect;
 
-export interface UpdateTrackInput {
-  title?: string;
-  description?: string;
-  genre?: string;
-  mainArtist?: string;
-  isPublic?: boolean;
-}
+export type CreateTrackInput = Pick<
+  typeof tracks.$inferInsert,
+  'title' | 'description' | 'genre' | 'mainArtist' | 'isPublic'
+>;
 
-export interface TrackQueryParams {
+export type UpdateTrackInput = Partial<CreateTrackInput>;
+
+export type TrackQueryParams = {
   page?: number;
   pageSize?: number;
-  userId?: string;
+  userId?: typeof tracks.$inferSelect.userId;
   search?: string;
   sortBy?: 'createdAt' | 'playCount';
   order?: 'asc' | 'desc';
-}
+};
 
-export interface TrackWithUser extends Track {
-  user: {
-    id: string;
-    username: string;
-  };
+export type TrackWithUser = Track & {
+  user: Pick<typeof users.$inferSelect, 'id' | 'username'>;
   likeCount?: number;
   isLiked?: boolean;
-}
+};

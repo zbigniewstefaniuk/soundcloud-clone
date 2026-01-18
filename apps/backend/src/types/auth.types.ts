@@ -1,24 +1,22 @@
-export interface RegisterInput {
-  username: string;
-  email: string;
-  password: string;
-}
+import type { users } from '../db/schema';
 
-export interface LoginInput {
-  email: string;
+export type RegisterInput = {
+  username: typeof users.$inferInsert.username;
+  email: typeof users.$inferInsert.email;
   password: string;
-}
+};
+
+export type LoginInput = {
+  email: typeof users.$inferSelect.email;
+  password: string;
+};
 
 export interface JWTPayload extends Record<string, any> {
-  userId: string;
-  username: string;
+  userId: typeof users.$inferSelect.id;
+  username: typeof users.$inferSelect.username;
 }
 
-export interface AuthResponse {
+export type AuthResponse = {
   token: string;
-  user: {
-    id: string;
-    username: string;
-    email: string;
-  };
-}
+  user: Pick<typeof users.$inferSelect, 'id' | 'username' | 'email'>;
+};
