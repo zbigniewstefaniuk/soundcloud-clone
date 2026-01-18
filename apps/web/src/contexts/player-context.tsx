@@ -8,6 +8,7 @@ interface PlayerState {
   queueIndex: number
   isPlaying: boolean
   volume: number
+  isMuted: boolean
   currentTime: number
   duration: number
 }
@@ -21,6 +22,10 @@ interface PlayerContextValue extends PlayerState {
   seek: (time: number) => void
   setVolume: (volume: number) => void
   audioRef: React.RefObject<HTMLAudioElement>
+  hasNext: boolean
+  hasPrevious: boolean
+  toggleMute: () => void
+  mute: () => void
 }
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined)
@@ -35,6 +40,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     volume: 1,
     currentTime: 0,
     duration: 0,
+    isMuted: false
   })
 
   // Load state from localStorage on mount
@@ -72,6 +78,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const audio = audioRef.current
     if (!audio) return
 
+    const controller = new AbortController()
+    const signal = controller.signal
+
     const handleTimeUpdate = () => {
       setState((prev) => ({ ...prev, currentTime: audio.currentTime }))
     }
@@ -96,18 +105,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       setState((prev) => ({ ...prev, isPlaying: false }))
     }
 
-    audio.addEventListener('timeupdate', handleTimeUpdate)
-    audio.addEventListener('durationchange', handleDurationChange)
-    audio.addEventListener('ended', handleEnded)
-    audio.addEventListener('play', handlePlay)
-    audio.addEventListener('pause', handlePause)
+    audio.addEventListener('timeupdate', handleTimeUpdate, { signal })
+    audio.addEventListener('durationchange', handleDurationChange, { signal })
+    audio.addEventListener('ended', handleEnded, { signal })
+    audio.addEventListener('play', handlePlay, { signal })
+    audio.addEventListener('pause', handlePause, { signal })
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate)
-      audio.removeEventListener('durationchange', handleDurationChange)
-      audio.removeEventListener('ended', handleEnded)
-      audio.removeEventListener('play', handlePlay)
-      audio.removeEventListener('pause', handlePause)
+      controller.abort()
+
     }
   }, [state.queueIndex, state.queue.length])
 
@@ -195,6 +201,29 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+
+
+  const toggleMute = () => {
+    if (state.isMuted) {
+      setVolume(state.volume || 1)
+      setState((prev) => ({ ...prev, isMuted: false }))
+    } else {
+      setVolume(0)
+      setState((prev) => ({ ...prev, isMuted: true }))
+    }
+  }
+
+  const mute = () => {
+    if (audioRef.current) {
+      audioRef.current.muted = true
+      setState((prev) => ({ ...prev, isMuted: true, volume: 0 }))
+    }
+  }
+  
+
+  const hasNext = state.queueIndex < state.queue.length - 1
+  const hasPrevious = state.queueIndex > 0
+
   return (
     <PlayerContext.Provider
       value={{
@@ -206,6 +235,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         togglePlay,
         seek,
         setVolume,
+        hasNext,
+        hasPrevious,
+        toggleMute,
+        mute,
         audioRef,
       }}
     >

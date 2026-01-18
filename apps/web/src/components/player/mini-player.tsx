@@ -5,7 +5,9 @@ import { usePlayer } from '@/contexts/player-context'
 import { Slider } from '@/components/ui/slider'
 import { WaveformSlider } from '@/components/ui/waveform-slider'
 import { extractColorsFromImage } from '@/lib/color-extraction'
-import { getAssetUrl } from '@/lib/utils'
+import {
+  formatTime,
+  getAssetUrl } from '@/lib/utils'
 import { AnimatedGradient } from './animated-gradient'
 import { TrackCover } from '../tracks/track-cover'
 
@@ -20,9 +22,11 @@ export function MiniPlayer() {
     next,
     previous,
     seek,
-    setVolume,
-    queue,
-    queueIndex,
+    mute,
+    hasNext,
+    hasPrevious, 
+    toggleMute, 
+    isMuted
   } = usePlayer()
 
   const [colors, setColors] = useState({
@@ -31,7 +35,6 @@ export function MiniPlayer() {
     accent: '#ec4899',
   })
 
-  const [isMuted, setIsMuted] = useState(false)
 
   const coverUrl = getAssetUrl(currentTrack?.coverArtUrl)
 
@@ -45,24 +48,7 @@ export function MiniPlayer() {
     return null
   }
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
 
-  const toggleMute = () => {
-    if (isMuted) {
-      setVolume(volume || 0.5)
-      setIsMuted(false)
-    } else {
-      setVolume(0)
-      setIsMuted(true)
-    }
-  }
-
-  const hasNext = queueIndex < queue.length - 1
-  const hasPrevious = queueIndex > 0
 
   return (
     <AnimatedGradient
@@ -150,8 +136,10 @@ export function MiniPlayer() {
                 max={1}
                 step={0.01}
                 onValueChange={(value) => {
-                  setVolume(value[0])
-                  setIsMuted(value[0] === 0)
+                  if (value[0] === 0) {
+                    mute()
+                    return
+                  }
                 }}
                 className="w-24"
               />

@@ -13,3 +13,10 @@ export function getAssetUrl(path: string | null | undefined): string | undefined
   }
   return `${env.VITE_API_URL}/${path}`
 }
+
+
+export const formatTime = (time: number) => {
+  const minutes = Math.floor(time / 60)
+  const seconds = Math.floor(time % 60)
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
