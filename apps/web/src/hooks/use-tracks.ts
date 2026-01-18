@@ -7,8 +7,10 @@ import {
   updateTrack,
   deleteTrack,
   getStreamUrl,
+  getPublicTracks,
   type UploadTrackInput,
   type UpdateTrackInput,
+  type GetTracksParams,
 } from '../api/tracks'
 import { useMemo } from 'react'
 
@@ -94,4 +96,27 @@ export function useDeleteTrack() {
 
 export function useStreamUrl(trackId: string | undefined): string | null {
   return trackId ? getStreamUrl(trackId) : null
+}
+
+const PUBLIC_TRACKS_QUERY_KEY = (params: GetTracksParams) =>
+  ['public-tracks', params] as const
+
+export function usePublicTracks(params: GetTracksParams = {}) {
+  const query = useQuery({
+    queryKey: PUBLIC_TRACKS_QUERY_KEY(params),
+    queryFn: () => getPublicTracks(params),
+    staleTime: 1000 * 60 * 2,
+  })
+
+  return useMemo(
+    () => ({
+      tracks: query.data?.data ?? [],
+      pagination: query.data?.pagination ?? null,
+      isLoading: query.isLoading,
+      isError: query.isError,
+      error: query.error,
+      refetch: query.refetch,
+    }),
+    [query.data, query.isLoading, query.isError, query.error, query.refetch]
+  )
 }

@@ -256,3 +256,49 @@ export async function deleteTrack(id: string): Promise<void> {
 export function getStreamUrl(id: string): string {
   return `${env.VITE_API_URL}/tracks/${id}/stream`
 }
+
+export interface GetTracksParams {
+  page?: number
+  pageSize?: number
+  search?: string
+  sortBy?: 'createdAt' | 'playCount'
+  order?: 'asc' | 'desc'
+}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  pagination: {
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+  }
+}
+
+export async function getPublicTracks(
+  params: GetTracksParams = {}
+): Promise<PaginatedResponse<TrackWithUser>> {
+  const { data: response, error } = await apiClient.GET('/tracks/', {
+    params: { query: params as any },
+  })
+
+  if (error) {
+    const errorData = error as unknown as ApiErrorResponse
+    if (errorData?.error?.code && errorData?.error?.message) {
+      throw new TrackError(errorData.error)
+    }
+    throw new TrackError({
+      code: 'FETCH_FAILED',
+      message: 'Failed to fetch tracks',
+    })
+  }
+
+  if (!response) {
+    throw new TrackError({
+      code: 'FETCH_FAILED',
+      message: 'Failed to fetch tracks',
+    })
+  }
+
+  return response as unknown as PaginatedResponse<TrackWithUser>
+}

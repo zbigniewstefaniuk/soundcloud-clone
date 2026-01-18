@@ -4,7 +4,7 @@ import { cn, getAssetUrl } from '@/lib/utils'
 interface TrackCoverProps {
   coverArtUrl?: string | null
   title: string
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'full'
   className?: string
 }
 
@@ -12,12 +12,14 @@ const sizeClasses = {
   sm: 'w-10 h-10',
   md: 'w-16 h-16',
   lg: 'w-24 h-24',
+  full: 'w-full h-full',
 }
 
 const iconSizes = {
   sm: 'h-4 w-4',
   md: 'h-8 w-8',
   lg: 'h-12 w-12',
+  full: 'h-16 w-16',
 }
 
 export function TrackCover({ coverArtUrl, title, size = 'md', className }: TrackCoverProps) {
