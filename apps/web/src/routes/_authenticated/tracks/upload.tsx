@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { UploadTrackForm } from '@/components/tracks/upload-track-form'
 
-export const Route = createFileRoute('/tracks/upload')({
+export const Route = createFileRoute('/_authenticated/tracks/upload')({
   component: UploadTrackPage,
 })
 

@@ -22,8 +22,16 @@ export const securityConfig = {
       ? process.env.ALLOWED_ORIGINS?.split(',') || []
       : true,
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] as const,
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Range',
+      'Accept-Ranges',
+      'Content-Range',
+      'X-Requested-With',
+    ],
+    exposeHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'] as const,
     maxAge: 86400, // 24 hours
   } satisfies CORSConfig,
 

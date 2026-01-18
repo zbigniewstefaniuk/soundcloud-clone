@@ -184,19 +184,74 @@ export function Switch({ label }: { label: string }) {
 
 
 
+const ACCEPTED_AUDIO_TYPES = [
+  'audio/mpeg',
+  'audio/wav',
+  'audio/flac',
+  'audio/m4a',
+  'audio/x-m4a',
+  'audio/aac',
+  'audio/x-wav',
+]
+
+const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg']
+
 export function AudioFileField({ label }: { label: string }) {
   const field = useFieldContext<File | null>()
   const errors = field.state.meta.errors as (string | ZodError)[]
   const inputRef = useRef<HTMLInputElement>(null)
   const [fileName, setFileName] = useState<string>('')
   const [fileSize, setFileSize] = useState<number>(0)
+  const [isDragOver, setIsDragOver] = useState(false)
+  const [dragError, setDragError] = useState<string | null>(null)
+
+  const validateAndSetFile = (file: File) => {
+    setDragError(null)
+
+    if (!ACCEPTED_AUDIO_TYPES.includes(file.type)) {
+      setDragError('Invalid file type. Please upload MP3, WAV, FLAC, AAC or M4A.')
+      return
+    }
+
+    const maxSize = 100 * 1024 * 1024
+    if (file.size > maxSize) {
+      setDragError('File too large. Maximum size is 100MB.')
+      return
+    }
+
+    field.handleChange(file)
+    setFileName(file.name)
+    setFileSize(file.size)
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      field.handleChange(file)
-      setFileName(file.name)
-      setFileSize(file.size)
+      validateAndSetFile(file)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+    setDragError(null)
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+
+    const file = e.dataTransfer.files[0]
+    if (file) {
+      validateAndSetFile(file)
     }
   }
 
@@ -204,6 +259,7 @@ export function AudioFileField({ label }: { label: string }) {
     field.handleChange(null)
     setFileName('')
     setFileSize(0)
+    setDragError(null)
     if (inputRef.current) {
       inputRef.current.value = ''
     }
@@ -219,23 +275,42 @@ export function AudioFileField({ label }: { label: string }) {
         {!fileName ? (
           <button
             onClick={() => inputRef.current?.click()}
-            type='button'
-            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-cyan-500 transition-colors"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            type="button"
+            className={`
+              w-full border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
+              ${isDragOver
+                ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-950/30 scale-[1.02]'
+                : 'border-gray-300 hover:border-cyan-500 dark:border-gray-600'
+              }
+              ${dragError ? 'border-red-500 bg-red-50 dark:bg-red-950/30' : ''}
+            `}
           >
-            <Music className="mx-auto h-12 w-12 text-gray-400" />
-            <p className="mt-2 text-sm text-gray-600">
-              Click to upload audio file
+            <Music
+              className={`mx-auto h-12 w-12 transition-colors ${
+                isDragOver ? 'text-cyan-500' : 'text-gray-400'
+              }`}
+            />
+            <p className={`mt-2 text-sm ${isDragOver ? 'text-cyan-600' : 'text-gray-600 dark:text-gray-400'}`}>
+              {isDragOver ? 'Drop your audio file here' : 'Drag & drop or click to upload'}
             </p>
-            <p className="mt-1 text-xs text-gray-500">
-              MP3, WAV, FLAC, M4A up to 100MB
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+              MP3, WAV, FLAC, AAC, M4A up to 100MB
             </p>
+            {dragError && (
+              <p className="mt-2 text-sm text-red-600 font-medium">{dragError}</p>
+            )}
           </button>
         ) : (
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <div className="flex items-center space-x-3">
               <Music className="h-8 w-8 text-cyan-600" />
               <div>
-                <p className="text-sm font-medium text-gray-900">{fileName}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-50">
+                  {fileName}
+                </p>
                 <p className="text-xs text-gray-500">
                   {(fileSize / 1024 / 1024).toFixed(2)} MB
                 </p>
@@ -244,7 +319,8 @@ export function AudioFileField({ label }: { label: string }) {
             <button
               type="button"
               onClick={handleRemove}
-              className="text-red-600 hover:text-red-800"
+              className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-full transition-colors"
+              aria-label="Remove file"
             >
               <X className="h-5 w-5" />
             </button>
@@ -255,7 +331,7 @@ export function AudioFileField({ label }: { label: string }) {
       <input
         ref={inputRef}
         type="file"
-        accept="audio/mpeg,audio/wav,audio/flac,audio/m4a,audio/x-m4a"
+        accept={ACCEPTED_AUDIO_TYPES.join(',')}
         onChange={handleFileChange}
         className="hidden"
       />
@@ -270,22 +346,66 @@ export function ImageFileField({ label }: { label: string }) {
   const errors = field.state.meta.errors as (string | ZodError)[]
   const inputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string>('')
+  const [isDragOver, setIsDragOver] = useState(false)
+  const [dragError, setDragError] = useState<string | null>(null)
+
+  const validateAndSetFile = (file: File) => {
+    setDragError(null)
+
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setDragError('Invalid file type. Please upload PNG or JPG.')
+      return
+    }
+
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      setDragError('File too large. Maximum size is 5MB.')
+      return
+    }
+
+    field.handleChange(file)
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setPreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      field.handleChange(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+      validateAndSetFile(file)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+    setDragError(null)
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+
+    const file = e.dataTransfer.files[0]
+    if (file) {
+      validateAndSetFile(file)
     }
   }
 
   const handleRemove = () => {
     field.handleChange(null)
     setPreview('')
+    setDragError(null)
     if (inputRef.current) {
       inputRef.current.value = ''
     }
@@ -301,19 +421,36 @@ export function ImageFileField({ label }: { label: string }) {
         {!preview ? (
           <button
             onClick={() => inputRef.current?.click()}
-            type='button'
-            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-cyan-500 transition-colors"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            type="button"
+            className={`
+              w-full border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
+              ${isDragOver
+                ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-950/30 scale-[1.02]'
+                : 'border-gray-300 hover:border-cyan-500 dark:border-gray-600'
+              }
+              ${dragError ? 'border-red-500 bg-red-50 dark:bg-red-950/30' : ''}
+            `}
           >
-            <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <p className="mt-2 text-sm text-gray-600">
-              Click to upload cover art
+            <ImageIcon
+              className={`mx-auto h-12 w-12 transition-colors ${
+                isDragOver ? 'text-cyan-500' : 'text-gray-400'
+              }`}
+            />
+            <p className={`mt-2 text-sm ${isDragOver ? 'text-cyan-600' : 'text-gray-600 dark:text-gray-400'}`}>
+              {isDragOver ? 'Drop your image here' : 'Drag & drop or click to upload'}
             </p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
               PNG, JPG up to 5MB (Optional)
             </p>
+            {dragError && (
+              <p className="mt-2 text-sm text-red-600 font-medium">{dragError}</p>
+            )}
           </button>
         ) : (
-          <div className="relative">
+          <div className="relative group">
             <img
               src={preview}
               alt="Cover art preview"
@@ -322,7 +459,8 @@ export function ImageFileField({ label }: { label: string }) {
             <button
               type="button"
               onClick={handleRemove}
-              className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
+              className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors opacity-0 group-hover:opacity-100"
+              aria-label="Remove image"
             >
               <X className="h-4 w-4" />
             </button>
@@ -333,7 +471,7 @@ export function ImageFileField({ label }: { label: string }) {
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg,image/jpg"
+        accept={ACCEPTED_IMAGE_TYPES.join(',')}
         onChange={handleFileChange}
         className="hidden"
       />

@@ -7,7 +7,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Suspense } from 'react'
 import { getAssetUrl } from '@/lib/utils';
 
-export const Route = createFileRoute('/tracks/$trackId/edit')({
+export const Route = createFileRoute('/_authenticated/tracks/$trackId/edit')({
   component: EditTrackPage,
 })
 

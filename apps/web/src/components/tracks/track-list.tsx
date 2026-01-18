@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, createContext, useContext } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Music, Trash2, Edit, Play, Pause, Heart } from 'lucide-react'
 import { useDeleteTrack, useBatchLikeStatus, useToggleLike } from '@/hooks/use-tracks'
@@ -21,6 +21,25 @@ import { TrackCover } from './track-cover'
 import { TrackStats } from './track-stats'
 import type { TrackWithUser } from '@/api/tracks'
 
+interface TrackListContextValue {
+  isOwner: boolean
+  isLoggedIn: boolean
+  currentPlayingTrackId: string | null
+  deletingId: string | null
+  likedMap: Record<string, boolean>
+  onTogglePlay?: (track: TrackWithUser) => void
+  onDelete: (trackId: string) => void
+  onToggleLike: (trackId: string) => void
+}
+
+const TrackListContext = createContext<TrackListContextValue | null>(null)
+
+function useTrackListContext() {
+  const context = useContext(TrackListContext)
+  if (!context) throw new Error('useTrackListContext must be used within TrackList')
+  return context
+}
+
 interface TrackListProps {
   tracks: TrackWithUser[]
   isOwner?: boolean
@@ -32,7 +51,7 @@ export function TrackList({
   tracks,
   isOwner = false,
   onTogglePlay,
-  currentPlayingTrackId,
+  currentPlayingTrackId = null,
 }: TrackListProps) {
   const { user } = useAccount()
   const deleteMutation = useDeleteTrack()
@@ -69,48 +88,28 @@ export function TrackList({
   }
 
   return (
-    <div className="space-y-3">
-      {tracks.map((track) => (
-        <TrackListItem
-          key={track.id}
-          track={track}
-          isOwner={isOwner}
-          isPlaying={track.id === currentPlayingTrackId}
-          isDeleting={deletingId === track.id}
-          isLiked={likedMap[track.id] ?? false}
-          isLoggedIn={!!user}
-          onTogglePlay={onTogglePlay}
-          onDelete={handleDelete}
-          onToggleLike={handleToggleLike}
-        />
-      ))}
-    </div>
+    <TrackListContext.Provider
+      value={{
+        isOwner,
+        isLoggedIn: !!user,
+        currentPlayingTrackId,
+        deletingId,
+        likedMap,
+        onTogglePlay,
+        onDelete: handleDelete,
+        onToggleLike: handleToggleLike,
+      }}
+    >
+      <div className="space-y-3">
+        {tracks.map((track) => (
+          <TrackListItem key={track.id} track={track} />
+        ))}
+      </div>
+    </TrackListContext.Provider>
   )
 }
 
-interface TrackListItemProps {
-  track: TrackWithUser
-  isOwner: boolean
-  isPlaying: boolean
-  isDeleting: boolean
-  isLiked: boolean
-  isLoggedIn: boolean
-  onTogglePlay?: (track: TrackWithUser) => void
-  onDelete: (trackId: string) => void
-  onToggleLike: (trackId: string) => void
-}
-
-function TrackListItem({
-  track,
-  isOwner,
-  isPlaying,
-  isDeleting,
-  isLiked,
-  isLoggedIn,
-  onTogglePlay,
-  onDelete,
-  onToggleLike,
-}: TrackListItemProps) {
+function TrackListItem({ track }: { track: TrackWithUser }) {
   return (
     <div className="flex items-center gap-4 p-2 bg-card rounded-lg hover:bg-accent/50 transition-colors">
       <TrackCover coverArtUrl={track.coverArtUrl} title={track.title} size='lg' />
@@ -131,44 +130,28 @@ function TrackListItem({
         </div>
       </div>
 
-      <TrackActions
-        track={track}
-        isOwner={isOwner}
-        isPlaying={isPlaying}
-        isDeleting={isDeleting}
-        isLiked={isLiked}
-        isLoggedIn={isLoggedIn}
-        onTogglePlay={onTogglePlay}
-        onDelete={onDelete}
-        onToggleLike={onToggleLike}
-      />
+      <TrackActions track={track} />
     </div>
   )
 }
 
-interface TrackActionsProps {
-  track: TrackWithUser
-  isOwner: boolean
-  isPlaying: boolean
-  isDeleting: boolean
-  isLiked: boolean
-  isLoggedIn: boolean
-  onTogglePlay?: (track: TrackWithUser) => void
-  onDelete: (trackId: string) => void
-  onToggleLike: (trackId: string) => void
-}
+function TrackActions({ track }: { track: TrackWithUser }) {
+  const {
+    isOwner,
+    isLoggedIn,
+    currentPlayingTrackId,
+    deletingId,
+    likedMap,
+    onTogglePlay,
+    onDelete,
+    onToggleLike,
+  } = useTrackListContext()
 
-function TrackActions({
-  track,
-  isOwner,
-  isPlaying,
-  isDeleting,
-  isLiked,
-  isLoggedIn,
-  onTogglePlay,
-  onDelete,
-  onToggleLike,
-}: TrackActionsProps) {
+  const isPlaying = track.id === currentPlayingTrackId
+  const isDeleting = track.id === deletingId
+  const isLiked = likedMap[track.id] ?? false
+
+
   return (
     <div className="flex items-center gap-2">
       {onTogglePlay && (

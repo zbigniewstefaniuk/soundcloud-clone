@@ -9,14 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlayerIndexRouteImport } from './routes/player/index'
-import { Route as TracksUploadRouteImport } from './routes/tracks/upload'
-import { Route as ProfileTracksRouteImport } from './routes/profile/tracks'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
-import { Route as TracksTrackIdEditRouteImport } from './routes/tracks/$trackId/edit'
+import { Route as AuthenticatedTracksUploadRouteImport } from './routes/_authenticated/tracks/upload'
+import { Route as AuthenticatedProfileTracksRouteImport } from './routes/_authenticated/profile/tracks'
+import { Route as AuthenticatedTracksTrackIdEditRouteImport } from './routes/_authenticated/tracks/$trackId/edit'
 
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -25,16 +30,6 @@ const IndexRoute = IndexRouteImport.update({
 const PlayerIndexRoute = PlayerIndexRouteImport.update({
   id: '/player/',
   path: '/player/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TracksUploadRoute = TracksUploadRouteImport.update({
-  id: '/tracks/upload',
-  path: '/tracks/upload',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileTracksRoute = ProfileTracksRouteImport.update({
-  id: '/profile/tracks',
-  path: '/profile/tracks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
@@ -47,39 +42,53 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TracksTrackIdEditRoute = TracksTrackIdEditRouteImport.update({
-  id: '/tracks/$trackId/edit',
-  path: '/tracks/$trackId/edit',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AuthenticatedTracksUploadRoute =
+  AuthenticatedTracksUploadRouteImport.update({
+    id: '/tracks/upload',
+    path: '/tracks/upload',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProfileTracksRoute =
+  AuthenticatedProfileTracksRouteImport.update({
+    id: '/profile/tracks',
+    path: '/profile/tracks',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTracksTrackIdEditRoute =
+  AuthenticatedTracksTrackIdEditRouteImport.update({
+    id: '/tracks/$trackId/edit',
+    path: '/tracks/$trackId/edit',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
-  '/profile/tracks': typeof ProfileTracksRoute
-  '/tracks/upload': typeof TracksUploadRoute
   '/player/': typeof PlayerIndexRoute
-  '/tracks/$trackId/edit': typeof TracksTrackIdEditRoute
+  '/profile/tracks': typeof AuthenticatedProfileTracksRoute
+  '/tracks/upload': typeof AuthenticatedTracksUploadRoute
+  '/tracks/$trackId/edit': typeof AuthenticatedTracksTrackIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
-  '/profile/tracks': typeof ProfileTracksRoute
-  '/tracks/upload': typeof TracksUploadRoute
   '/player': typeof PlayerIndexRoute
-  '/tracks/$trackId/edit': typeof TracksTrackIdEditRoute
+  '/profile/tracks': typeof AuthenticatedProfileTracksRoute
+  '/tracks/upload': typeof AuthenticatedTracksUploadRoute
+  '/tracks/$trackId/edit': typeof AuthenticatedTracksTrackIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
-  '/profile/tracks': typeof ProfileTracksRoute
-  '/tracks/upload': typeof TracksUploadRoute
   '/player/': typeof PlayerIndexRoute
-  '/tracks/$trackId/edit': typeof TracksTrackIdEditRoute
+  '/_authenticated/profile/tracks': typeof AuthenticatedProfileTracksRoute
+  '/_authenticated/tracks/upload': typeof AuthenticatedTracksUploadRoute
+  '/_authenticated/tracks/$trackId/edit': typeof AuthenticatedTracksTrackIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,42 +96,48 @@ export interface FileRouteTypes {
     | '/'
     | '/auth/login'
     | '/auth/register'
+    | '/player/'
     | '/profile/tracks'
     | '/tracks/upload'
-    | '/player/'
     | '/tracks/$trackId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth/login'
     | '/auth/register'
+    | '/player'
     | '/profile/tracks'
     | '/tracks/upload'
-    | '/player'
     | '/tracks/$trackId/edit'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/auth/login'
     | '/auth/register'
-    | '/profile/tracks'
-    | '/tracks/upload'
     | '/player/'
-    | '/tracks/$trackId/edit'
+    | '/_authenticated/profile/tracks'
+    | '/_authenticated/tracks/upload'
+    | '/_authenticated/tracks/$trackId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
-  ProfileTracksRoute: typeof ProfileTracksRoute
-  TracksUploadRoute: typeof TracksUploadRoute
   PlayerIndexRoute: typeof PlayerIndexRoute
-  TracksTrackIdEditRoute: typeof TracksTrackIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -135,20 +150,6 @@ declare module '@tanstack/react-router' {
       path: '/player'
       fullPath: '/player/'
       preLoaderRoute: typeof PlayerIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tracks/upload': {
-      id: '/tracks/upload'
-      path: '/tracks/upload'
-      fullPath: '/tracks/upload'
-      preLoaderRoute: typeof TracksUploadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile/tracks': {
-      id: '/profile/tracks'
-      path: '/profile/tracks'
-      fullPath: '/profile/tracks'
-      preLoaderRoute: typeof ProfileTracksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/register': {
@@ -165,24 +166,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tracks/$trackId/edit': {
-      id: '/tracks/$trackId/edit'
+    '/_authenticated/tracks/upload': {
+      id: '/_authenticated/tracks/upload'
+      path: '/tracks/upload'
+      fullPath: '/tracks/upload'
+      preLoaderRoute: typeof AuthenticatedTracksUploadRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/profile/tracks': {
+      id: '/_authenticated/profile/tracks'
+      path: '/profile/tracks'
+      fullPath: '/profile/tracks'
+      preLoaderRoute: typeof AuthenticatedProfileTracksRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/tracks/$trackId/edit': {
+      id: '/_authenticated/tracks/$trackId/edit'
       path: '/tracks/$trackId/edit'
       fullPath: '/tracks/$trackId/edit'
-      preLoaderRoute: typeof TracksTrackIdEditRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedTracksTrackIdEditRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedProfileTracksRoute: typeof AuthenticatedProfileTracksRoute
+  AuthenticatedTracksUploadRoute: typeof AuthenticatedTracksUploadRoute
+  AuthenticatedTracksTrackIdEditRoute: typeof AuthenticatedTracksTrackIdEditRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedProfileTracksRoute: AuthenticatedProfileTracksRoute,
+  AuthenticatedTracksUploadRoute: AuthenticatedTracksUploadRoute,
+  AuthenticatedTracksTrackIdEditRoute: AuthenticatedTracksTrackIdEditRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
-  ProfileTracksRoute: ProfileTracksRoute,
-  TracksUploadRoute: TracksUploadRoute,
   PlayerIndexRoute: PlayerIndexRoute,
-  TracksTrackIdEditRoute: TracksTrackIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

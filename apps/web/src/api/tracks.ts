@@ -114,7 +114,18 @@ export async function deleteTrack(id: string) {
 
 
 export function getStreamUrl(id: string): string {
-  return `${env.VITE_API_URL}/tracks/${id}/stream`
+  const baseUrl = `${env.VITE_API_URL}/tracks/${id}/stream`
+
+  // Include auth token for private tracks
+  const token = typeof window !== 'undefined'
+    ? localStorage.getItem('auth_token')
+    : null
+
+  if (token) {
+    return `${baseUrl}?token=${encodeURIComponent(token)}`
+  }
+
+  return baseUrl
 }
 
 export async function likeTrack(trackId: string) {

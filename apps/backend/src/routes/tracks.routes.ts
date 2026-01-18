@@ -42,15 +42,81 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
   )
   .get(
     '/:id/stream',
-    async ({ params, set }) => {
-      const track = await trackService.getTrackById(params.id);
-      await trackService.incrementPlayCount(params.id);
+    async ({ params, set, request, jwt }) => {
+      console.log('[Stream] Requested Track ID:', params.id);
+
+      // Try to get current user from JWT (optional auth for private tracks)
+      // Check both Authorization header and query param (for audio element which can't send headers)
+      let currentUserId: string | undefined;
+      try {
+        const authHeader = request.headers.get('authorization');
+        const url = new URL(request.url);
+        const queryToken = url.searchParams.get('token');
+
+        const token = authHeader?.startsWith('Bearer ')
+          ? authHeader.substring(7)
+          : queryToken;
+
+        if (token) {
+          const payload = await jwt.verify(token);
+          if (payload && typeof payload === 'object' && 'userId' in payload) {
+            currentUserId = payload.userId as string;
+          }
+        }
+      } catch {
+        // Ignore auth errors - user is just not logged in
+      }
+
+      let track;
+      try {
+        track = await trackService.getTrackById(params.id, currentUserId);
+      } catch (error) {
+        console.error('[Stream] Error fetching track:', error);
+        throw error;
+      }
+
+      console.log('[Stream] Track found, audioUrl:', track.audioUrl);
+      console.log('[Stream] mimeType:', track.mimeType);
 
       const file = Bun.file(track.audioUrl);
-      set.headers['Content-Type'] = track.mimeType;
-      set.headers['Content-Length'] = track.fileSize.toString();
-      set.headers['Accept-Ranges'] = 'bytes';
+      const exists = await file.exists();
+      console.log('[Stream] File exists:', exists);
 
+      if (!exists) {
+        set.status = 404;
+        return {
+          success: false,
+          error: {
+            code: 'FILE_NOT_FOUND',
+            message: 'Audio file not found on server',
+          },
+        };
+      }
+
+      await trackService.incrementPlayCount(params.id);
+
+      const fileSize = file.size;
+      const rangeHeader = request.headers.get('range');
+
+      set.headers['Accept-Ranges'] = 'bytes';
+      set.headers['Content-Type'] = track.mimeType;
+
+      if (rangeHeader) {
+        const match = rangeHeader.match(/bytes=(\d*)-(\d*)/);
+        if (match) {
+          const start = match[1] ? parseInt(match[1], 10) : 0;
+          const end = match[2] ? parseInt(match[2], 10) : fileSize - 1;
+          const chunkSize = end - start + 1;
+
+          set.status = 206;
+          set.headers['Content-Range'] = `bytes ${start}-${end}/${fileSize}`;
+          set.headers['Content-Length'] = chunkSize.toString();
+
+          return file.slice(start, end + 1);
+        }
+      }
+
+      set.headers['Content-Length'] = fileSize.toString();
       return file;
     },
     {
@@ -60,7 +126,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       detail: {
         tags: ['Tracks'],
         summary: 'Stream track',
-        description: 'Stream audio file',
+        description: 'Stream audio file with range request support',
       },
     },
   )

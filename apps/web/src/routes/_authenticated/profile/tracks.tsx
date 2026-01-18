@@ -11,7 +11,7 @@ import { usePlayer } from '@/contexts/player-context'
 import { useAccount } from '@/hooks/use-auth'
 import type { TrackWithUser } from '@/api/tracks'
 
-export const Route = createFileRoute('/profile/tracks')({
+export const Route = createFileRoute('/_authenticated/profile/tracks')({
   component: ProfileTracksPage,
 })
 
@@ -26,7 +26,7 @@ function ProfileTracksPage() {
           <User className="h-8 w-8 text-primary" />
         </div>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">{user?.username || 'My Profile'}</h1>
+          <h1 className="text-2xl font-bold">{user?.username || "My Profile"}</h1>
           <p className="text-muted-foreground">{user?.email}</p>
         </div>
         <Link to="/tracks/upload">
@@ -120,7 +120,7 @@ function MyTracksTab() {
           <p className="text-sm text-muted-foreground">
             {isSearching
               ? `${displayTracks.length} of ${tracks.length} tracks`
-              : `${tracks.length} track${tracks.length !== 1 ? 's' : ''}`}
+              : `${tracks.length} track${tracks.length !== 1 ? `s` : ``}`}
           </p>
         </div>
       )}
@@ -216,7 +216,7 @@ function LikedTracksTab() {
           <p className="text-sm text-muted-foreground">
             {isSearching
               ? `${displayTracks.length} of ${tracks.length} tracks`
-              : `${tracks.length} liked track${tracks.length !== 1 ? 's' : ''}`}
+              : `${tracks.length} liked track${tracks.length !== 1 ? `s` : ``}`}
           </p>
         </div>
       )}
