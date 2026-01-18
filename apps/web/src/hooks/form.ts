@@ -5,14 +5,21 @@ import {
   SubmitButton,
   TextArea,
   TextField,
+  Switch,
+  AudioFileField,
+  ImageFileField,
 } from '../components/form-components.tsx';
-import { fieldContext, formContext } from './demo.form-context';
+
+import { fieldContext, formContext } from './form-context';
 
 export const { useAppForm } = createFormHook({
   fieldComponents: {
     TextField,
     Select,
     TextArea,
+    Switch,
+    AudioFileField,
+    ImageFileField,
   },
   formComponents: {
     SubmitButton,
