@@ -2,7 +2,9 @@ import { Elysia, t } from 'elysia';
 import { jwtPlugin, authMiddleware } from '../middleware/auth';
 import { trackService } from '../services/track.service';
 import { success, paginated } from '../utils/response';
-import { TrackQuerySchema } from '../utils/validation';
+import {
+  CreateTrackSchema,
+  TrackQuerySchema, UpdateTrackSchema } from '../utils/validation';
 
 export const trackRoutes = new Elysia({ prefix: '/tracks' })
   .use(jwtPlugin)
@@ -67,9 +69,9 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
     '/',
     async ({ body, user }) => {
       const { file, title, description, genre, mainArtist, isPublic, coverArt } =
-        body as any;
+        body 
 
-      console.log('body', body);
+      console.log('body-==--==--=-=', body);
 
       if (!file || !(file instanceof File)) {
         throw new Error('Audio file is required');
@@ -91,7 +93,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       return success(track);
     },
     {
-      type: 'multipart/form-data',
+      body: CreateTrackSchema,
       detail: {
         tags: ['Tracks'],
         summary: 'Upload track',
@@ -101,8 +103,8 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
   )
   .patch(
     '/:id',
-    async ({ params, body, user }) => {
-      const { isPublic, ...rest } = body as any;
+    async ({ params, body, user, }) => {
+      const { isPublic, ...rest } = body;
 
       const updateData = {
         ...rest,
@@ -124,6 +126,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       params: t.Object({
         id: t.String(),
       }),
+      body: UpdateTrackSchema,
       detail: {
         tags: ['Tracks'],
         summary: 'Update track',

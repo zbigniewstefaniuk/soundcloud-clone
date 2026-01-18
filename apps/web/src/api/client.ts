@@ -1,22 +1,12 @@
-import createClient from 'openapi-fetch'
-import type { paths } from './generated/schema'
-import { authStorage } from '../lib/auth-storage'
-import { env } from '@/env';
+import type { App } from '@repo/backend/App'
+import { treaty } from '@elysiajs/eden'
+import { env } from '@/env'
+import { authStorage } from '@/lib/auth-storage'
 
-const API_URL = env.VITE_API_URL;
-
-export const apiClient = createClient<paths>({
-  baseUrl: API_URL,
+export const api = treaty<App>(env.VITE_API_URL, {
+  headers: () => authStorage.getHeaders(),
 })
 
-// Request interceptor to add auth headers
-apiClient.use({
-  async onRequest({ request }) {
-    const authHeaders = authStorage.getHeaders()
-    for (const [key, value] of Object.entries(authHeaders)) {
-      request.headers.set(key, value)
-    }
-    return request
-  },
-})
-
+export function getStreamUrl(trackId: string): string {
+  return `${env.VITE_API_URL}/tracks/${trackId}/stream`
+}

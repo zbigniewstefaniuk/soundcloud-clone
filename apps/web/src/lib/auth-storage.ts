@@ -1,5 +1,8 @@
-import type { User } from '../api/auth'
-
+export interface StoredUser {
+  id: string
+  username: string
+  email: string
+}
 
 class AuthStorage {
   private readonly TOKEN_KEY = 'auth_token'
@@ -47,26 +50,26 @@ class AuthStorage {
   }
 
   /**
-   * User data management
+   * StoredUser data management
    * Provides offline-first user data before API calls complete
    */
   user = {
     /**
      * Get the cached user data
      */
-    get: (): User | null => {
+    get: (): StoredUser | null => {
       if (!this.isBrowser) return null
       try {
         const userData = localStorage.getItem(this.USER_KEY)
         if (!userData) return null
-        return JSON.parse(userData) as User
+        return JSON.parse(userData) as StoredUser
       } catch {
         return null
       }
     },
 
 
-    set: (user: User): void => {
+    set: (user: StoredUser): void => {
       if (!this.isBrowser) return
       localStorage.setItem(this.USER_KEY, JSON.stringify(user))
     },
@@ -79,7 +82,7 @@ class AuthStorage {
   }
 
 
-  setAuth(token: string, user: User): void {
+  setAuth(token: string, user: StoredUser): void {
     this.token.set(token)
     this.user.set(user)
   }

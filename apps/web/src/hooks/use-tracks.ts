@@ -6,12 +6,11 @@ import {
   getTrackById,
   updateTrack,
   deleteTrack,
-  getStreamUrl,
   getPublicTracks,
   type UploadTrackInput,
   type UpdateTrackInput,
-  type GetTracksParams,
-} from '../api/tracks'
+} from '@/api/tracks'
+import { getStreamUrl } from '@/api/client'
 import { useMemo } from 'react'
 
 const TRACKS_QUERY_KEY = ['user-tracks'] as const
@@ -96,6 +95,14 @@ export function useDeleteTrack() {
 
 export function useStreamUrl(trackId: string | undefined): string | null {
   return trackId ? getStreamUrl(trackId) : null
+}
+
+export interface GetTracksParams {
+  page?: number
+  pageSize?: number
+  search?: string
+  sortBy?: 'createdAt' | 'playCount'
+  order?: 'asc' | 'desc'
 }
 
 const PUBLIC_TRACKS_QUERY_KEY = (params: GetTracksParams) =>

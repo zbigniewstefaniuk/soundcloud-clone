@@ -40,7 +40,7 @@ export const commentRoutes = new Elysia()
         user.userId,
         params.id,
         body.content,
-        body.timestamp
+        body.timestamp ?? undefined
       );
       return success(comment);
     },

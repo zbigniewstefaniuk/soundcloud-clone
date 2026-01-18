@@ -26,12 +26,21 @@ export const UpdateProfileSchema = t.Object({
   website: t.Optional(userProfiles.website),
 });
 
+// FormData sends booleans as strings, so accept both
+const BooleanOrString = t.Union([
+  t.Boolean(),
+  t.Literal('true'),
+  t.Literal('false'),
+]);
+
 export const CreateTrackSchema = t.Object({
   title: tracks.title,
   description: t.Optional(tracks.description),
   genre: t.Optional(tracks.genre),
   mainArtist: t.Optional(tracks.mainArtist),
-  isPublic: t.Optional(tracks.isPublic),
+  isPublic: t.Optional(BooleanOrString),
+  file: t.File({ maxSize: '100m' }),
+  coverArt: t.Optional(t.File({ maxSize: '10m' })),
 });
 
 export const UpdateTrackSchema = t.Object({
@@ -39,7 +48,9 @@ export const UpdateTrackSchema = t.Object({
   description: t.Optional(tracks.description),
   genre: t.Optional(tracks.genre),
   mainArtist: t.Optional(tracks.mainArtist),
-  isPublic: t.Optional(tracks.isPublic),
+  isPublic: t.Optional(BooleanOrString),
+  file: t.Optional(t.File({ maxSize: '100m' })),
+  coverArt: t.Optional(t.File({ maxSize: '10m' })),
 });
 
 export const CreateCommentSchema = t.Object({

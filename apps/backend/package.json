@@ -4,15 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun",
-    "start": "bun run dist/index.js",
+    "build": "bun build --compile --minify-whitespace --minify-syntax --target bun --outfile server src/index.ts",
+    "start": "bun run ./server",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "lint": "oxlint src",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist node_modules server"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.1",
@@ -36,6 +36,9 @@
     "typescript": "^5.9.3"
   },
   "module": "src/index.js",
+  "exports":{
+    "./App": "./src/index.ts"
+  },
   "overrides": {
     "@sinclair/typebox": "0.34.47"
   }

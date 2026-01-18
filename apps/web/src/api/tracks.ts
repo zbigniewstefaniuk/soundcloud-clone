@@ -1,32 +1,20 @@
-import { apiClient } from './client'
-import { authStorage } from '../lib/auth-storage'
-import { env } from '@/env';
+import { api } from './client'
+import { ApiError } from './auth'
+import { env } from '@/env'
 
-export interface Track {
-  id: string
-  userId: string
-  title: string
-  description?: string | null
-  genre?: string | null
-  mainArtist?: string | null
-  audioUrl: string
-  coverArtUrl?: string | null
-  duration?: number | null
-  fileSize: number
-  mimeType: string
-  playCount: number
-  isPublic: boolean
-  createdAt: string
-  updatedAt: string
-}
+// Infer types from API responses
+export type TrackWithUser = Awaited<ReturnType<typeof getTrackById>>
+export type Track = TrackWithUser
+export type PublicTracksResponse = Awaited<ReturnType<typeof getPublicTracks>>
 
-export interface TrackWithUser extends Track {
-  user: {
-    id: string
-    username: string
+function handleError(error: unknown): never {
+  if (error && typeof error === 'object' && 'value' in error) {
+    const errorValue = (error as { value: { error?: { code: string; message: string } } }).value
+    if (errorValue?.error?.code && errorValue?.error?.message) {
+      throw new ApiError(errorValue.error.code, errorValue.error.message)
+    }
   }
-  likeCount?: number
-  isLiked?: boolean
+  throw new ApiError('UNKNOWN_ERROR', 'An unexpected error occurred')
 }
 
 export interface UploadTrackInput {
@@ -48,257 +36,89 @@ export interface UpdateTrackInput {
   coverArt?: File
 }
 
-export interface ApiError {
-  code: string
-  message: string
-}
-
-export interface ApiErrorResponse {
-  success: false
-  error: ApiError
-}
-
-export class TrackError extends Error {
-  code: string
-
-  constructor(error: ApiError) {
-    super(error.message)
-    this.name = 'TrackError'
-    this.code = error.code
-  }
-}
-
-
-
-export async function uploadTrack(input: UploadTrackInput): Promise<Track> {
-  const formData = new FormData()
-  formData.append('file', input.file)
-
-  if (input.coverArt) {
-    formData.append('coverArt', input.coverArt)
-  }
-
-  formData.append('title', input.title)
-
-  if (input.description) {
-    formData.append('description', input.description)
-  }
-
-  if (input.genre) {
-    formData.append('genre', input.genre)
-  }
-
-  if (input.mainArtist) {
-    formData.append('mainArtist', input.mainArtist)
-  }
-
-  formData.append('isPublic', String(input.isPublic))
-
-  const token = authStorage.token.get()
-
-  const response = await fetch(`${env.VITE_API_URL}/tracks/`, {
-    method: 'POST',
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: formData,
-  })
-
-  if (!response.ok) {
-    try {
-      const errorData = await response.json()
-      if (errorData?.error?.code && errorData?.error?.message) {
-        throw new TrackError(errorData.error)
-      }
-    } catch (e) {
-      if (e instanceof TrackError) throw e
-    }
-    throw new TrackError({ code: 'UPLOAD_FAILED', message: 'Upload failed' })
-  }
-
-  const result = await response.json()
-  return result.data as Track
-}
-
-export async function updateTrack(
-  id: string,
-  input: UpdateTrackInput
-): Promise<Track> {
-  if (input.coverArt) {
-    const formData = new FormData()
-
-    if (input.title !== undefined) formData.append('title', input.title)
-    if (input.description !== undefined)
-      formData.append('description', input.description || '')
-    if (input.genre !== undefined) formData.append('genre', input.genre || '')
-    if (input.mainArtist !== undefined)
-      formData.append('mainArtist', input.mainArtist || '')
-    if (input.isPublic !== undefined)
-      formData.append('isPublic', String(input.isPublic))
-    formData.append('coverArt', input.coverArt)
-
-    const token = authStorage.token.get()
-
-    const response = await fetch(`${env.VITE_API_URL}/tracks/${id}`, {
-      method: 'PATCH',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
-    })
-
-    if (!response.ok) {
-      try {
-        const errorData = await response.json()
-        if (errorData?.error?.code && errorData?.error?.message) {
-          throw new TrackError(errorData.error)
-        }
-      } catch (e) {
-        if (e instanceof TrackError) throw e
-      }
-      throw new TrackError({
-        code: 'UPDATE_FAILED',
-        message: 'Update failed',
-      })
-    }
-
-    const result = await response.json()
-    return result.data as Track
-  }
-
-  const { data: response, error } = await apiClient.PATCH('/tracks/{id}', {
-    params: { path: { id } },
-    body: input as any,
-  })
-
-  if (error) {
-    const errorData = error as unknown as ApiErrorResponse
-    if (errorData?.error?.code && errorData?.error?.message) {
-      throw new TrackError(errorData.error)
-    }
-    throw new TrackError({ code: 'UPDATE_FAILED', message: 'Update failed' })
-  }
-
-  if (!response) {
-    throw new TrackError({ code: 'UPDATE_FAILED', message: 'Update failed' })
-  }
-
-  return (response as any).data as Track
-}
-
-export async function getUserTracks(): Promise<TrackWithUser[]> {
-  const { data: response, error } = await apiClient.GET('/users/me/tracks')
-
-  if (error) {
-    const errorData = error as unknown as ApiErrorResponse
-    if (errorData?.error?.code && errorData?.error?.message) {
-      throw new TrackError(errorData.error)
-    }
-    throw new TrackError({
-      code: 'FETCH_FAILED',
-      message: 'Failed to fetch tracks',
-    })
-  }
-
-  if (!response) {
-    throw new TrackError({
-      code: 'FETCH_FAILED',
-      message: 'Failed to fetch tracks',
-    })
-  }
-
-  return (response as any).data as TrackWithUser[]
-}
-
-export async function getTrackById(id: string): Promise<TrackWithUser> {
-  const { data: response, error } = await apiClient.GET('/tracks/{id}', {
-    params: { path: { id } },
-  })
-
-  if (error) {
-    const errorData = error as unknown as ApiErrorResponse
-    if (errorData?.error?.code && errorData?.error?.message) {
-      throw new TrackError(errorData.error)
-    }
-    throw new TrackError({
-      code: 'FETCH_FAILED',
-      message: 'Failed to fetch track',
-    })
-  }
-
-  if (!response) {
-    throw new TrackError({
-      code: 'FETCH_FAILED',
-      message: 'Failed to fetch track',
-    })
-  }
-
-  return (response as any).data as TrackWithUser
-}
-
-export async function deleteTrack(id: string): Promise<void> {
-  const { error } = await apiClient.DELETE('/tracks/{id}', {
-    params: { path: { id } },
-  })
-
-  if (error) {
-    const errorData = error as unknown as ApiErrorResponse
-    if (errorData?.error?.code && errorData?.error?.message) {
-      throw new TrackError(errorData.error)
-    }
-    throw new TrackError({
-      code: 'DELETE_FAILED',
-      message: 'Failed to delete track',
-    })
-  }
-}
-
-export function getStreamUrl(id: string): string {
-  return `${env.VITE_API_URL}/tracks/${id}/stream`
-}
-
-export interface GetTracksParams {
+export async function getPublicTracks(params: {
   page?: number
   pageSize?: number
   search?: string
   sortBy?: 'createdAt' | 'playCount'
   order?: 'asc' | 'desc'
-}
+} = {}) {
+  const { data: response, error } = await api.tracks.get({ query: params })
 
-export interface PaginatedResponse<T> {
-  data: T[]
-  pagination: {
-    page: number
-    pageSize: number
-    total: number
-    totalPages: number
+  if (error) {
+    handleError(error)
   }
+
+  return response!
 }
 
-export async function getPublicTracks(
-  params: GetTracksParams = {}
-): Promise<PaginatedResponse<TrackWithUser>> {
-  const { data: response, error } = await apiClient.GET('/tracks/', {
-    params: { query: params as any },
+export async function getTrackById(id: string) {
+  const { data: response, error } = await api.tracks({ id }).get()
+
+  if (error) {
+    handleError(error)
+  }
+
+  return response!.data
+}
+
+export async function getUserTracks() {
+  const { data: response, error } = await api.users.me.tracks.get()
+
+  if (error) {
+    handleError(error)
+  }
+
+  return response!.data
+}
+
+export async function uploadTrack(input: UploadTrackInput) {
+  // Eden treaty handles File objects directly - pass them as an object
+  const { data, error } = await api.tracks.post({
+    file: input.file,
+    title: input.title,
+    isPublic: String(input.isPublic),
+    ...(input.coverArt && { coverArt: input.coverArt }),
+    ...(input.description && { description: input.description }),
+    ...(input.genre && { genre: input.genre }),
+    ...(input.mainArtist && { mainArtist: input.mainArtist }),
   })
 
   if (error) {
-    const errorData = error as unknown as ApiErrorResponse
-    if (errorData?.error?.code && errorData?.error?.message) {
-      throw new TrackError(errorData.error)
-    }
-    throw new TrackError({
-      code: 'FETCH_FAILED',
-      message: 'Failed to fetch tracks',
-    })
+    handleError(error)
   }
 
-  if (!response) {
-    throw new TrackError({
-      code: 'FETCH_FAILED',
-      message: 'Failed to fetch tracks',
-    })
-  }
-
-  return response as unknown as PaginatedResponse<TrackWithUser>
+  return data?.data
 }
+
+export async function updateTrack(id: string, input: UpdateTrackInput) {
+  // Eden treaty handles File objects directly - pass them as an object
+  const { data: response, error } = await api.tracks({ id }).patch({
+    ...(input.title !== undefined && { title: input.title }),
+    ...(input.description !== undefined && { description: input.description || '' }),
+    ...(input.genre !== undefined && { genre: input.genre || '' }),
+    ...(input.mainArtist !== undefined && { mainArtist: input.mainArtist || '' }),
+    ...(input.isPublic !== undefined && { isPublic: String(input.isPublic) }),
+    ...(input.coverArt && { coverArt: input.coverArt }),
+  })
+
+  if (error) {
+    handleError(error)
+  }
+
+  return response!.data
+}
+
+export async function deleteTrack(id: string) {
+  const { error } = await api.tracks({ id }).delete()
+
+  if (error) {
+    handleError(error)
+  }
+}
+
+
+
+export function getStreamUrl(id: string): string {
+  return `${env.VITE_API_URL}/tracks/${id}/stream`
+} 

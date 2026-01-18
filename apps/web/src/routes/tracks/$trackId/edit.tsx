@@ -22,6 +22,7 @@ const updateTrackSchema = z.object({
   coverArt: z
     .instanceof(File)
     .optional()
+    .nullable()
     .refine(
       (file) => !file || file.size <= MAX_IMAGE_SIZE,
       'Image must be less than 5MB'

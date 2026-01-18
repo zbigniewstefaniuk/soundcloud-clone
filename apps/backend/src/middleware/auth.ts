@@ -4,16 +4,17 @@ import { env } from '../config/env';
 import { AuthError } from './error';
 import type { JWTPayload } from '../types/auth.types';
 
-export const jwtPlugin = new Elysia().use(
+export const jwtPlugin = new Elysia({ name: 'jwt-plugin' }).use(
   jwt({
     name: 'jwt',
     secret: env.JWT_SECRET,
     exp: env.JWT_EXPIRES_IN,
-  }),
+  })
 );
 
-export const authMiddleware = (app: any) =>
-  app.derive(async ({ headers, jwt }: any) => {
+export const authMiddleware = new Elysia({ name: 'auth-middleware' })
+  .use(jwtPlugin)
+  .derive({ as: 'scoped' }, async ({ headers, jwt }) => {
     const authHeader = headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -22,17 +23,13 @@ export const authMiddleware = (app: any) =>
 
     const token = authHeader.substring(7);
 
-    try {
-      const payload = await jwt.verify(token);
+    const payload = await jwt.verify(token);
 
-      if (!payload) {
-        throw new AuthError('Invalid token');
-      }
-
-      return {
-        user: payload as JWTPayload,
-      };
-    } catch (error) {
+    if (!payload) {
       throw new AuthError('Invalid or expired token');
     }
+
+    return {
+      user: payload as unknown as JWTPayload,
+    };
   });

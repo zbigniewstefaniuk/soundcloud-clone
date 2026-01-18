@@ -49,10 +49,12 @@ const app = new Elysia()
     }),
   )
   .use(cors())
-  .use(staticPlugin({
-    assets: 'uploads',
-    prefix: '/uploads',
-  }))
+  .use(
+    staticPlugin({
+      assets: 'uploads',
+      prefix: '/uploads',
+    })
+  )
   .onError(({ error }) => {
     return errorHandler(error);
   })
@@ -60,16 +62,17 @@ const app = new Elysia()
     message: 'Elysia Music API',
     version: '1.0.0',
     docs: '/openapi',
-  }));
-
-app
+  }))
   .use(authRoutes)
   .use(userRoutes)
   .use(trackRoutes)
   .use(likeRoutes)
   .use(commentRoutes);
 
-app.listen(env.PORT);
+// this type is shared with the client
+export type App = typeof app;
+
+app.listen(env.PORT); 
 
 console.log(
   `🦊 Elysia Music API is running at ${app.server?.hostname}:${app.server?.port}`,

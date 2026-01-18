@@ -8,7 +8,7 @@ export const env = {
   POSTGRES_DB: process.env.POSTGRES_DB || 'elysia_music_db',
 
   // Server
-  PORT: parseInt(process.env.PORT || '3000', 10),
+  PORT: parseInt(process.env.PORT || '8000', 10),
   NODE_ENV: process.env.NODE_ENV || 'development',
 
   // JWT
