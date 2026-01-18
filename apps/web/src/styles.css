@@ -90,6 +90,10 @@ code {
 }
 
 @theme inline {
+  --default-font-family:
+    "InterVariable", system-ui, -apple-system, "Roboto", sans-serif;
+
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -132,7 +136,37 @@ code {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Tailwind v4 switched from cursor: pointer to cursor: default for the button component. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+
+.animate-waveform {
+  animation: waveform-flow 8s ease-in-out infinite;
+}
+
+@keyframes waveform-flow {
+  0% {
+    transform: scaleY(1) translateY(0);
+  }
+  25% {
+    transform: scaleY(0.92) translateY(2%);
+  }
+  50% {
+    transform: scaleY(1.05) translateY(-1%);
+  }
+  75% {
+    transform: scaleY(0.95) translateY(1%);
+  }
+  100% {
+    transform: scaleY(1) translateY(0);
   }
 }

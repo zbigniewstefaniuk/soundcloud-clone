@@ -1,9 +1,12 @@
+import { useState, useEffect } from 'react'
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX } from 'lucide-react'
 import { usePlayer } from '@/contexts/player-context'
-import { Play, Pause, SkipForward, SkipBack, Music, Volume2, VolumeX } from 'lucide-react'
 import { Slider } from '@/components/ui/slider'
+import { WaveformSlider } from '@/components/ui/waveform-slider'
 import { extractColorsFromImage } from '@/lib/color-extraction'
 import { getAssetUrl } from '@/lib/utils'
-import { useState, useEffect } from 'react'
+import { AnimatedGradient } from './animated-gradient'
+import { TrackCover } from '../tracks/track-cover'
 
 export function FullPlayer() {
   const {
@@ -61,30 +64,18 @@ export function FullPlayer() {
   const hasPrevious = queueIndex > 0
 
   return (
-    <div
-      className="min-h-screen relative overflow-hidden"
-      style={{
-        background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 50%, ${colors.accent} 100%)`,
-      }}
-    >
-      <div className="backdrop-blur-sm bg-black/20 min-h-screen flex items-center justify-center p-8">
+    <AnimatedGradient colors={colors} blur className="min-h-screen">
+      <div className="min-h-screen flex items-center justify-center p-8">
         <div className="w-full max-w-4xl space-y-8">
-          {/* Cover Art */}
           <div className="flex justify-center">
-            {coverUrl ? (
-              <img
-                src={coverUrl}
-                alt={currentTrack.title}
-                className="w-96 h-96 rounded-2xl shadow-2xl object-cover"
-              />
-            ) : (
-              <div className="w-96 h-96 rounded-2xl bg-white/20 flex items-center justify-center shadow-2xl">
-                <Music className="h-48 w-48 text-white/60" />
-              </div>
-            )}
+            <TrackCover
+              coverArtUrl={currentTrack.coverArtUrl}
+              title={currentTrack.title}
+              size="lg"
+              className="w-96 h-96 rounded-2xl shadow-2xl"
+            />
           </div>
 
-          {/* Track Info */}
           <div className="text-center space-y-2">
             <h1 className="text-5xl font-bold text-white">
               {currentTrack.title}
@@ -99,14 +90,14 @@ export function FullPlayer() {
             )}
           </div>
 
-          {/* Progress Bar */}
           <div className="space-y-2">
-            <Slider
-              value={[currentTime]}
+            <WaveformSlider
+              value={currentTime}
               max={duration || 100}
-              step={0.1}
-              onValueChange={(value) => seek(value[0])}
+              onValueChange={seek}
+              isPlaying={isPlaying}
               className="w-full"
+              waveformHeight={48}
             />
             <div className="flex justify-between text-sm text-white/80 tabular-nums">
               <span>{formatTime(currentTime)}</span>
@@ -114,7 +105,6 @@ export function FullPlayer() {
             </div>
           </div>
 
-          {/* Controls */}
           <div className="flex items-center justify-center gap-6">
             <button
               onClick={previous}
@@ -143,7 +133,6 @@ export function FullPlayer() {
             </button>
           </div>
 
-          {/* Volume Control */}
           <div className="flex items-center justify-center gap-4 bg-white/10 rounded-full px-6 py-3 mx-auto max-w-md">
             <button onClick={toggleMute} className="text-white">
               {isMuted || volume === 0 ? (
@@ -164,7 +153,6 @@ export function FullPlayer() {
             />
           </div>
 
-          {/* Queue Info */}
           {queue.length > 1 && (
             <div className="text-center">
               <p className="text-sm text-white/60">
@@ -179,6 +167,6 @@ export function FullPlayer() {
           )}
         </div>
       </div>
-    </div>
+    </AnimatedGradient>
   )
 }

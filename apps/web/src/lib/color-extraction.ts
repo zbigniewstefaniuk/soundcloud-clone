@@ -1,188 +1,174 @@
-interface RGB {
-  r: number
-  g: number
-  b: number
-}
-
 interface ColorPalette {
   primary: string
   secondary: string
   accent: string
 }
 
-function rgbToHex(r: number, g: number, b: number): string {
-  return `#${[r, g, b]
-    .map((x) => {
-      const hex = x.toString(16)
-      return hex.length === 1 ? '0' + hex : hex
-    })
-    .join('')}`
+interface ColorBucket {
+  redSum: number
+  greenSum: number
+  blueSum: number
+  saturationSum: number
+  pixelCount: number
 }
 
-function getBrightness(rgb: RGB): number {
-  return (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000
+interface ScoredColor {
+  red: number
+  green: number
+  blue: number
+  hue: number
+  score: number
 }
 
-function colorDistance(c1: RGB, c2: RGB): number {
-  return Math.sqrt(
-    Math.pow(c1.r - c2.r, 2) +
-      Math.pow(c1.g - c2.g, 2) +
-      Math.pow(c1.b - c2.b, 2)
-  )
+const DEFAULT_PALETTE: ColorPalette = {
+  primary: '#6366f1',
+  secondary: '#8b5cf6',
+  accent: '#ec4899',
 }
 
-function quantizeColors(pixels: RGB[], colorCount: number): RGB[] {
-  const sortByChannel = (colors: RGB[], channel: 'r' | 'g' | 'b') => {
-    return [...colors].sort((a, b) => a[channel] - b[channel])
+const SAMPLE_SIZE = 50
+const HUE_BUCKET_COUNT = 12
+const HUE_BUCKET_SIZE = 360 / HUE_BUCKET_COUNT
+const MIN_HUE_DIFFERENCE = 30
+const MIN_BRIGHTNESS = 20
+const MAX_BRIGHTNESS = 235
+const MIN_ALPHA = 128
+
+function rgbToHex(red: number, green: number, blue: number): string {
+  return '#' + ((1 << 24) | (red << 16) | (green << 8) | blue).toString(16).slice(1)
+}
+
+function calculateHue(red: number, green: number, blue: number): number {
+  const max = Math.max(red, green, blue)
+  const min = Math.min(red, green, blue)
+  if (max === min) return 0
+
+  const delta = max - min
+  let hue = 0
+
+  if (max === red) {
+    hue = (green - blue) / delta + (green < blue ? 6 : 0)
+  } else if (max === green) {
+    hue = (blue - red) / delta + 2
+  } else {
+    hue = (red - green) / delta + 4
   }
 
-  const split = (colors: RGB[]): RGB[][] => {
-    if (colors.length <= colorCount) {
-      return [colors]
-    }
+  return hue * 60
+}
 
-    const channels: ('r' | 'g' | 'b')[] = ['r', 'g', 'b']
-    let maxVariance = 0
-    let maxChannel: 'r' | 'g' | 'b' = 'r'
+function getHueDifference(hue1: number, hue2: number): number {
+  const diff = Math.abs(hue1 - hue2)
+  return Math.min(diff, 360 - diff)
+}
 
-    for (const channel of channels) {
-      const values = colors.map((c) => c[channel])
-      const variance = Math.max(...values) - Math.min(...values)
-      if (variance > maxVariance) {
-        maxVariance = variance
-        maxChannel = channel
-      }
-    }
+function createEmptyBucket(): ColorBucket {
+  return { redSum: 0, greenSum: 0, blueSum: 0, saturationSum: 0, pixelCount: 0 }
+}
 
-    const sorted = sortByChannel(colors, maxChannel)
-    const mid = Math.floor(sorted.length / 2)
+function bucketToScoredColor(bucket: ColorBucket): ScoredColor {
+  const red = Math.round(bucket.redSum / bucket.pixelCount)
+  const green = Math.round(bucket.greenSum / bucket.pixelCount)
+  const blue = Math.round(bucket.blueSum / bucket.pixelCount)
+  const avgSaturation = bucket.saturationSum / bucket.pixelCount
 
-    return [...split(sorted.slice(0, mid)), ...split(sorted.slice(mid))]
+  return {
+    red,
+    green,
+    blue,
+    hue: calculateHue(red, green, blue),
+    score: bucket.pixelCount * (avgSaturation + 0.1),
   }
+}
 
-  const buckets = split(pixels)
+function selectDiverseColors(sortedColors: ScoredColor[]): ScoredColor[] {
+  const selected = [sortedColors[0]]
 
-  return buckets.slice(0, colorCount).map((bucket) => {
-    const sum = bucket.reduce(
-      (acc, color) => ({
-        r: acc.r + color.r,
-        g: acc.g + color.g,
-        b: acc.b + color.b,
-      }),
-      { r: 0, g: 0, b: 0 }
+  for (const color of sortedColors.slice(1)) {
+    if (selected.length >= 3) break
+    const isDifferentEnough = selected.every(
+      (picked) => getHueDifference(picked.hue, color.hue) >= MIN_HUE_DIFFERENCE
     )
-
-    return {
-      r: Math.round(sum.r / bucket.length),
-      g: Math.round(sum.g / bucket.length),
-      b: Math.round(sum.b / bucket.length),
+    if (isDifferentEnough) {
+      selected.push(color)
     }
-  })
+  }
+
+  for (const color of sortedColors) {
+    if (selected.length >= 3) break
+    if (!selected.includes(color)) {
+      selected.push(color)
+    }
+  }
+
+  return selected
 }
 
-export async function extractColorsFromImage(
-  imageUrl: string
-): Promise<ColorPalette> {
+function colorToHex(color: ScoredColor | undefined, fallback: ScoredColor): string {
+  const { red, green, blue } = color ?? fallback
+  return rgbToHex(red, green, blue)
+}
+
+export async function extractColorsFromImage(imageUrl: string): Promise<ColorPalette> {
   return new Promise((resolve) => {
     const img = new Image()
     img.crossOrigin = 'Anonymous'
 
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      if (!ctx) return resolve(DEFAULT_PALETTE)
 
-      if (!ctx) {
-        resolve({
-          primary: '#6366f1',
-          secondary: '#8b5cf6',
-          accent: '#ec4899',
-        })
-        return
+      canvas.width = SAMPLE_SIZE
+      canvas.height = SAMPLE_SIZE
+      ctx.drawImage(img, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE)
+
+      const { data: pixelData } = ctx.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE)
+      const buckets: ColorBucket[] = Array.from({ length: HUE_BUCKET_COUNT }, createEmptyBucket)
+
+      for (let i = 0; i < pixelData.length; i += 16) {
+        const red = pixelData[i]
+        const green = pixelData[i + 1]
+        const blue = pixelData[i + 2]
+        const alpha = pixelData[i + 3]
+
+        if (alpha < MIN_ALPHA) continue
+
+        const maxChannel = Math.max(red, green, blue)
+        const minChannel = Math.min(red, green, blue)
+        const brightness = (maxChannel + minChannel) / 2
+
+        if (brightness < MIN_BRIGHTNESS || brightness > MAX_BRIGHTNESS) continue
+
+        const saturation = maxChannel === 0 ? 0 : (maxChannel - minChannel) / maxChannel
+        const hue = calculateHue(red, green, blue)
+        const bucketIndex = Math.floor(hue / HUE_BUCKET_SIZE) % HUE_BUCKET_COUNT
+        const bucket = buckets[bucketIndex]
+
+        bucket.redSum += red
+        bucket.greenSum += green
+        bucket.blueSum += blue
+        bucket.saturationSum += saturation
+        bucket.pixelCount++
       }
 
-      const scale = 0.25
-      canvas.width = img.width * scale
-      canvas.height = img.height * scale
+      const scoredColors = buckets
+        .filter((bucket) => bucket.pixelCount > 0)
+        .map(bucketToScoredColor)
+        .sort((a, b) => b.score - a.score)
 
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      if (scoredColors.length === 0) return resolve(DEFAULT_PALETTE)
 
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-      const pixels: RGB[] = []
-
-      for (let i = 0; i < imageData.data.length; i += 40) {
-        const r = imageData.data[i]
-        const g = imageData.data[i + 1]
-        const b = imageData.data[i + 2]
-        const a = imageData.data[i + 3]
-
-        if (
-          a > 125 &&
-          getBrightness({ r, g, b }) > 20 &&
-          getBrightness({ r, g, b }) < 235
-        ) {
-          pixels.push({ r, g, b })
-        }
-      }
-
-      if (pixels.length === 0) {
-        resolve({
-          primary: '#6366f1',
-          secondary: '#8b5cf6',
-          accent: '#ec4899',
-        })
-        return
-      }
-
-      const dominantColors = quantizeColors(pixels, 5)
-
-      const sortedByVibrancy = dominantColors.sort((a, b) => {
-        const satA = Math.max(a.r, a.g, a.b) - Math.min(a.r, a.g, a.b)
-        const satB = Math.max(b.r, b.g, b.b) - Math.min(b.r, b.g, b.b)
-        return satB - satA
-      })
-
-      const selectedColors: RGB[] = [sortedByVibrancy[0]]
-
-      for (const color of sortedByVibrancy.slice(1)) {
-        const minDistance = Math.min(
-          ...selectedColors.map((c) => colorDistance(c, color))
-        )
-        if (minDistance > 60 && selectedColors.length < 3) {
-          selectedColors.push(color)
-        }
-      }
-
-      while (selectedColors.length < 3) {
-        selectedColors.push(sortedByVibrancy[selectedColors.length])
-      }
+      const selectedColors = selectDiverseColors(scoredColors)
 
       resolve({
-        primary: rgbToHex(
-          selectedColors[0].r,
-          selectedColors[0].g,
-          selectedColors[0].b
-        ),
-        secondary: rgbToHex(
-          selectedColors[1].r,
-          selectedColors[1].g,
-          selectedColors[1].b
-        ),
-        accent: rgbToHex(
-          selectedColors[2].r,
-          selectedColors[2].g,
-          selectedColors[2].b
-        ),
+        primary: colorToHex(selectedColors[0], selectedColors[0]),
+        secondary: colorToHex(selectedColors[1], selectedColors[0]),
+        accent: colorToHex(selectedColors[2], selectedColors[0]),
       })
     }
 
-    img.onerror = () => {
-      resolve({
-        primary: '#6366f1',
-        secondary: '#8b5cf6',
-        accent: '#ec4899',
-      })
-    }
-
+    img.onerror = () => resolve(DEFAULT_PALETTE)
     img.src = imageUrl
   })
 }
