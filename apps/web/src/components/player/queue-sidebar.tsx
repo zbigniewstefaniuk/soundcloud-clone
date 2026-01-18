@@ -1,6 +1,7 @@
-import { X, ListMusic, Play, Pause, Music2 } from 'lucide-react'
+import { ListMusic, Play, Pause, Music2 } from 'lucide-react'
 import { usePlayer } from '@/contexts/player-context'
 import { TrackCover } from '@/components/tracks/track-cover'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import type { TrackWithUser } from '@/api/tracks'
 
@@ -12,7 +13,7 @@ interface QueueSidebarProps {
 export function QueueSidebar({ isOpen, onClose }: QueueSidebarProps) {
   const { queue, queueIndex, currentTrack, playTrack, isPlaying, togglePlay } = usePlayer()
 
-  const handleTrackClick = (track: TrackWithUser, index: number) => {
+  const handleTrackClick = (track: TrackWithUser) => {
     if (currentTrack?.id === track.id) {
       togglePlay()
     } else {
@@ -21,45 +22,23 @@ export function QueueSidebar({ isOpen, onClose }: QueueSidebarProps) {
   }
 
   return (
-    <>
-      {isOpen && (
-        <button
-          type="button"
-          className="fixed inset-0 bg-black/50 z-40 cursor-default"
-          onClick={onClose}
-          onKeyDown={(e) => e.key === 'Escape' && onClose()}
-          aria-label="Close queue"
-        />
-      )}
-
-      <aside
-        className={cn(
-          'fixed top-0 right-0 h-full w-80 bg-background border-l border-border z-50 transform transition-transform duration-200 ease-out flex flex-col',
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        )}
-      >
-        <div className="flex items-center justify-between h-14 px-4 border-b border-border">
-          <div className="flex items-center gap-2">
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="w-80 p-0">
+        <SheetHeader className="border-b border-border">
+          <SheetTitle className="flex items-center gap-2">
             <ListMusic className="h-5 w-5 text-primary" />
-            <span className="font-semibold">Queue</span>
+            Queue
             {queue.length > 0 && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground font-normal">
                 ({queue.length} tracks)
               </span>
             )}
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-md hover:bg-accent transition-colors"
-            aria-label="Close queue"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+          </SheetTitle>
+        </SheetHeader>
 
         <div className="flex-1 overflow-y-auto">
           {queue.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <div className="flex flex-col items-center justify-center h-64 text-center px-4">
               <Music2 className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="font-medium mb-1">No tracks in queue</h3>
               <p className="text-sm text-muted-foreground">
@@ -94,7 +73,7 @@ export function QueueSidebar({ isOpen, onClose }: QueueSidebarProps) {
                         track={track}
                         isActive={false}
                         isPlaying={false}
-                        onClick={() => handleTrackClick(track, queueIndex + 1 + idx)}
+                        onClick={() => handleTrackClick(track)}
                         index={idx + 1}
                       />
                     ))}
@@ -114,7 +93,7 @@ export function QueueSidebar({ isOpen, onClose }: QueueSidebarProps) {
                         track={track}
                         isActive={false}
                         isPlaying={false}
-                        onClick={() => handleTrackClick(track, idx)}
+                        onClick={() => handleTrackClick(track)}
                       />
                     ))}
                   </div>
@@ -123,8 +102,8 @@ export function QueueSidebar({ isOpen, onClose }: QueueSidebarProps) {
             </div>
           )}
         </div>
-      </aside>
-    </>
+      </SheetContent>
+    </Sheet>
   )
 }
 

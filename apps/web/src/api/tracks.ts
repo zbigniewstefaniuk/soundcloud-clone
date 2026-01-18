@@ -36,13 +36,7 @@ export interface UpdateTrackInput {
   coverArt?: File
 }
 
-export async function getPublicTracks(params: {
-  page?: number
-  pageSize?: number
-  search?: string
-  sortBy?: 'createdAt' | 'playCount' | 'likeCount'
-  order?: 'asc' | 'desc'
-} = {}) {
+export async function getPublicTracks(params: NonNullable<Parameters<typeof api.tracks.get>[0]>['query'] = {}) {
   const { data: response, error } = await api.tracks.get({ query: params })
 
   if (error) {

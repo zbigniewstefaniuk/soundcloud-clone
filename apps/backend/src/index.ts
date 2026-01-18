@@ -1,11 +1,12 @@
 import { Elysia } from 'elysia';
-import { cors } from '@elysiajs/cors';
 import { staticPlugin } from '@elysiajs/static';
 import openapi from '@elysiajs/openapi';
 import { env, validateEnv } from './config/env';
+import { securityConfig } from './config/security';
 import { testConnection } from './config/database';
 import { fileService } from './services/file.service';
 import { errorHandler } from './middleware/error';
+import { securityMiddleware } from './middleware/security';
 import { authRoutes } from './routes/auth.routes';
 import { userRoutes } from './routes/users.routes';
 import { likeRoutes } from './routes/likes.routes';
@@ -29,6 +30,7 @@ if (!dbConnected) {
 }
 
 const app = new Elysia()
+  .use(securityMiddleware)
   .use(
     openapi({
       documentation: {
@@ -46,9 +48,9 @@ const app = new Elysia()
           { name: 'Comments', description: 'Track comments endpoints' },
         ],
       },
+      path: securityConfig.isProduction ? undefined : '/openapi',
     }),
   )
-  .use(cors())
   .use(
     staticPlugin({
       assets: 'uploads',
@@ -56,12 +58,15 @@ const app = new Elysia()
     })
   )
   .onError(({ error }) => {
+    if (securityConfig.isProduction && error instanceof Error) {
+      console.error(`[${new Date().toISOString()}] Error:`, error.message);
+    }
     return errorHandler(error);
   })
   .get('/', () => ({
     message: 'Elysia Music API',
     version: '1.0.0',
-    docs: '/openapi',
+    docs: securityConfig.isProduction ? undefined : '/openapi',
   }))
   .use(authRoutes)
   .use(userRoutes)
