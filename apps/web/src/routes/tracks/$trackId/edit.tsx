@@ -42,12 +42,12 @@ function EditTrackPage() {
   const form = useAppForm({
     defaultValues: {
       title: track?.title ?? '',
-      description: track?.description ?? '',
-      genre: track?.genre ?? '',
-      mainArtist: track?.mainArtist ?? '',
+      description: track?.description,
+      genre: track?.genre,
+      mainArtist: track?.mainArtist,
       isPublic: track?.isPublic ?? true,
-      coverArt: null as File | null,
-    },
+      coverArt: undefined as File | undefined,
+    } satisfies z.input<typeof updateTrackSchema>,
     validators: {
       onSubmit: updateTrackSchema,
     },
