@@ -52,7 +52,6 @@ export const tracks = pgTable('tracks', {
   mainArtist: varchar('main_artist', { length: 100 }), // Main artist name
   audioUrl: varchar('audio_url', { length: 500 }).notNull(),
   coverArtUrl: varchar('cover_art_url', { length: 500 }), // Album/track artwork
-  duration: integer('duration'), // in seconds
   fileSize: integer('file_size').notNull(), // in bytes
   mimeType: varchar('mime_type', { length: 50 }).notNull(),
   playCount: integer('play_count').default(0).notNull(),

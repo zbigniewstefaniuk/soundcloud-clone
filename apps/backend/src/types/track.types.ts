@@ -7,7 +7,6 @@ export interface Track {
   mainArtist?: string | null;
   audioUrl: string;
   coverArtUrl?: string | null;
-  duration?: number | null;
   fileSize: number;
   mimeType: string;
   playCount: number;

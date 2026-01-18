@@ -35,6 +35,10 @@ export class TrackService {
         })
         .returning();
 
+      if (!track) {
+        throw new Error('Failed to create track');
+      }
+
       if (coverArtFile && coverArtFile instanceof File) {
         const coverArtUrl = await fileService.uploadCover(coverArtFile, track.id);
         const [updatedTrack] = await tx
