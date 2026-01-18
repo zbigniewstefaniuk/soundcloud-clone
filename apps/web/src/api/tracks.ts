@@ -153,4 +153,14 @@ export async function batchCheckLikes(trackIds: string[]): Promise<Record<string
   }
   const result = await response.json()
   return result.data ?? {}
+}
+
+export async function getUserLikedTracks(params: { page?: number; pageSize?: number } = {}) {
+  const { data: response, error } = await api.users.me.likes.get({ query: params })
+
+  if (error) {
+    handleError(error)
+  }
+
+  return response!
 } 

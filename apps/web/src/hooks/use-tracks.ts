@@ -10,6 +10,7 @@ import {
   likeTrack,
   unlikeTrack,
   batchCheckLikes,
+  getUserLikedTracks,
   type UploadTrackInput,
   type UpdateTrackInput,
 } from '@/api/tracks'
@@ -216,6 +217,29 @@ export function useToggleLike() {
       // Refetch after mutation settles
       queryClient.invalidateQueries({ queryKey: ['batch-likes'] })
       queryClient.invalidateQueries({ queryKey: ['public-tracks'] })
+      queryClient.invalidateQueries({ queryKey: LIKED_TRACKS_QUERY_KEY })
     },
   })
+}
+
+const LIKED_TRACKS_QUERY_KEY = ['user-liked-tracks'] as const
+
+export function useUserLikedTracks(params: { page?: number; pageSize?: number } = {}) {
+  const query = useQuery({
+    queryKey: [...LIKED_TRACKS_QUERY_KEY, params] as const,
+    queryFn: () => getUserLikedTracks(params),
+    staleTime: 1000 * 60 * 2,
+  })
+
+  return useMemo(
+    () => ({
+      tracks: query.data?.data ?? [],
+      pagination: query.data?.pagination ?? null,
+      isLoading: query.isLoading,
+      isError: query.isError,
+      error: query.error,
+      refetch: query.refetch,
+    }),
+    [query.data, query.isLoading, query.isError, query.error, query.refetch]
+  )
 }
