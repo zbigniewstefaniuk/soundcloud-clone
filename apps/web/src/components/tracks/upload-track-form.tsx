@@ -72,7 +72,7 @@ export function UploadTrackForm() {
     <div className="w-full max-w-2xl mx-auto space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Upload Track</h1>
-        <p className="text-gray-500">Share your music with the world</p>
+        <p className="text-muted-foreground">Share your music with the world</p>
       </div>
 
       <Suspense fallback={<div>Loading...</div>}>
@@ -137,8 +137,8 @@ export function UploadTrackForm() {
           </form.AppField>
 
           {uploadMutation.error && (
-            <div className="rounded-md bg-red-50 p-3">
-              <p className="text-sm text-red-800">
+            <div className="rounded-md bg-destructive/10 p-3">
+              <p className="text-sm text-destructive">
                 {uploadMutation.error instanceof Error
                   ? uploadMutation.error.message
                   : 'Upload failed. Please try again.'}

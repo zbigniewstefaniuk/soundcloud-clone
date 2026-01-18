@@ -67,8 +67,8 @@ function EditTrackPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600">Error</h2>
-          <p className="text-gray-600 mt-2">Track not found</p>
+          <h2 className="text-2xl font-bold text-destructive">Error</h2>
+          <p className="text-muted-foreground mt-2">Track not found</p>
         </div>
       </div>
     )
@@ -77,14 +77,14 @@ function EditTrackPage() {
   const coverArtURL = getAssetUrl(track.coverArtUrl);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-2xl mx-auto space-y-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Edit Track</h1>
-          <p className="text-gray-500">Update your track information</p>
+          <p className="text-muted-foreground">Update your track information</p>
           {coverArtURL && (
             <div className="mt-4">
-              <p className="text-sm text-gray-600 mb-2">Current cover art:</p>
+              <p className="text-sm text-muted-foreground mb-2">Current cover art:</p>
               <img
                 src={coverArtURL}
                 alt={track.title}
@@ -152,8 +152,8 @@ function EditTrackPage() {
             </form.AppField>
 
             {updateMutation.error && (
-              <div className="rounded-md bg-red-50 p-3">
-                <p className="text-sm text-red-800">
+              <div className="rounded-md bg-destructive/10 p-3">
+                <p className="text-sm text-destructive">
                   {updateMutation.error instanceof Error
                     ? updateMutation.error.message
                     : 'Update failed. Please try again.'}
@@ -162,8 +162,8 @@ function EditTrackPage() {
             )}
 
             {updateMutation.isSuccess && (
-              <div className="rounded-md bg-green-50 p-3">
-                <p className="text-sm text-green-800">Track updated successfully!</p>
+              <div className="rounded-md bg-primary/10 p-3">
+                <p className="text-sm text-primary">Track updated successfully!</p>
               </div>
             )}
 
