@@ -31,7 +31,7 @@ elysia-monorepo/
 - **Framework**: React 19
 - **Build Tool**: Vite
 - **Language**: TypeScript
-- **Port**: 3001
+- **Port**: 3000
 
 ## Getting Started
 
@@ -47,7 +47,7 @@ elysia-monorepo/
 
    ```bash
    cd elysia-monorepo
-   bun install
+   npm i
    ```
 
 2. **Setup backend environment**:
@@ -150,7 +150,7 @@ turbo run dev --filter=@repo/web
 ### Monorepo
 
 - **Tool**: Turborepo 2.7
-- **Package Manager**: Bun
+- **Package Manager**: NPM(workspace - frontend) / BUN (backend)
 
 ## Turborepo Features
 
@@ -203,15 +203,15 @@ bun run db:studio
 
 ```bash
 # Build all apps
-bun run build
+npm run build
 
 # Start backend in production
 cd apps/backend
-bun run start
+npm run start
 
 # Preview frontend build
 cd apps/web
-bun run preview
+npm run preview
 ```
 
 ## Adding Packages
@@ -223,7 +223,7 @@ bun run preview
 bun add <package> --filter=@repo/backend
 
 # Frontend
-bun add <package> --filter=@repo/web
+npm add <package> --filter=@repo/web
 ```
 
 ### Add to root
