@@ -79,4 +79,4 @@ app.listen(env.PORT);
 console.log(
   `🦊 Elysia Music API is running at ${app.server?.hostname}:${app.server?.port}`,
 );
-console.log(`📚 API Documentation: http://localhost:${env.PORT}/swagger`);
+console.log(`📚 API Documentation: http://localhost:${env.PORT}/openapi`);
