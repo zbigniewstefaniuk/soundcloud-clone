@@ -66,7 +66,7 @@ export function UploadTrackForm() {
         isPublic: value.isPublic,
       })
 
-      // formApi.reset()
+      formApi.reset()
     },
   })
 
