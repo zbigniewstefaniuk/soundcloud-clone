@@ -59,12 +59,12 @@ export async function getTrackById(id: string) {
     handleError(error)
   }
 
-  return response!.data
+  return response.data
 }
 
 export async function getUserTracks() {
   const { data: response, error } = await api.users.me.tracks.get()
-
+  
   if (error) {
     handleError(error)
   }

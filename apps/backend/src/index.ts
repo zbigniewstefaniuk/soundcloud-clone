@@ -49,7 +49,6 @@ const app = new Elysia()
       },
     }),
   )
-  .use(Logestic.preset('common'))
   .use(cors())
   .use(
     staticPlugin({
