@@ -297,9 +297,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
 
     const handleEnded = () => {
-      setState((prev) => ({ ...prev, isPlaying: false }))
       if (stateRef.current.queueIndex < stateRef.current.queue.length - 1) {
         executeNext()
+      } else {
+        const newState = { ...stateRef.current, isPlaying: false }
+        setState(newState)
+        broadcastState(newState)
       }
     }
 
