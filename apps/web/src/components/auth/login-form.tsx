@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { useLoginMutation } from '../../hooks/use-auth';
 import { Button } from '../ui/button';
 import { useAppForm } from '@/hooks/form';
 import { Suspense } from 'react';
+import { useLogin } from '@/hooks/use-auth';
 
 const loginSchema = z.object({
   email: z.email('Invalid email address'),
@@ -10,7 +10,7 @@ const loginSchema = z.object({
 });
 
 export function LoginForm() {
-  const loginMutation = useLoginMutation();
+  const loginMutation = useLogin();
 
   const form = useAppForm({
     defaultValues: {

@@ -10,15 +10,34 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PlayerIndexRouteImport } from './routes/player/index'
+import { Route as TracksUploadRouteImport } from './routes/tracks/upload'
+import { Route as ProfileTracksRouteImport } from './routes/profile/tracks'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as TracksTrackIdEditRouteImport } from './routes/tracks/$trackId/edit'
 import { Route as DemoFormSimpleRouteImport } from './routes/demo/form.simple'
 import { Route as DemoFormAddressRouteImport } from './routes/demo/form.address'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlayerIndexRoute = PlayerIndexRouteImport.update({
+  id: '/player/',
+  path: '/player/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TracksUploadRoute = TracksUploadRouteImport.update({
+  id: '/tracks/upload',
+  path: '/tracks/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileTracksRoute = ProfileTracksRouteImport.update({
+  id: '/profile/tracks',
+  path: '/profile/tracks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
@@ -34,6 +53,11 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TracksTrackIdEditRoute = TracksTrackIdEditRouteImport.update({
+  id: '/tracks/$trackId/edit',
+  path: '/tracks/$trackId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoFormSimpleRoute = DemoFormSimpleRouteImport.update({
@@ -52,16 +76,24 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/profile/tracks': typeof ProfileTracksRoute
+  '/tracks/upload': typeof TracksUploadRoute
+  '/player/': typeof PlayerIndexRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
+  '/tracks/$trackId/edit': typeof TracksTrackIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/profile/tracks': typeof ProfileTracksRoute
+  '/tracks/upload': typeof TracksUploadRoute
+  '/player': typeof PlayerIndexRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
+  '/tracks/$trackId/edit': typeof TracksTrackIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,8 +101,12 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/profile/tracks': typeof ProfileTracksRoute
+  '/tracks/upload': typeof TracksUploadRoute
+  '/player/': typeof PlayerIndexRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
+  '/tracks/$trackId/edit': typeof TracksTrackIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -79,24 +115,36 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/demo/tanstack-query'
+    | '/profile/tracks'
+    | '/tracks/upload'
+    | '/player/'
     | '/demo/form/address'
     | '/demo/form/simple'
+    | '/tracks/$trackId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth/login'
     | '/auth/register'
     | '/demo/tanstack-query'
+    | '/profile/tracks'
+    | '/tracks/upload'
+    | '/player'
     | '/demo/form/address'
     | '/demo/form/simple'
+    | '/tracks/$trackId/edit'
   id:
     | '__root__'
     | '/'
     | '/auth/login'
     | '/auth/register'
     | '/demo/tanstack-query'
+    | '/profile/tracks'
+    | '/tracks/upload'
+    | '/player/'
     | '/demo/form/address'
     | '/demo/form/simple'
+    | '/tracks/$trackId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -104,8 +152,12 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
+  ProfileTracksRoute: typeof ProfileTracksRoute
+  TracksUploadRoute: typeof TracksUploadRoute
+  PlayerIndexRoute: typeof PlayerIndexRoute
   DemoFormAddressRoute: typeof DemoFormAddressRoute
   DemoFormSimpleRoute: typeof DemoFormSimpleRoute
+  TracksTrackIdEditRoute: typeof TracksTrackIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -115,6 +167,27 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/player/': {
+      id: '/player/'
+      path: '/player'
+      fullPath: '/player/'
+      preLoaderRoute: typeof PlayerIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tracks/upload': {
+      id: '/tracks/upload'
+      path: '/tracks/upload'
+      fullPath: '/tracks/upload'
+      preLoaderRoute: typeof TracksUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/tracks': {
+      id: '/profile/tracks'
+      path: '/profile/tracks'
+      fullPath: '/profile/tracks'
+      preLoaderRoute: typeof ProfileTracksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/tanstack-query': {
@@ -136,6 +209,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/login'
       fullPath: '/auth/login'
       preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tracks/$trackId/edit': {
+      id: '/tracks/$trackId/edit'
+      path: '/tracks/$trackId/edit'
+      fullPath: '/tracks/$trackId/edit'
+      preLoaderRoute: typeof TracksTrackIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/form/simple': {
@@ -160,8 +240,12 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
+  ProfileTracksRoute: ProfileTracksRoute,
+  TracksUploadRoute: TracksUploadRoute,
+  PlayerIndexRoute: PlayerIndexRoute,
   DemoFormAddressRoute: DemoFormAddressRoute,
   DemoFormSimpleRoute: DemoFormSimpleRoute,
+  TracksTrackIdEditRoute: TracksTrackIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

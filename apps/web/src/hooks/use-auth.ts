@@ -48,6 +48,7 @@ export function useRegister() {
   const navigate = useNavigate();
 
   return useMutation({
+    mutationKey: ['register'],
     mutationFn: (data: RegisterInput) => register(data),
     onSuccess: (data) => {
       authStorage.setAuth(data.data.token, data.data.user);

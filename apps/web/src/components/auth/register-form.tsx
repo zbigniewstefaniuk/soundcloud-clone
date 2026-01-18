@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { useRegisterMutation } from '../../hooks/use-auth';
 import { Button } from '../ui/button';
 import { useAppForm } from '@/hooks/form';
+import { useRegister } from '@/hooks/use-auth';
 
 const registerSchema = z.object({
   username: z
@@ -13,7 +13,7 @@ const registerSchema = z.object({
 });
 
 export function RegisterForm() {
-  const registerMutation = useRegisterMutation();
+  const registerMutation = useRegister();
 
   const form = useAppForm({
     defaultValues: {

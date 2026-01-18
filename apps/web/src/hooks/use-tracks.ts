@@ -7,12 +7,10 @@ import {
   updateTrack,
   deleteTrack,
   getStreamUrl,
-  type Track,
-  type TrackWithUser,
   type UploadTrackInput,
   type UpdateTrackInput,
 } from '../api/tracks'
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 
 const TRACKS_QUERY_KEY = ['user-tracks'] as const
 const TRACK_QUERY_KEY = (id: string) => ['track', id] as const
@@ -73,6 +71,7 @@ export function useUpdateTrack(trackId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
+    mutationKey: TRACK_QUERY_KEY(trackId),
     mutationFn: (input: UpdateTrackInput) => updateTrack(trackId, input),
     onSuccess: (updatedTrack) => {
       queryClient.setQueryData(TRACK_QUERY_KEY(trackId), updatedTrack)

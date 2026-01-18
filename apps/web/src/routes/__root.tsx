@@ -7,6 +7,8 @@ import TanStackQueryDevtools from '../integrations/tanstack-query/devtools';
 import type { QueryClient } from '@tanstack/react-query';
 import Header from '@/components/common/header';
 import { Toaster } from '@/components/ui/sonner';
+import { PlayerProvider } from '@/contexts/player-context';
+import { MiniPlayer } from '@/components/player/mini-player';
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -14,9 +16,12 @@ interface MyRouterContext {
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: () => (
-    <>
+    <PlayerProvider>
       <Header />
-      <Outlet />
+      <div className="pb-24">
+        <Outlet />
+      </div>
+      <MiniPlayer />
       <Toaster />
       <TanStackDevtools
         config={{
@@ -30,6 +35,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
           TanStackQueryDevtools,
         ]}
       />
-    </>
+    </PlayerProvider>
   ),
 });

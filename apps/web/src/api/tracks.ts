@@ -68,7 +68,6 @@ export class TrackError extends Error {
   }
 }
 
-const apiUrl = env.VITE_API_URL || 'http://localhost:8000'
 
 
 export async function uploadTrack(input: UploadTrackInput): Promise<Track> {
@@ -97,7 +96,7 @@ export async function uploadTrack(input: UploadTrackInput): Promise<Track> {
 
   const token = authStorage.token.get()
 
-  const response = await fetch(`${apiUrl}/tracks/`, {
+  const response = await fetch(`${env.VITE_API_URL}/tracks/`, {
     method: 'POST',
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -140,7 +139,7 @@ export async function updateTrack(
 
     const token = authStorage.token.get()
 
-    const response = await fetch(`${apiUrl}/tracks/${id}`, {
+    const response = await fetch(`${env.VITE_API_URL}/tracks/${id}`, {
       method: 'PATCH',
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -255,6 +254,5 @@ export async function deleteTrack(id: string): Promise<void> {
 }
 
 export function getStreamUrl(id: string): string {
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-  return `${apiUrl}/tracks/${id}/stream`
+  return `${env.VITE_API_URL}/tracks/${id}/stream`
 }
