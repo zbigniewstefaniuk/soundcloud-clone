@@ -15,9 +15,7 @@ interface PlayerState {
 }
 
 type PlayerMessage =
-  // State updates (sent by active tab to update other tabs' UI)
   | { type: 'STATE_UPDATE'; state: PlayerState }
-  // Commands (sent by any tab, executed by active tab)
   | { type: 'CMD_PLAY_TRACK'; track: TrackWithUser; queue: TrackWithUser[]; queueIndex: number }
   | { type: 'CMD_TOGGLE_PLAY' }
   | { type: 'CMD_NEXT' }
@@ -25,7 +23,6 @@ type PlayerMessage =
   | { type: 'CMD_SEEK'; time: number }
   | { type: 'CMD_VOLUME'; volume: number }
   | { type: 'CMD_ADD_TO_QUEUE'; track: TrackWithUser }
-  // Sync (for new tabs)
   | { type: 'SYNC_REQUEST' }
   | { type: 'SYNC_RESPONSE'; state: PlayerState }
 
@@ -49,6 +46,7 @@ const PlayerContext = createContext<PlayerContextValue | undefined>(undefined)
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const isActivePlayerRef = useRef(false)
+  const previousVolumeRef = useRef(1)
   const [state, setState] = useState<PlayerState>({
     currentTrack: null,
     queue: [],
@@ -64,35 +62,35 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const stateRef = useRef(state)
   stateRef.current = state
 
-  // Broadcast state to other tabs (only active player does this)
-  const broadcastState = (newState: PlayerState) => {
+  // Helper to update state and broadcast
+  const updateState = (newState: PlayerState) => {
+    setState(newState)
+    stateRef.current = newState
     if (isActivePlayerRef.current) {
       broadcastRef.current({ type: 'STATE_UPDATE', state: newState })
     }
   }
 
-  // Internal functions that actually control the audio (only called by active tab)
+  // Execute functions (only active tab runs these)
   const executePlayTrack = (track: TrackWithUser, queue: TrackWithUser[], queueIndex: number) => {
-    const newState: PlayerState = {
-      ...stateRef.current,
-      currentTrack: track,
-      queue,
-      queueIndex,
-      isPlaying: true,
-    }
-    setState(newState)
-
     if (audioRef.current) {
       audioRef.current.src = getStreamUrl(track.id)
       audioRef.current.play()
     }
 
-    broadcastState(newState)
+    updateState({
+      ...stateRef.current,
+      currentTrack: track,
+      queue,
+      queueIndex,
+      isPlaying: true,
+      currentTime: 0,
+      duration: 0,
+    })
   }
 
   const executeTogglePlay = () => {
     if (!audioRef.current) return
-
     if (stateRef.current.isPlaying) {
       audioRef.current.pause()
     } else {
@@ -103,21 +101,19 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const executeNext = () => {
     const { queueIndex, queue } = stateRef.current
     if (queueIndex < queue.length - 1) {
-      const nextTrack = queue[queueIndex + 1]
-      executePlayTrack(nextTrack, queue, queueIndex + 1)
+      executePlayTrack(queue[queueIndex + 1], queue, queueIndex + 1)
     }
   }
 
   const executePrevious = () => {
+    const { queueIndex, queue } = stateRef.current
     if (audioRef.current && audioRef.current.currentTime > 3) {
       audioRef.current.currentTime = 0
+      updateState({ ...stateRef.current, currentTime: 0 })
       return
     }
-
-    const { queueIndex, queue } = stateRef.current
     if (queueIndex > 0) {
-      const prevTrack = queue[queueIndex - 1]
-      executePlayTrack(prevTrack, queue, queueIndex - 1)
+      executePlayTrack(queue[queueIndex - 1], queue, queueIndex - 1)
     }
   }
 
@@ -125,87 +121,70 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (audioRef.current) {
       audioRef.current.currentTime = time
     }
-    const newState = { ...stateRef.current, currentTime: time }
-    setState(newState)
-    broadcastState(newState)
+    updateState({ ...stateRef.current, currentTime: time })
   }
 
   const executeVolume = (volume: number) => {
     if (audioRef.current) {
       audioRef.current.volume = volume
     }
-    const newState = { ...stateRef.current, volume, isMuted: volume === 0 }
-    setState(newState)
-    broadcastState(newState)
+    if (volume > 0) {
+      previousVolumeRef.current = volume
+    }
+    updateState({ ...stateRef.current, volume, isMuted: volume === 0 })
   }
 
   const executeAddToQueue = (track: TrackWithUser) => {
-    const newState = { ...stateRef.current, queue: [...stateRef.current.queue, track] }
-    setState(newState)
-    broadcastState(newState)
+    updateState({ ...stateRef.current, queue: [...stateRef.current.queue, track] })
   }
 
   const handleBroadcastMessage = (msg: PlayerMessage) => {
     switch (msg.type) {
-      // State update from active tab - just update UI
       case 'STATE_UPDATE':
         if (!isActivePlayerRef.current) {
           setState(msg.state)
+          stateRef.current = msg.state
         }
         break
 
-      // CMD_PLAY_TRACK - another tab is taking over as active player
       case 'CMD_PLAY_TRACK':
-        // Stop our audio if we were playing
         if (isActivePlayerRef.current && audioRef.current) {
           audioRef.current.pause()
         }
-        // We are no longer the active player
         isActivePlayerRef.current = false
-        // Update our state to match
-        setState((prev) => ({
-          ...prev,
+        setState({
+          ...stateRef.current,
           currentTrack: msg.track,
           queue: msg.queue,
           queueIndex: msg.queueIndex,
           isPlaying: true,
-        }))
+          currentTime: 0,
+          duration: 0,
+        })
         break
 
       case 'CMD_TOGGLE_PLAY':
-        if (isActivePlayerRef.current) {
-          executeTogglePlay()
-        }
+        if (isActivePlayerRef.current) executeTogglePlay()
         break
 
       case 'CMD_NEXT':
-        if (isActivePlayerRef.current) {
-          executeNext()
-        }
+        if (isActivePlayerRef.current) executeNext()
         break
 
       case 'CMD_PREVIOUS':
-        if (isActivePlayerRef.current) {
-          executePrevious()
-        }
+        if (isActivePlayerRef.current) executePrevious()
         break
 
       case 'CMD_SEEK':
-        if (isActivePlayerRef.current) {
-          executeSeek(msg.time)
-        }
+        if (isActivePlayerRef.current) executeSeek(msg.time)
         break
 
       case 'CMD_VOLUME':
-        if (isActivePlayerRef.current) {
-          executeVolume(msg.volume)
-        }
+        if (isActivePlayerRef.current) executeVolume(msg.volume)
         break
 
       case 'CMD_ADD_TO_QUEUE':
-        if (isActivePlayerRef.current) {
-          executeAddToQueue(msg.track)
-        }
+        if (isActivePlayerRef.current) executeAddToQueue(msg.track)
         break
 
       case 'SYNC_REQUEST':
@@ -224,6 +203,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       case 'SYNC_RESPONSE':
         if (!isActivePlayerRef.current) {
           setState(msg.state)
+          stateRef.current = msg.state
         }
         break
     }
@@ -232,12 +212,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const { broadcast } = useBroadcastChannel<PlayerMessage>('player-sync', handleBroadcastMessage)
   broadcastRef.current = broadcast
 
-  // Request sync from other tabs on mount
   useEffect(() => {
     broadcast({ type: 'SYNC_REQUEST' })
   }, [broadcast])
 
-  // Load state from localStorage on mount
   useEffect(() => {
     const savedState = localStorage.getItem('playerState')
     if (savedState) {
@@ -249,13 +227,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           queue: parsed.queue ?? [],
           queueIndex: parsed.queueIndex ?? 0,
         }))
+        previousVolumeRef.current = parsed.volume ?? 1
       } catch {
-        // Ignore parse errors
+        // Ignore
       }
     }
   }, [])
 
-  // Save state to localStorage
   useEffect(() => {
     localStorage.setItem(
       'playerState',
@@ -267,7 +245,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     )
   }, [state.volume, state.queue, state.queueIndex])
 
-  // Audio event handlers
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
@@ -276,70 +253,48 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const signal = controller.signal
 
     let lastBroadcastTime = 0
+
     const handleTimeUpdate = () => {
       const currentTime = audio.currentTime
       const duration = audio.duration || 0
+      const newState = { ...stateRef.current, currentTime, duration }
 
-      setState((prev) => ({ ...prev, currentTime, duration }))
+      setState(newState)
+      stateRef.current = newState
 
-      // Broadcast time updates every second to other tabs
-      if (isActivePlayerRef.current && currentTime - lastBroadcastTime >= 1) {
+      if (isActivePlayerRef.current && Math.abs(currentTime - lastBroadcastTime) >= 1) {
         lastBroadcastTime = currentTime
-        broadcastRef.current({
-          type: 'STATE_UPDATE',
-          state: { ...stateRef.current, currentTime, duration },
-        })
+        broadcastRef.current({ type: 'STATE_UPDATE', state: newState })
       }
-    }
-
-    const handleDurationChange = () => {
-      setState((prev) => ({ ...prev, duration: audio.duration }))
     }
 
     const handleEnded = () => {
       if (stateRef.current.queueIndex < stateRef.current.queue.length - 1) {
         executeNext()
       } else {
-        const newState = { ...stateRef.current, isPlaying: false }
-        setState(newState)
-        broadcastState(newState)
+        updateState({ ...stateRef.current, isPlaying: false })
       }
     }
 
-    const handlePlay = () => {
-      const newState = { ...stateRef.current, isPlaying: true }
-      setState(newState)
-      broadcastState(newState)
-    }
-
-    const handlePause = () => {
-      const newState = { ...stateRef.current, isPlaying: false }
-      setState(newState)
-      broadcastState(newState)
-    }
+    const handlePlay = () => updateState({ ...stateRef.current, isPlaying: true })
+    const handlePause = () => updateState({ ...stateRef.current, isPlaying: false })
 
     audio.addEventListener('timeupdate', handleTimeUpdate, { signal })
-    audio.addEventListener('durationchange', handleDurationChange, { signal })
     audio.addEventListener('ended', handleEnded, { signal })
     audio.addEventListener('play', handlePlay, { signal })
     audio.addEventListener('pause', handlePause, { signal })
 
-    return () => {
-      controller.abort()
-    }
+    return () => controller.abort()
   }, [])
 
-  // Public API - these broadcast commands that the active tab executes
+  // Public API
   const playTrack = (track: TrackWithUser, queue?: TrackWithUser[]) => {
     const newQueue = queue || [track]
     const index = newQueue.findIndex((t) => t.id === track.id)
     const queueIndex = index >= 0 ? index : 0
 
-    // This tab becomes the active player
     isActivePlayerRef.current = true
     executePlayTrack(track, newQueue, queueIndex)
-
-    // Tell other tabs to stop being active
     broadcast({ type: 'CMD_PLAY_TRACK', track, queue: newQueue, queueIndex })
   }
 
@@ -393,18 +348,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const toggleMute = () => {
     if (state.isMuted) {
-      setVolume(state.volume || 1)
+      setVolume(previousVolumeRef.current)
     } else {
       setVolume(0)
     }
   }
 
-  const mute = () => {
-    setVolume(0)
-  }
-
-  const hasNext = state.queueIndex < state.queue.length - 1
-  const hasPrevious = state.queueIndex > 0
+  const mute = () => setVolume(0)
 
   return (
     <PlayerContext.Provider
@@ -417,8 +367,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         togglePlay,
         seek,
         setVolume,
-        hasNext,
-        hasPrevious,
+        hasNext: state.queueIndex < state.queue.length - 1,
+        hasPrevious: state.queueIndex > 0,
         toggleMute,
         mute,
         audioRef,
