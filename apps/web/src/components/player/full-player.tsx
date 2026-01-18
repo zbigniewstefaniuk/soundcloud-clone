@@ -21,13 +21,13 @@ export function FullPlayer() {
     next,
     previous,
     seek,
+    setVolume,
     queue,
     queueIndex,
     hasNext,
-    hasPrevious, 
-    isMuted, 
-    toggleMute,
-    mute
+    hasPrevious,
+    isMuted,
+    toggleMute
   } = usePlayer()
 
   const [colors, setColors] = useState({
@@ -133,12 +133,7 @@ export function FullPlayer() {
               value={[isMuted ? 0 : volume]}
               max={1}
               step={0.01}
-              onValueChange={(value) => {
-                if (value[0] === 0) {
-                  mute()
-                  return
-                }
-              }}
+              onValueChange={(value) => setVolume(value[0])}
               className="flex-1"
             />
           </div>

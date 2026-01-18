@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Play, Pause, SkipForward, SkipBack, Music, Volume2, VolumeX } from 'lucide-react'
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX } from 'lucide-react'
 import { usePlayer } from '@/contexts/player-context'
 import { Slider } from '@/components/ui/slider'
 import { WaveformSlider } from '@/components/ui/waveform-slider'
@@ -22,10 +22,10 @@ export function MiniPlayer() {
     next,
     previous,
     seek,
-    mute,
+    setVolume,
     hasNext,
-    hasPrevious, 
-    toggleMute, 
+    hasPrevious,
+    toggleMute,
     isMuted
   } = usePlayer()
 
@@ -135,12 +135,7 @@ export function MiniPlayer() {
                 value={[isMuted ? 0 : volume]}
                 max={1}
                 step={0.01}
-                onValueChange={(value) => {
-                  if (value[0] === 0) {
-                    mute()
-                    return
-                  }
-                }}
+                onValueChange={(value) => setVolume(value[0])}
                 className="w-24"
               />
             </div>

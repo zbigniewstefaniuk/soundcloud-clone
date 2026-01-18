@@ -73,7 +73,7 @@ export function useUserProfile(userId: string | null | undefined) {
     queryKey: ['user', userId] as const,
     queryFn: () => getUserById(userId!),
     enabled: !!userId,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 1,
   })
 

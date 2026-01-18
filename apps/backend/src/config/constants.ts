@@ -10,6 +10,7 @@ export const ALLOWED_AUDIO_TYPES = [
   'audio/flac', // .flac
   'audio/wave', // .wav
   'audio/x-wav', // .wav
+  'audio/mpeg', // .mp3
 ];
 
 export const ALLOWED_IMAGE_TYPES = [

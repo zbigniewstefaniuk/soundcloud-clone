@@ -8,14 +8,12 @@ import { PAGINATION_DEFAULTS } from '../config/constants';
 import type { TrackQueryParams, CreateTrackInput, UpdateTrackInput } from '~/utils/validation';
 
 export class TrackService {
-  async uploadTrack({ file, input, userId, coverArtFile }: {
-    file: File,
+  async uploadTrack({ input, userId }: {
     userId: string,
     input: CreateTrackInput
-    coverArtFile?: File
   }) {
-    const audioUrl = await fileService.uploadAudio(file, userId);
-
+    console.log('Uploading track for user:', userId, input);
+    const audioUrl = await fileService.uploadAudio(input.file, userId);
     return await db.transaction(async (tx) => {
       const [track] = await tx
         .insert(tracks)
@@ -26,8 +24,8 @@ export class TrackService {
           genre: input.genre,
           mainArtist: input.mainArtist,
           audioUrl,
-          fileSize: file.size,
-          mimeType: file.type,
+          fileSize: input.file.size,
+          mimeType: input.file.type,
           isPublic: input.isPublic === 'true' ? true : input.isPublic === 'false',
         })
         .returning();
@@ -36,8 +34,8 @@ export class TrackService {
         throw new Error('Failed to create track');
       }
 
-      if (coverArtFile && coverArtFile instanceof File) {
-        const coverArtUrl = await fileService.uploadCover(coverArtFile, track.id);
+      if (input.coverArt && input.coverArt instanceof File) {
+        const coverArtUrl = await fileService.uploadCover(input.coverArt, track.id);
         const [updatedTrack] = await tx
           .update(tracks)
           .set({ coverArtUrl })
