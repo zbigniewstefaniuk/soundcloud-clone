@@ -84,13 +84,15 @@ export function UploadTrackForm() {
           }}
           className="space-y-6"
         >
-          <form.AppField name="file">
-            {(field) => <field.AudioFileField label="Audio File" />}
-          </form.AppField>
+          <div className='flex gap-10 justify-between'>
+            <form.AppField name="file">
+              {(field) => <field.AudioFileField label="Audio File" />}
+            </form.AppField>
 
-          <form.AppField name="coverArt">
-            {(field) => <field.ImageFileField label="Cover Art (Optional)" />}
-          </form.AppField>
+            <form.AppField name="coverArt">
+              {(field) => <field.ImageFileField label="Cover Art (Optional)" />}
+            </form.AppField>
+          </div>
 
           <form.AppField name="title">
             {(field) => (

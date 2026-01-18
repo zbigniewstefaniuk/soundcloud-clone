@@ -13,7 +13,7 @@ export const Route = createFileRoute('/profile/tracks')({
 
 function ProfileTracksPage() {
   const { tracks, isLoading, isError, error } = useUserTracks()
-  const { playTrack } = usePlayer()
+  const { playTrack, currentTrack } = usePlayer()
 
   const handlePlay = (track: TrackWithUser) => {
     playTrack(track, tracks)
@@ -55,7 +55,7 @@ function ProfileTracksPage() {
         </Link>
       </div>
 
-      <TrackList tracks={tracks} isOwner={true} onPlay={handlePlay} />
+      <TrackList tracks={tracks} isOwner={true} onPlay={handlePlay} currentPlayingTrackId={currentTrack?.id} />
     </div>
   )
 }

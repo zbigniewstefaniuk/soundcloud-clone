@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Music, Trash2, Edit, Play, Heart, Headphones } from 'lucide-react'
+import { Music, Trash2, Edit, Play, Heart, Headphones, Pause } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import type { TrackWithUser } from '@/api/tracks'
@@ -21,9 +21,10 @@ interface TrackListProps {
   tracks: TrackWithUser[]
   isOwner?: boolean
   onPlay?: (track: TrackWithUser) => void
+  currentPlayingTrackId?: string | null
 }
 
-export function TrackList({ tracks, isOwner = false, onPlay }: TrackListProps) {
+export function TrackList({ tracks, isOwner = false, onPlay, currentPlayingTrackId }: TrackListProps) {
   const deleteMutation = useDeleteTrack()
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -51,6 +52,7 @@ export function TrackList({ tracks, isOwner = false, onPlay }: TrackListProps) {
     <div className="space-y-4">
       {tracks.map((track) => {
         const coverUrl = getAssetUrl(track?.coverArtUrl)
+        const isPlaying = track.id === currentPlayingTrackId
         return (
           <div
             key={track.id}
@@ -94,15 +96,21 @@ export function TrackList({ tracks, isOwner = false, onPlay }: TrackListProps) {
               </div>
 
               <div className="flex items-center space-x-2">
-                {onPlay && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onPlay(track)}
-                  >
-                    <Play className="h-4 w-4" />
-                  </Button>
-                )}
+                {
+                  isPlaying ? <Button variant="outline" size="sm" type='button'><Pause className="h-4 w-4" /></Button> : (
+                    onPlay && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onPlay(track)}
+                        type='button'
+                      >
+                        <Play className="h-4 w-4" />
+                      </Button>
+                    )
+                  )
+                }
+               
 
                 {isOwner && (
                   <>
