@@ -22,14 +22,14 @@ import type { TrackWithUser } from '@/api/tracks'
 interface TrackListProps {
   tracks: TrackWithUser[]
   isOwner?: boolean
-  onPlay?: (track: TrackWithUser) => void
+  onTogglePlay?: (track: TrackWithUser) => void
   currentPlayingTrackId?: string | null
 }
 
 export function TrackList({
   tracks,
   isOwner = false,
-  onPlay,
+  onTogglePlay,
   currentPlayingTrackId,
 }: TrackListProps) {
   const deleteMutation = useDeleteTrack()
@@ -64,7 +64,7 @@ export function TrackList({
           isOwner={isOwner}
           isPlaying={track.id === currentPlayingTrackId}
           isDeleting={deletingId === track.id}
-          onPlay={onPlay}
+          onTogglePlay={onTogglePlay}
           onDelete={handleDelete}
         />
       ))}
@@ -77,7 +77,7 @@ interface TrackListItemProps {
   isOwner: boolean
   isPlaying: boolean
   isDeleting: boolean
-  onPlay?: (track: TrackWithUser) => void
+  onTogglePlay?: (track: TrackWithUser) => void
   onDelete: (trackId: string) => void
 }
 
@@ -86,12 +86,12 @@ function TrackListItem({
   isOwner,
   isPlaying,
   isDeleting,
-  onPlay,
+  onTogglePlay,
   onDelete,
 }: TrackListItemProps) {
   return (
-    <div className="flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:bg-accent/50 transition-colors">
-      <TrackCover coverArtUrl={track.coverArtUrl} title={track.title} />
+    <div className="flex items-center gap-4 p-2 bg-card rounded-lg hover:bg-accent/50 transition-colors">
+      <TrackCover coverArtUrl={track.coverArtUrl} title={track.title} size='lg' />
 
       <div className="flex-1 min-w-0">
         <h3 className="text-base font-medium text-foreground truncate">
@@ -114,7 +114,7 @@ function TrackListItem({
         isOwner={isOwner}
         isPlaying={isPlaying}
         isDeleting={isDeleting}
-        onPlay={onPlay}
+        onTogglePlay={onTogglePlay}
         onDelete={onDelete}
       />
     </div>
@@ -126,7 +126,7 @@ interface TrackActionsProps {
   isOwner: boolean
   isPlaying: boolean
   isDeleting: boolean
-  onPlay?: (track: TrackWithUser) => void
+  onTogglePlay?: (track: TrackWithUser) => void
   onDelete: (trackId: string) => void
 }
 
@@ -135,16 +135,16 @@ function TrackActions({
   isOwner,
   isPlaying,
   isDeleting,
-  onPlay,
+  onTogglePlay,
   onDelete,
 }: TrackActionsProps) {
   return (
     <div className="flex items-center gap-2">
-      {onPlay && (
+      {onTogglePlay && (
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onPlay(track)}
+          onClick={() => onTogglePlay(track)}
           type="button"
         >
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
