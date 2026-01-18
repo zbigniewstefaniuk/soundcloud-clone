@@ -4,11 +4,10 @@ import { users, userProfiles } from '../db/schema';
 import { hashPassword, verifyPassword, generateSalt } from '../utils/password';
 import { AuthError, ConflictError, ValidationError } from '../middleware/error';
 import type {
-  RegisterInput,
-  LoginInput,
   AuthResponse,
   JWTPayload,
 } from '../types/auth.types';
+import type { RegisterInput, LoginInput } from '~/utils/validation';
 
 export class AuthService {
   async register(
