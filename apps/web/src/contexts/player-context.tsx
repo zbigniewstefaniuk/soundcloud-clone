@@ -21,7 +21,7 @@ interface PlayerContextValue extends PlayerState {
   togglePlay: () => void
   seek: (time: number) => void
   setVolume: (volume: number) => void
-  audioRef: React.RefObject<HTMLAudioElement>
+  audioRef: React.RefObject<HTMLAudioElement | null>
   hasNext: boolean
   hasPrevious: boolean
   toggleMute: () => void
