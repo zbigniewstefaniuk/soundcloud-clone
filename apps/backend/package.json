@@ -25,6 +25,7 @@
     "drizzle-orm": "^0.45.1",
     "drizzle-typebox": "^0.3.3",
     "elysia": "latest",
+    "logestic": "^1.2.4",
     "postgres": "^3.4.8"
   },
   "devDependencies": {
@@ -36,7 +37,7 @@
     "typescript": "^5.9.3"
   },
   "module": "src/index.js",
-  "exports":{
+  "exports": {
     "./App": "./src/index.ts"
   },
   "overrides": {

@@ -18,8 +18,8 @@ export const ALLOWED_IMAGE_TYPES = [
   'image/webp', // .webp
 ];
 
-export const MAX_AUDIO_SIZE = 10 * 1024 * 1024; // 10MB
-export const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+export const MAX_AUDIO_SIZE = 20 * 1024 * 1024; // 20MB
+export const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export const BCRYPT_SALT_ROUNDS = 12;
 
