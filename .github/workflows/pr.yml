@@ -18,8 +18,11 @@ jobs:
           node-version: 24
           cache: "npm"
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Install deps
-        run: npm ci
+        run: npm install
 
       - name: Lint
         run: npx turbo run lint
