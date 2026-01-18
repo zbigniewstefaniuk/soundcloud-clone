@@ -43,8 +43,7 @@ export async function getPublicTracks(params: {
   sortBy?: 'createdAt' | 'playCount' | 'likeCount'
   order?: 'asc' | 'desc'
 } = {}) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: response, error } = await api.tracks.get({ query: params as any })
+  const { data: response, error } = await api.tracks.get({ query: params })
 
   if (error) {
     handleError(error)
