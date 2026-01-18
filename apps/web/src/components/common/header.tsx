@@ -1,21 +1,25 @@
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Home, LogIn, LogOut, Menu, UserPlus, X, Music2, Sun, Moon } from 'lucide-react'
+import { Home, LogIn, LogOut, Menu, UserPlus, X, Music2, Sun, Moon, ListMusic } from 'lucide-react'
 import { Button } from '../ui/button'
 import { useAccount } from '@/hooks/use-auth'
 import { useTheme } from '@/contexts/theme-context'
+import { usePlayer } from '@/contexts/player-context'
+import { QueueSidebar } from '@/components/player/queue-sidebar'
 
 export default function Header() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isQueueOpen, setIsQueueOpen] = useState(false)
   const { user, isLoading, logout } = useAccount()
   const { theme, toggleTheme } = useTheme()
+  const { queue } = usePlayer()
 
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="flex h-14 items-center px-4 gap-4">
           <button
-            onClick={() => setIsOpen(true)}
+            onClick={() => setIsMenuOpen(true)}
             className="p-2 rounded-md hover:bg-accent transition-colors"
             aria-label="Open menu"
           >
@@ -28,6 +32,19 @@ export default function Header() {
           </Link>
 
           <div className="flex-1" />
+
+          <button
+            onClick={() => setIsQueueOpen(true)}
+            className="p-2 rounded-md hover:bg-accent transition-colors relative"
+            aria-label="Open queue"
+          >
+            <ListMusic className="h-5 w-5" />
+            {queue.length > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-medium rounded-full flex items-center justify-center">
+                {queue.length > 9 ? '9+' : queue.length}
+              </span>
+            )}
+          </button>
 
           <button
             onClick={toggleTheme}
@@ -59,25 +76,26 @@ export default function Header() {
         </div>
       </header>
 
-      {isOpen && (
+      {/* Menu Sidebar (left) */}
+      {isMenuOpen && (
         <button
           type="button"
           className="fixed inset-0 bg-black/50 z-40 cursor-default"
-          onClick={() => setIsOpen(false)}
-          onKeyDown={(e) => e.key === 'Escape' && setIsOpen(false)}
+          onClick={() => setIsMenuOpen(false)}
+          onKeyDown={(e) => e.key === 'Escape' && setIsMenuOpen(false)}
           aria-label="Close menu"
         />
       )}
 
       <aside
         className={`fixed top-0 left-0 h-full w-72 bg-background border-r border-border z-50 transform transition-transform duration-200 ease-out flex flex-col ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex items-center justify-between h-14 px-4 border-b border-border">
           <span className="font-semibold">Menu</span>
           <button
-            onClick={() => setIsOpen(false)}
+            onClick={() => setIsMenuOpen(false)}
             className="p-2 rounded-md hover:bg-accent transition-colors"
             aria-label="Close menu"
           >
@@ -86,12 +104,12 @@ export default function Header() {
         </div>
 
         <nav className="flex-1 p-3 overflow-y-auto">
-          <NavLink to="/" icon={<Home className="h-5 w-5" />} onClick={() => setIsOpen(false)}>
+          <NavLink to="/" icon={<Home className="h-5 w-5" />} onClick={() => setIsMenuOpen(false)}>
             Home
           </NavLink>
 
           {!isLoading && user && (
-            <NavLink to="/profile/tracks" icon={<Music2 className="h-5 w-5" />} onClick={() => setIsOpen(false)}>
+            <NavLink to="/profile/tracks" icon={<Music2 className="h-5 w-5" />} onClick={() => setIsMenuOpen(false)}>
               My Tracks
             </NavLink>
           )}
@@ -108,7 +126,7 @@ export default function Header() {
               <Button
                 onClick={() => {
                   logout()
-                  setIsOpen(false)
+                  setIsMenuOpen(false)
                 }}
                 variant="outline"
                 className="w-full"
@@ -120,13 +138,13 @@ export default function Header() {
           ) : (
             <div className="space-y-2">
               <Button className="w-full" asChild>
-                <Link to="/auth/login" onClick={() => setIsOpen(false)}>
+                <Link to="/auth/login" onClick={() => setIsMenuOpen(false)}>
                   <LogIn className="h-4 w-4 mr-2" />
                   Sign in
                 </Link>
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <Link to="/auth/register" onClick={() => setIsOpen(false)}>
+                <Link to="/auth/register" onClick={() => setIsMenuOpen(false)}>
                   <UserPlus className="h-4 w-4 mr-2" />
                   Create account
                 </Link>
@@ -135,6 +153,9 @@ export default function Header() {
           )}
         </div>
       </aside>
+
+      {/* Queue Sidebar (right) */}
+      <QueueSidebar isOpen={isQueueOpen} onClose={() => setIsQueueOpen(false)} />
     </>
   )
 }

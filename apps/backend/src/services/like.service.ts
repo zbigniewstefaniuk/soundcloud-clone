@@ -1,4 +1,4 @@
-import { eq, and, count } from 'drizzle-orm';
+import { eq, and, count, inArray } from 'drizzle-orm';
 import { db } from '../config/database';
 import { likes, tracks, users } from '../db/schema';
 import { NotFoundError, ConflictError } from '../middleware/error';
@@ -142,6 +142,18 @@ export class LikeService {
       .limit(1);
 
     return !!like;
+  }
+
+  async batchCheckLikes(userId: string, trackIds: string[]): Promise<Record<string, boolean>> {
+    if (trackIds.length === 0) return {};
+
+    const likedTracks = await db
+      .select({ trackId: likes.trackId })
+      .from(likes)
+      .where(and(eq(likes.userId, userId), inArray(likes.trackId, trackIds)));
+
+    const likedSet = new Set(likedTracks.map((l) => l.trackId));
+    return Object.fromEntries(trackIds.map((id) => [id, likedSet.has(id)]));
   }
 }
 

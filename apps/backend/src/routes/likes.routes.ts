@@ -81,4 +81,21 @@ export const likeRoutes = new Elysia()
         description: 'Get authenticated user liked tracks',
       },
     }
+  )
+  .post(
+    '/tracks/likes/check',
+    async ({ body, user }) => {
+      const likedMap = await likeService.batchCheckLikes(user.userId, body.trackIds);
+      return success(likedMap);
+    },
+    {
+      body: t.Object({
+        trackIds: t.Array(t.String()),
+      }),
+      detail: {
+        tags: ['Likes'],
+        summary: 'Batch check liked tracks',
+        description: 'Check if multiple tracks are liked by the current user',
+      },
+    }
   );

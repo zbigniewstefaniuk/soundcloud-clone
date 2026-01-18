@@ -7,6 +7,9 @@ import {
   updateTrack,
   deleteTrack,
   getPublicTracks,
+  likeTrack,
+  unlikeTrack,
+  batchCheckLikes,
   type UploadTrackInput,
   type UpdateTrackInput,
 } from '@/api/tracks'
@@ -104,7 +107,7 @@ export interface GetTracksParams {
   page?: number
   pageSize?: number
   search?: string
-  sortBy?: 'createdAt' | 'playCount'
+  sortBy?: 'createdAt' | 'playCount' | 'likeCount'
   order?: 'asc' | 'desc'
 }
 
@@ -129,4 +132,90 @@ export function usePublicTracks(params: GetTracksParams = {}) {
     }),
     [query.data, query.isLoading, query.isError, query.error, query.refetch]
   )
+}
+
+const BATCH_LIKES_QUERY_KEY = (trackIds: string[]) =>
+  ['batch-likes', trackIds.sort().join(',')] as const
+
+export function useBatchLikeStatus(trackIds: string[], enabled = true) {
+  const query = useQuery({
+    queryKey: BATCH_LIKES_QUERY_KEY(trackIds),
+    queryFn: () => batchCheckLikes(trackIds),
+    enabled: enabled && trackIds.length > 0,
+    staleTime: 1000 * 60 * 2,
+  })
+
+  return useMemo(
+    () => ({
+      likedMap: query.data ?? {},
+      isLoading: query.isLoading,
+      isError: query.isError,
+    }),
+    [query.data, query.isLoading, query.isError]
+  )
+}
+
+export function useToggleLike() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ trackId, isLiked }: { trackId: string; isLiked: boolean }) => {
+      return isLiked ? unlikeTrack(trackId) : likeTrack(trackId)
+    },
+    onMutate: async ({ trackId, isLiked }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['batch-likes'] })
+      await queryClient.cancelQueries({ queryKey: ['public-tracks'] })
+
+      // Snapshot previous values for rollback
+      const previousBatchLikes = queryClient.getQueriesData({ queryKey: ['batch-likes'] })
+      const previousPublicTracks = queryClient.getQueriesData({ queryKey: ['public-tracks'] })
+
+      // Optimistically update batch likes cache
+      queryClient.setQueriesData<Record<string, boolean>>(
+        { queryKey: ['batch-likes'] },
+        (old) => {
+          if (!old) return old
+          return { ...old, [trackId]: !isLiked }
+        }
+      )
+
+      // Optimistically update like counts in track queries
+      queryClient.setQueriesData<{ data: Array<{ id: string; likeCount: number }>; pagination: unknown }>(
+        { queryKey: ['public-tracks'] },
+        (old) => {
+          if (!old?.data) return old
+          return {
+            ...old,
+            data: old.data.map((track) =>
+              track.id === trackId
+                ? { ...track, likeCount: track.likeCount + (isLiked ? -1 : 1) }
+                : track
+            ),
+          }
+        }
+      )
+
+      return { previousBatchLikes, previousPublicTracks }
+    },
+    onError: (_err, _variables, context) => {
+      // Rollback on error
+      if (context?.previousBatchLikes) {
+        context.previousBatchLikes.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data)
+        })
+      }
+      if (context?.previousPublicTracks) {
+        context.previousPublicTracks.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data)
+        })
+      }
+      toast.error('Failed to update like')
+    },
+    onSettled: () => {
+      // Refetch after mutation settles
+      queryClient.invalidateQueries({ queryKey: ['batch-likes'] })
+      queryClient.invalidateQueries({ queryKey: ['public-tracks'] })
+    },
+  })
 }

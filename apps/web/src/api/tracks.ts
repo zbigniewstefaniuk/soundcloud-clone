@@ -40,10 +40,11 @@ export async function getPublicTracks(params: {
   page?: number
   pageSize?: number
   search?: string
-  sortBy?: 'createdAt' | 'playCount'
+  sortBy?: 'createdAt' | 'playCount' | 'likeCount'
   order?: 'asc' | 'desc'
 } = {}) {
-  const { data: response, error } = await api.tracks.get({ query: params })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: response, error } = await api.tracks.get({ query: params as any })
 
   if (error) {
     handleError(error)
@@ -121,4 +122,36 @@ export async function deleteTrack(id: string) {
 
 export function getStreamUrl(id: string): string {
   return `${env.VITE_API_URL}/tracks/${id}/stream`
+}
+
+export async function likeTrack(trackId: string) {
+  const { data, error } = await api.tracks({ id: trackId }).like.post()
+  if (error) handleError(error)
+  return data
+}
+
+export async function unlikeTrack(trackId: string) {
+  const { data, error } = await api.tracks({ id: trackId }).like.delete()
+  if (error) handleError(error)
+  return data
+}
+
+export async function batchCheckLikes(trackIds: string[]): Promise<Record<string, boolean>> {
+  if (trackIds.length === 0) return {}
+  // Using fetch directly as this is a new endpoint - Eden types need regeneration
+  const response = await fetch(`${env.VITE_API_URL}/tracks/likes/check`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...Object.fromEntries(
+        Object.entries(await import('@/lib/auth-storage').then(m => m.authStorage.getHeaders()))
+      ),
+    },
+    body: JSON.stringify({ trackIds }),
+  })
+  if (!response.ok) {
+    throw new ApiError('BATCH_CHECK_FAILED', 'Failed to check likes')
+  }
+  const result = await response.json()
+  return result.data ?? {}
 } 

@@ -88,19 +88,18 @@ export const PaginationSchema = t.Object({
 
 export type PaginationParams = typeof PaginationSchema['static'];
 
-export const TrackQuerySchema = t.Intersect([
-  PaginationSchema,
-  t.Object({
-    userId: t.Optional(t.String()),
-    search: t.Optional(t.String()),
-    sortBy: t.Optional(
-      t.Union([t.Literal('createdAt'), t.Literal('playCount')]),
-    ),
-    order: t.Optional(
-      t.Union([t.Literal('asc'), t.Literal('desc')]),
-    ),
-  }),
-]);
+export const TrackQuerySchema = t.Object({
+  page: t.Optional(t.Integer({ minimum: 1 })),
+  pageSize: t.Optional(t.Integer({ minimum: 1, maximum: 100 })),
+  userId: t.Optional(t.String()),
+  search: t.Optional(t.String()),
+  sortBy: t.Optional(
+    t.Union([t.Literal('createdAt'), t.Literal('playCount'), t.Literal('likeCount')]),
+  ),
+  order: t.Optional(
+    t.Union([t.Literal('asc'), t.Literal('desc')]),
+  ),
+});
 
 export type TrackQueryParams = typeof TrackQuerySchema['static'];
 

@@ -56,79 +56,89 @@ export class TrackService {
     );
     const offset = (page - 1) * pageSize;
 
-    const conditions = [];
+    return await db.transaction(async (tx) => {
+      const conditions = [];
 
-    // If userId is specified, get that user's tracks, otherwise only public
-    if (query.userId) {
-      conditions.push(eq(tracks.userId, query.userId));
-    } else {
-      conditions.push(eq(tracks.isPublic, true));
-    }
+      // If userId is specified, get that user's tracks, otherwise only public
+      if (query.userId) {
+        conditions.push(eq(tracks.userId, query.userId));
+      } else {
+        conditions.push(eq(tracks.isPublic, true));
+      }
 
-    if (query.search) {
-      conditions.push(
-        or(
-          ilike(tracks.title, `%${query.search}%`),
-          ilike(tracks.description, `%${query.search}%`)
-        )!
-      );
-    }
+      if (query.search) {
+        conditions.push(
+          or(
+            ilike(tracks.title, `%${query.search}%`),
+            ilike(tracks.description, `%${query.search}%`)
+          )!
+        );
+      }
 
-    const orderColumn =
-      query.sortBy === 'playCount' ? tracks.playCount : tracks.createdAt;
-    const orderFn = query.order === 'asc' ? asc : desc;
+      const orderFn = query.order === 'asc' ? asc : desc;
 
-    // Get total count
-    const [totalResult] = await db
-      .select({ count: count() })
-      .from(tracks)
-      .where(conditions.length > 0 ? and(...conditions) : undefined);
+      // Determine order expression - likeCount requires ordering by aggregated column
+      const getOrderExpression = () => {
+        if (query.sortBy === 'likeCount') {
+          return orderFn(sql`count(DISTINCT ${likes.id})`);
+        } else if (query.sortBy === 'playCount') {
+          return orderFn(tracks.playCount);
+        }
+        return orderFn(tracks.createdAt);
+      };
 
-    const total = totalResult?.count || 0;
+      // Get total count
+      const [totalResult] = await tx
+        .select({ count: count() })
+        .from(tracks)
+        .where(conditions.length > 0 ? and(...conditions) : undefined);
 
-    // If no tracks, return empty result
-    if (total === 0) {
+      const total = totalResult?.count || 0;
+
+      // If no tracks, return empty result
+      if (total === 0) {
+        return {
+          data: [],
+          pagination: {
+            page,
+            pageSize,
+            total: 0,
+          },
+        };
+      }
+
+      // Get tracks with user and like count
+      const tracksData = await tx
+        .select({
+          track: tracks,
+          user: {
+            id: users.id,
+            username: users.username,
+          },
+          likeCount: sql<number>`count(DISTINCT ${likes.id})`,
+        })
+        .from(tracks)
+        .leftJoin(users, eq(tracks.userId, users.id))
+        .leftJoin(likes, eq(tracks.id, likes.trackId))
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .groupBy(tracks.id, users.id, users.username)
+        .orderBy(getOrderExpression())
+        .limit(pageSize)
+        .offset(offset);
+
       return {
-        data: [],
+        data: tracksData.map((t) => ({
+          ...t.track,
+          user: t.user,
+          likeCount: Number(t.likeCount) || 0,
+        })),
         pagination: {
           page,
           pageSize,
-          total: 0,
+          total,
         },
       };
-    }
-
-    // Get tracks with user and like count
-    const tracksData = await db
-      .select({
-        track: tracks,
-        user: {
-          id: users.id,
-          username: users.username,
-        },
-        likeCount: sql<number>`count(DISTINCT ${likes.id})`,
-      })
-      .from(tracks)
-      .leftJoin(users, eq(tracks.userId, users.id))
-      .leftJoin(likes, eq(tracks.id, likes.trackId))
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .groupBy(tracks.id, users.id, users.username)
-      .orderBy(orderFn(orderColumn))
-      .limit(pageSize)
-      .offset(offset);
-
-    return {
-      data: tracksData.map((t) => ({
-        ...t.track,
-        user: t.user,
-        likeCount: Number(t.likeCount) || 0,
-      })),
-      pagination: {
-        page,
-        pageSize,
-        total,
-      },
-    };
+    });
   }
 
   async getTrackById(trackId: string, currentUserId?: string) {

@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Music2, Play, Headphones, Upload, TrendingUp } from 'lucide-react'
+import { Music2, Play, Pause, Heart, Headphones, Upload, TrendingUp, Sparkles, AlertCircle, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TrackCover } from '@/components/tracks/track-cover'
 import { TrackStats } from '@/components/tracks/track-stats'
-import { usePublicTracks } from '@/hooks/use-tracks'
+import { usePublicTracks, useBatchLikeStatus, useToggleLike, type GetTracksParams } from '@/hooks/use-tracks'
 import { usePlayer } from '@/contexts/player-context'
 import { useAccount } from '@/hooks/use-auth'
 import type { TrackWithUser } from '@/api/tracks'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -18,15 +19,34 @@ function HomePage() {
   return (
     <div className="min-h-screen">
       <HeroSection isLoggedIn={!!user} />
+      <div className="space-y-4">
+        <TrackSection
+          title="Trending Now"
+          subtitle="Most played tracks this week"
+          icon={TrendingUp}
+          sortBy="playCount"
+        />
+        <TrackSection
+          title="Most Loved"
+          subtitle="Tracks with the most likes"
+          icon={Heart}
+          sortBy="likeCount"
+        />
+        <TrackSection
+          title="New Releases"
+          subtitle="Fresh music from our community"
+          icon={Sparkles}
+          sortBy="createdAt"
+        />
+      </div>
       <FeaturesSection />
-      <TracksSection />
     </div>
   )
 }
 
 function HeroSection({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background py-20 md:py-32">
+    <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background py-16 md:py-24">
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       <div className="container mx-auto px-4 relative">
         <div className="max-w-3xl mx-auto text-center">
@@ -82,6 +102,98 @@ function HeroSection({ isLoggedIn }: { isLoggedIn: boolean }) {
   )
 }
 
+interface TrackSectionProps {
+  title: string
+  subtitle: string
+  icon: LucideIcon
+  sortBy: GetTracksParams['sortBy']
+  pageSize?: number
+}
+
+function TrackSection({ title, subtitle, icon: Icon, sortBy, pageSize = 8 }: TrackSectionProps) {
+  const { user } = useAccount()
+  const { tracks, isLoading, isError, refetch } = usePublicTracks({
+    sortBy,
+    order: 'desc',
+    pageSize,
+  })
+  const { playTrack, currentTrack, isPlaying, togglePlay } = usePlayer()
+
+  const trackIds = tracks.map((t) => t.id)
+  const { likedMap } = useBatchLikeStatus(trackIds, !!user)
+  const toggleLike = useToggleLike()
+
+  const handlePlay = (track: TrackWithUser) => {
+    if (currentTrack?.id === track.id) {
+      togglePlay()
+    } else {
+      playTrack(track, tracks)
+    }
+  }
+
+  const handleLike = (trackId: string) => {
+    if (!user) return
+    const isLiked = likedMap[trackId] ?? false
+    toggleLike.mutate({ trackId, isLiked })
+  }
+
+  return (
+    <section className="py-12 relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent pointer-events-none" />
+      <div className="container mx-auto px-4 relative">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Icon className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">{title}</h2>
+              <p className="text-sm text-muted-foreground">{subtitle}</p>
+            </div>
+          </div>
+        </div>
+
+        {isLoading && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {Array.from({ length: pageSize }).map((_, i) => (
+              <TrackCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
+
+        {isError && <SectionError onRetry={() => refetch()} />}
+
+        {!isLoading && !isError && tracks.length === 0 && (
+          <div className="text-center py-12">
+            <Music2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">No tracks yet</h3>
+            <p className="text-muted-foreground mb-4">Be the first to share your music!</p>
+            <Button asChild>
+              <Link to="/tracks/upload">Upload a Track</Link>
+            </Button>
+          </div>
+        )}
+
+        {!isLoading && !isError && tracks.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {tracks.map((track) => (
+              <TrackCard
+                key={track.id}
+                track={track}
+                isPlaying={currentTrack?.id === track.id && isPlaying}
+                isLiked={likedMap[track.id] ?? false}
+                onPlay={() => handlePlay(track)}
+                onLike={() => handleLike(track.id)}
+                showLikeButton={!!user}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
 function FeaturesSection() {
   const features = [
     {
@@ -102,7 +214,7 @@ function FeaturesSection() {
   ]
 
   return (
-    <section className="py-16 border-b border-border">
+    <section className="py-16 border-t border-border mt-8">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-3 gap-8">
           {features.map((feature) => (
@@ -120,110 +232,61 @@ function FeaturesSection() {
   )
 }
 
-function TracksSection() {
-  const { tracks, isLoading, isError } = usePublicTracks({
-    pageSize: 8,
-    sortBy: 'createdAt',
-    order: 'desc'
-  })
-  const { playTrack, currentTrack, isPlaying, togglePlay } = usePlayer()
-
-  const handlePlay = (track: TrackWithUser) => {
-    if (currentTrack?.id === track.id) {
-      togglePlay()
-    } else {
-      playTrack(track, tracks)
-    }
-  }
-
-  return (
-    <section className="py-16">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold">Latest Tracks</h2>
-            <p className="text-muted-foreground mt-1">Fresh music from our community</p>
-          </div>
-        </div>
-
-        {isLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <TrackCardSkeleton key={i} />
-            ))}
-          </div>
-        )}
-
-        {isError && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Failed to load tracks. Please try again later.</p>
-          </div>
-        )}
-
-        {!isLoading && !isError && tracks.length === 0 && (
-          <div className="text-center py-12">
-            <Music2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No tracks yet</h3>
-            <p className="text-muted-foreground mb-4">Be the first to share your music!</p>
-            <Button asChild>
-              <Link to="/tracks/upload">Upload a Track</Link>
-            </Button>
-          </div>
-        )}
-
-        {!isLoading && !isError && tracks.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {tracks.map((track) => (
-              <TrackCard
-                key={track.id}
-                track={track}
-                isPlaying={currentTrack?.id === track.id && isPlaying}
-                onPlay={() => handlePlay(track)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
 interface TrackCardProps {
   track: TrackWithUser
   isPlaying: boolean
+  isLiked: boolean
   onPlay: () => void
+  onLike: () => void
+  showLikeButton: boolean
 }
 
-function TrackCard({ track, isPlaying, onPlay }: TrackCardProps) {
+function TrackCard({ track, isPlaying, isLiked, onPlay, onLike, showLikeButton }: TrackCardProps) {
   return (
-    <div className="group bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 transition-colors">
+    <div className="group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
       <div className="relative aspect-square">
         <TrackCover
           coverArtUrl={track.coverArtUrl}
           title={track.title}
           size="full"
         />
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        {/* Play button */}
+        <button
+          onClick={onPlay}
+          className="absolute bottom-3 right-3 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:scale-105"
+        >
+          {isPlaying ? (
+            <Pause className="h-5 w-5" fill="currentColor" />
+          ) : (
+            <Play className="h-5 w-5 ml-0.5" fill="currentColor" />
+          )}
+        </button>
+
+        {/* Like button */}
+        {showLikeButton && (
           <button
-            onClick={onPlay}
-            className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-105 transition-transform"
-          >
-            <Play className={`h-6 w-6 ${isPlaying ? 'hidden' : ''}`} fill="currentColor" />
-            {isPlaying && (
-              <div className="flex gap-1">
-                <span className="w-1 h-4 bg-current animate-pulse" />
-                <span className="w-1 h-4 bg-current animate-pulse delay-75" />
-                <span className="w-1 h-4 bg-current animate-pulse delay-150" />
-              </div>
+            onClick={(e) => {
+              e.stopPropagation()
+              onLike()
+            }}
+            className={cn(
+              'absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200',
+              isLiked
+                ? 'bg-red-500 text-white'
+                : 'bg-black/40 text-white opacity-0 group-hover:opacity-100'
             )}
+          >
+            <Heart className={cn('h-4 w-4', isLiked && 'fill-current')} />
           </button>
-        </div>
+        )}
       </div>
       <div className="p-4">
-        <h3 className="font-medium truncate" title={track.title}>
+        <h3 className="font-semibold text-sm truncate" title={track.title}>
           {track.title}
         </h3>
-        <p className="text-sm text-muted-foreground truncate">
+        <p className="text-xs text-muted-foreground truncate mt-0.5">
           {track.mainArtist || track.user?.username}
         </p>
         <div className="mt-2">
@@ -240,13 +303,28 @@ function TrackCard({ track, isPlaying, onPlay }: TrackCardProps) {
 
 function TrackCardSkeleton() {
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden">
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="aspect-square bg-muted animate-pulse" />
       <div className="p-4 space-y-2">
-        <div className="h-5 bg-muted rounded animate-pulse" />
-        <div className="h-4 bg-muted rounded w-2/3 animate-pulse" />
-        <div className="h-4 bg-muted rounded w-1/2 animate-pulse" />
+        <div className="h-4 bg-muted rounded-md animate-pulse w-3/4" />
+        <div className="h-3 bg-muted rounded-md animate-pulse w-1/2" />
+        <div className="flex gap-2 mt-2">
+          <div className="h-5 w-16 bg-muted rounded animate-pulse" />
+          <div className="h-5 w-12 bg-muted rounded animate-pulse" />
+        </div>
       </div>
+    </div>
+  )
+}
+
+function SectionError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+      <AlertCircle className="h-10 w-10 text-muted-foreground mb-3" />
+      <p className="text-sm text-muted-foreground mb-3">Failed to load tracks</p>
+      <Button variant="outline" size="sm" onClick={onRetry}>
+        Try again
+      </Button>
     </div>
   )
 }
