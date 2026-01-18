@@ -242,7 +242,7 @@ export function WaveformSlider({
     }
   }, [isPlaying, waveformHeight, progress])
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
     const percentage = Math.max(0, Math.min(1, x / rect.width))
@@ -250,10 +250,11 @@ export function WaveformSlider({
   }
 
   return (
-    <div
+    <button
       className={cn('relative cursor-pointer select-none', className)}
       style={{ height: totalHeight }}
       onClick={handleClick}
+      type='button'
     >
       <canvas
         ref={canvasRef}
@@ -269,6 +270,6 @@ export function WaveformSlider({
           top: waveformHeight + CONFIG.track.height / 2,
         }}
       />
-    </div>
+    </button>
   )
 }

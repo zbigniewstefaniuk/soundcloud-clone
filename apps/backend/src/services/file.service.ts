@@ -13,13 +13,10 @@ import { ValidationError } from '../middleware/error';
 export class FileService {
   async initializeDirectories() {
     const dirs = Object.values(UPLOAD_PATHS);
-    for (const dir of dirs) {
-      try {
-        await mkdir(dir, { recursive: true });
-      } catch (error) {
-        console.error(`Failed to create directory ${dir}:`, error);
-      }
-    }
+
+    await Promise.all(
+      dirs.map((dir) => mkdir(dir, { recursive: true })),
+    )
   }
 
   validateAudioFile(file: File) {
