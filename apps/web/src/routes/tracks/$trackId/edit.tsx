@@ -162,12 +162,6 @@ function EditTrackPage() {
               </div>
             )}
 
-            {updateMutation.isSuccess && (
-              <div className="rounded-md bg-primary/10 p-3">
-                <p className="text-sm text-primary">Track updated successfully!</p>
-              </div>
-            )}
-
             <Button
               type="submit"
               className="w-full"

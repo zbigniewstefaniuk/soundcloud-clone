@@ -12,6 +12,7 @@ import {
 } from '@/api/tracks'
 import { getStreamUrl } from '@/api/client'
 import { useMemo } from 'react'
+import { toast } from 'sonner';
 
 const TRACKS_QUERY_KEY = ['user-tracks'] as const
 const TRACK_QUERY_KEY = (id: string) => ['track', id] as const
@@ -25,6 +26,7 @@ export function useUploadTrack() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TRACKS_QUERY_KEY })
       navigate({ to: '/profile/tracks' })
+      toast.success('Track uploaded successfully')
     },
   })
 }
@@ -77,6 +79,7 @@ export function useUpdateTrack(trackId: string) {
     onSuccess: (updatedTrack) => {
       queryClient.setQueryData(TRACK_QUERY_KEY(trackId), updatedTrack)
       queryClient.invalidateQueries({ queryKey: TRACKS_QUERY_KEY })
+      toast.success('Track updated successfully')
     },
   })
 }

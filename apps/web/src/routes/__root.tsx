@@ -24,7 +24,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
           <Outlet />
         </div>
         <MiniPlayer />
-        <Toaster />
+        <Toaster richColors />
         <TanStackDevtools
           config={{
             position: 'bottom-right',
