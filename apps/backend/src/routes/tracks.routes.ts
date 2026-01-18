@@ -80,14 +80,14 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       const track = await trackService.uploadTrack({
         userId: user.userId,
         input: {
-          title: title || file.name,
+          ...body,
+          title,
           description,
           genre,
           mainArtist,
           isPublic: isPublic === 'true' || isPublic === true,
           file,
           coverArt,
-          ...body
         }
       });
 

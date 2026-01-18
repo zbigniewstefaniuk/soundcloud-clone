@@ -11,7 +11,6 @@ import { userRoutes } from './routes/users.routes';
 import { likeRoutes } from './routes/likes.routes';
 import { commentRoutes } from './routes/comments.routes';
 import { trackRoutes } from './routes/tracks.routes';
-import { Logestic } from 'logestic';
 
 try {
   validateEnv();
