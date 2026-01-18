@@ -224,7 +224,7 @@ function TrackCard({ track, isPlaying, onPlay }: TrackCardProps) {
           {track.title}
         </h3>
         <p className="text-sm text-muted-foreground truncate">
-          {track.mainArtist || track.user.username}
+          {track.mainArtist || track.user?.username}
         </p>
         <div className="mt-2">
           <TrackStats
