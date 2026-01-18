@@ -11,10 +11,15 @@ export const RegisterSchema = t.Object({
   password: t.String({ minLength: 8 }),
 });
 
+export type RegisterInput = typeof RegisterSchema['static'];
+
+
 export const LoginSchema = t.Object({
   email: users.email,
   password: t.String({ minLength: 1 }),
 });
+
+export type LoginInput = typeof LoginSchema['static'];
 
 // Get other insert fields
 const { userProfiles, tracks, comments } = db.insert;
@@ -26,12 +31,17 @@ export const UpdateProfileSchema = t.Object({
   website: t.Optional(userProfiles.website),
 });
 
+export type UpdateProfileInput = typeof UpdateProfileSchema['static'];
+
+
 // FormData sends booleans as strings, so accept both
 const BooleanOrString = t.Union([
   t.Boolean(),
   t.Literal('true'),
   t.Literal('false'),
 ]);
+
+export type BooleanOrString = typeof BooleanOrString['static'];
 
 export const CreateTrackSchema = t.Object({
   title: tracks.title,
@@ -43,6 +53,9 @@ export const CreateTrackSchema = t.Object({
   coverArt: t.Optional(t.File({ maxSize: '10m' })),
 });
 
+export type CreateTrackInput = typeof CreateTrackSchema['static'];
+
+
 export const UpdateTrackSchema = t.Object({
   title: t.Optional(tracks.title),
   description: t.Optional(tracks.description),
@@ -53,19 +66,27 @@ export const UpdateTrackSchema = t.Object({
   coverArt: t.Optional(t.File({ maxSize: '10m' })),
 });
 
+export type UpdateTrackInput = typeof UpdateTrackSchema['static'];
+
 export const CreateCommentSchema = t.Object({
   content: t.String({ minLength: 1, maxLength: 1000 }),
   timestamp: t.Optional(comments.timestamp),
 });
 
+export type CreateCommentInput = typeof CreateCommentSchema['static'];
+
 export const UpdateCommentSchema = t.Object({
   content: t.String({ minLength: 1, maxLength: 1000 }),
 });
+
+export type UpdateCommentInput = typeof UpdateCommentSchema['static'];
 
 export const PaginationSchema = t.Object({
   page: t.Optional(t.Integer({ minimum: 1 })),
   pageSize: t.Optional(t.Integer({ minimum: 1, maximum: 100 })),
 });
+
+export type PaginationParams = typeof PaginationSchema['static'];
 
 export const TrackQuerySchema = t.Intersect([
   PaginationSchema,
@@ -80,3 +101,7 @@ export const TrackQuerySchema = t.Intersect([
     ),
   }),
 ]);
+
+export type TrackQueryParams = typeof TrackQuerySchema['static'];
+
+

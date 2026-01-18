@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../config/database';
 import { users, userProfiles, tracks } from '../db/schema';
 import { NotFoundError } from '../middleware/error';
-import type { UpdateProfileInput } from '../types/user.types';
+import type { UpdateProfileInput } from '~/utils/validation';
 
 export class UserService {
   async getUserProfile(userId: string) {
@@ -56,13 +56,13 @@ export class UserService {
   }
 
   async getUserTracks(userId: string, includePrivate: boolean = false) {
-    const query = db.select().from(tracks).where(eq(tracks.userId, userId));
+    const query = db.select().from(tracks)
 
     if (!includePrivate) {
-      query.where(eq(tracks.isPublic, true));
+      return query.where(eq(tracks.isPublic, true));
     }
 
-    return query;
+    return query.where(eq(tracks.userId, userId));
   }
 }
 

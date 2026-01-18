@@ -4,11 +4,8 @@ import { tracks, users, likes } from '../db/schema';
 import { fileService } from './file.service';
 import { NotFoundError, ForbiddenError } from '../middleware/error';
 import { PAGINATION_DEFAULTS } from '../config/constants';
-import type {
-  CreateTrackInput,
-  UpdateTrackInput,
-  TrackQueryParams,
-} from '../types/track.types';
+
+import type { TrackQueryParams, CreateTrackInput, UpdateTrackInput } from '~/utils/validation';
 
 export class TrackService {
   async uploadTrack({ file, input, userId, coverArtFile }: {
@@ -31,7 +28,7 @@ export class TrackService {
           audioUrl,
           fileSize: file.size,
           mimeType: file.type,
-          isPublic: input.isPublic ?? true,
+          isPublic: input.isPublic === 'true' ? true : input.isPublic === 'false',
         })
         .returning();
 
@@ -187,7 +184,7 @@ export class TrackService {
       throw new ForbiddenError('You can only update your own tracks');
     }
 
-    const { coverArt, ...updateData } = input as UpdateTrackInput & { coverArt?: File };
+    const { coverArt, ...updateData } = input;
 
     return await db.transaction(async (tx) => {
       let coverArtUrl: string | undefined;
@@ -199,7 +196,8 @@ export class TrackService {
         .update(tracks)
         .set({
           ...updateData,
-          ...(coverArtUrl && { coverArtUrl }),
+          isPublic: updateData.isPublic === 'true' ? true : updateData.isPublic === 'false' ? false : undefined,
+          ...(coverArtUrl ? { coverArtUrl } : {}),
           updatedAt: new Date(),
         })
         .where(eq(tracks.id, trackId))
