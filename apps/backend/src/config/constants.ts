@@ -7,6 +7,9 @@ export const ALLOWED_AUDIO_TYPES = [
   'audio/aac', // .aac
   'audio/mp4', // .m4a
   'audio/x-m4a', // .m4a
+  'audio/flac', // .flac
+  'audio/wave', // .wav
+  'audio/x-wav', // .wav
 ];
 
 export const ALLOWED_IMAGE_TYPES = [
