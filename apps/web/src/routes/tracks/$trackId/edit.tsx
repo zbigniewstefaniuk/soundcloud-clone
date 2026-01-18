@@ -172,7 +172,7 @@ function EditTrackPage() {
               className="w-full"
               disabled={updateMutation.isPending}
             >
-              {updateMutation.isPending ? 'Updating...' : 'Update Track'}
+              {updateMutation.isPending ? <Spinner /> : 'Update Track'}
             </Button>
           </form>
         </Suspense>

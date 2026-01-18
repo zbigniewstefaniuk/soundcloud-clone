@@ -3,6 +3,7 @@ import { useUploadTrack } from '@/hooks/use-tracks'
 import { Button } from '@/components/ui/button'
 import { useAppForm } from '@/hooks/form'
 import { Suspense } from 'react'
+import { Spinner } from '../ui/spinner';
 
 const MAX_AUDIO_SIZE = 100 * 1024 * 1024
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
@@ -151,7 +152,7 @@ export function UploadTrackForm() {
             className="w-full"
             disabled={uploadMutation.isPending}
           >
-            {uploadMutation.isPending ? 'Uploading...' : 'Upload Track'}
+            {uploadMutation.isPending ? <Spinner /> : 'Upload Track'}
           </Button>
         </form>
       </Suspense>
