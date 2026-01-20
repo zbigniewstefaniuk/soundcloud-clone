@@ -1,5 +1,5 @@
 {
-  "id": "372ba23e-1083-48e2-bb92-d343891ba7ee",
+  "id": "c2d49202-0722-4f10-a88e-0da53c4eee36",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -203,6 +203,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "genre": {
+          "name": "genre",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "main_artist": {
+          "name": "main_artist",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "audio_url": {
           "name": "audio_url",
           "type": "varchar(500)",
@@ -212,12 +224,6 @@
         "cover_art_url": {
           "name": "cover_art_url",
           "type": "varchar(500)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "duration": {
-          "name": "duration",
-          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },

@@ -1,40 +1,12 @@
 {
-  "version": "7",
+  "version": "0",
   "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
       "version": "7",
-      "when": 1768666590757,
-      "tag": "0000_gorgeous_king_bedlam",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1768667626391,
-      "tag": "0001_even_cassandra_nova",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1768670166774,
-      "tag": "0002_huge_celestials",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1768676377728,
-      "tag": "0003_worthless_emma_frost",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1768705015913,
-      "tag": "0004_safe_bloodscream",
+      "when": 1768943048438,
+      "tag": "0000_misty_runaways",
       "breakpoints": true
     }
   ]

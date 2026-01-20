@@ -11,6 +11,7 @@ import {
 import { TrackCover } from './track-cover'
 import { cn } from '@/lib/utils'
 import type { TrackWithUser } from '@/api/tracks'
+import { useDebouncedValue } from '@tanstack/react-pacer';
 
 interface TrackSearchProps {
   tracks: TrackWithUser[]
@@ -126,13 +127,17 @@ export function TrackSearchInput({
 }: TrackSearchInputProps) {
   const [query, setQuery] = useState('')
 
+  const [debouncedQuery] = useDebouncedValue(query, {
+    wait: 300
+  });
+
   useEffect(() => {
-    if (!query.trim()) {
+    if (!debouncedQuery.trim()) {
       onFilteredTracksChange(tracks)
       return
     }
 
-    const lowerQuery = query.toLowerCase()
+    const lowerQuery = debouncedQuery.toLowerCase()
     const filtered = tracks.filter(
       (track) =>
         track.title.toLowerCase().includes(lowerQuery) ||
@@ -141,7 +146,7 @@ export function TrackSearchInput({
         track.genre?.toLowerCase().includes(lowerQuery)
     )
     onFilteredTracksChange(filtered)
-  }, [query, tracks, onFilteredTracksChange])
+  }, [debouncedQuery, tracks, onFilteredTracksChange])
 
   return (
     <div className={cn('relative', className)}>
