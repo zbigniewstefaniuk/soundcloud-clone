@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react'
+import { createContext, useContext, useState, useRef, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import type { TrackWithUser } from '@/api/tracks'
-import { getStreamUrl } from '@/api/tracks'
+import { fetchStreamToken } from '@/api/tracks'
 import { useBroadcastChannel } from '@/hooks/use-broadcast-channel'
 
 interface PlayerState {
@@ -44,6 +45,7 @@ interface PlayerContextValue extends PlayerState {
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined)
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient()
   const audioRef = useRef<HTMLAudioElement>(null)
   const isActivePlayerRef = useRef(false)
   const previousVolumeRef = useRef(1)
@@ -58,7 +60,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     isMuted: false,
   })
 
-  const broadcastRef = useRef<(msg: PlayerMessage) => void>(() => {})
+  const broadcastRef = useRef<(msg: PlayerMessage) => void>(() => { })
   const stateRef = useRef(state)
   stateRef.current = state
 
@@ -72,12 +74,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Execute functions (only active tab runs these)
-  const executePlayTrack = (track: TrackWithUser, queue: TrackWithUser[], queueIndex: number) => {
-    if (audioRef.current) {
-      audioRef.current.src = getStreamUrl(track.id)
-      audioRef.current.play()
-    }
-
+  const executePlayTrack = async (track: TrackWithUser, queue: TrackWithUser[], queueIndex: number) => {
     updateState({
       ...stateRef.current,
       currentTrack: track,
@@ -87,6 +84,21 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       currentTime: 0,
       duration: 0,
     })
+
+    if (audioRef.current) {
+      try {
+        const streamUrl = await queryClient.fetchQuery({
+          queryKey: ['stream-url', track.id],
+          queryFn: () => fetchStreamToken(track.id),
+          staleTime: 1000 * 60 * 4, // 4 min (tokens expire in 5 min)
+        })
+        audioRef.current.src = streamUrl
+        audioRef.current.play()
+      } catch (error) {
+        console.error('Failed to get stream URL:', error)
+        updateState({ ...stateRef.current, isPlaying: false })
+      }
+    }
   }
 
   const executeTogglePlay = () => {
@@ -98,14 +110,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const executeNext = () => {
+  const executeNext = async () => {
     const { queueIndex, queue } = stateRef.current
     if (queueIndex < queue.length - 1) {
-      executePlayTrack(queue[queueIndex + 1], queue, queueIndex + 1)
+      await executePlayTrack(queue[queueIndex + 1], queue, queueIndex + 1)
     }
   }
 
-  const executePrevious = () => {
+  const executePrevious = async () => {
     const { queueIndex, queue } = stateRef.current
     if (audioRef.current && audioRef.current.currentTime > 3) {
       audioRef.current.currentTime = 0
@@ -113,7 +125,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       return
     }
     if (queueIndex > 0) {
-      executePlayTrack(queue[queueIndex - 1], queue, queueIndex - 1)
+      await executePlayTrack(queue[queueIndex - 1], queue, queueIndex - 1)
     }
   }
 
@@ -268,9 +280,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const handleEnded = () => {
+    const handleEnded = async () => {
       if (stateRef.current.queueIndex < stateRef.current.queue.length - 1) {
-        executeNext()
+        await executeNext()
       } else {
         updateState({ ...stateRef.current, isPlaying: false })
       }
@@ -279,22 +291,46 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const handlePlay = () => updateState({ ...stateRef.current, isPlaying: true })
     const handlePause = () => updateState({ ...stateRef.current, isPlaying: false })
 
+    // Handle stream errors (e.g., expired token) by refreshing the URL
+    const handleError = async () => {
+      const currentTrack = stateRef.current.currentTrack
+      if (!currentTrack || !isActivePlayerRef.current) return
+
+      try {
+        // Invalidate cached token and fetch a fresh one
+        await queryClient.invalidateQueries({ queryKey: ['stream-url', currentTrack.id] })
+        const currentTime = audio.currentTime
+        const newUrl = await queryClient.fetchQuery({
+          queryKey: ['stream-url', currentTrack.id],
+          queryFn: () => fetchStreamToken(currentTrack.id),
+          staleTime: 0, // Force fresh fetch
+        })
+        audio.src = newUrl
+        audio.currentTime = currentTime
+        audio.play()
+      } catch {
+        console.error('Failed to refresh stream URL')
+        updateState({ ...stateRef.current, isPlaying: false })
+      }
+    }
+
     audio.addEventListener('timeupdate', handleTimeUpdate, { signal })
     audio.addEventListener('ended', handleEnded, { signal })
     audio.addEventListener('play', handlePlay, { signal })
     audio.addEventListener('pause', handlePause, { signal })
+    audio.addEventListener('error', handleError, { signal })
 
     return () => controller.abort()
   }, [])
 
   // Public API
-  const playTrack = (track: TrackWithUser, queue?: TrackWithUser[]) => {
+  const playTrack = async (track: TrackWithUser, queue?: TrackWithUser[]) => {
     const newQueue = queue || [track]
     const index = newQueue.findIndex((t) => t.id === track.id)
     const queueIndex = index >= 0 ? index : 0
 
     isActivePlayerRef.current = true
-    executePlayTrack(track, newQueue, queueIndex)
+    await executePlayTrack(track, newQueue, queueIndex)
     broadcast({ type: 'CMD_PLAY_TRACK', track, queue: newQueue, queueIndex })
   }
 

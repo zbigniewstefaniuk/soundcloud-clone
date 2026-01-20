@@ -113,19 +113,24 @@ export async function deleteTrack(id: string) {
 
 
 
-export function getStreamUrl(id: string): string {
-  const baseUrl = `${env.VITE_API_URL}/tracks/${id}/stream`
+/**
+ * Fetch stream token from API.
+ * Used by React Query in useStreamUrl hook.
+ */
+export async function fetchStreamToken(id: string): Promise<string> {
+  try {
+    // @ts-expect-error - Eden types need regeneration for new endpoint
+    const { data, error } = await api.tracks({ id })['stream-token'].get()
 
-  // Include auth token for private tracks
-  const token = typeof window !== 'undefined'
-    ? localStorage.getItem('auth_token')
-    : null
-
-  if (token) {
-    return `${baseUrl}?token=${encodeURIComponent(token)}`
+    if (!error && data?.data) {
+      return `${env.VITE_API_URL}${data.data.streamUrl}`
+    }
+  } catch {
+    // Fall through to direct URL for public tracks
   }
 
-  return baseUrl
+  // Fallback for public tracks - direct URL without token
+  return `${env.VITE_API_URL}/tracks/${id}/stream`
 }
 
 export async function likeTrack(trackId: string) {

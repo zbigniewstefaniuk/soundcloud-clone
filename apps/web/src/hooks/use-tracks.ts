@@ -11,10 +11,10 @@ import {
   unlikeTrack,
   batchCheckLikes,
   getUserLikedTracks,
+  fetchStreamToken,
   type UploadTrackInput,
   type UpdateTrackInput,
 } from '@/api/tracks'
-import { getStreamUrl } from '@/api/client'
 import { useMemo } from 'react'
 import { toast } from 'sonner';
 
@@ -100,8 +100,20 @@ export function useDeleteTrack() {
   })
 }
 
-export function useStreamUrl(trackId: string | undefined): string | null {
-  return trackId ? getStreamUrl(trackId) : null
+export function useStreamUrl(trackId: string | undefined) {
+  const query = useQuery({
+    queryKey: ['stream-url', trackId],
+    queryFn: () => fetchStreamToken(trackId!),
+    enabled: !!trackId,
+    staleTime: 1000 * 60 * 4, // 4 min (tokens expire in 5 min)
+  })
+
+  return {
+    streamUrl: query.data ?? null,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
+  }
 }
 
 export interface GetTracksParams {

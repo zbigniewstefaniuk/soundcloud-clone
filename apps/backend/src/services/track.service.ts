@@ -48,7 +48,7 @@ export class TrackService {
     });
   }
 
-  async getTracks(query: TrackQueryParams, _currentUserId?: string) {
+  async getTracks(query: TrackQueryParams, currentUserId?: string) {
     const page = query.page || PAGINATION_DEFAULTS.page;
     const pageSize = Math.min(
       query.pageSize || PAGINATION_DEFAULTS.pageSize,
@@ -59,10 +59,16 @@ export class TrackService {
     return await db.transaction(async (tx) => {
       const conditions = [];
 
-      // If userId is specified, get that user's tracks, otherwise only public
       if (query.userId) {
+        // Filter by requested user
         conditions.push(eq(tracks.userId, query.userId));
+        // If requester is NOT the owner, only show public tracks
+        if (query.userId !== currentUserId) {
+          conditions.push(eq(tracks.isPublic, true));
+        }
+        // If requester IS the owner, show all their tracks (public + private)
       } else {
+        // No userId specified = public feed, only public tracks
         conditions.push(eq(tracks.isPublic, true));
       }
 
@@ -200,11 +206,12 @@ export class TrackService {
         coverArtUrl = await fileService.uploadCover(coverArt, trackId);
       }
 
+
       const [updated] = await tx
         .update(tracks)
         .set({
           ...updateData,
-          isPublic: updateData.isPublic === 'true' ? true : updateData.isPublic === 'false' ? false : undefined,
+          isPublic: updateData.isPublic === 'true' ? true : updateData.isPublic === 'false' ? false : updateData.isPublic,
           ...(coverArtUrl ? { coverArtUrl } : {}),
           updatedAt: new Date(),
         })

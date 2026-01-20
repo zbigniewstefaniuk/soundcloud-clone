@@ -12,6 +12,29 @@ export const jwtPlugin = new Elysia({ name: 'jwt-plugin' }).use(
   })
 );
 
+export const optionalAuthMiddleware = new Elysia({ name: 'optional-auth-middleware' })
+  .use(jwtPlugin)
+  .derive({ as: 'scoped' }, async ({ headers, jwt }) => {
+    const authHeader = headers.authorization;
+
+    if (!authHeader?.startsWith('Bearer ')) {
+      return { currentUserId: undefined };
+    }
+
+    try {
+      const token = authHeader.substring(7);
+      const payload = await jwt.verify(token);
+
+      if (payload && typeof payload === 'object' && 'userId' in payload) {
+        return { currentUserId: payload.userId as string };
+      }
+    } catch {
+      // Invalid token - treat as unauthenticated
+    }
+
+    return { currentUserId: undefined };
+  });
+
 export const authMiddleware = new Elysia({ name: 'auth-middleware' })
   .use(jwtPlugin)
   .derive({ as: 'scoped' }, async ({ headers, jwt }) => {

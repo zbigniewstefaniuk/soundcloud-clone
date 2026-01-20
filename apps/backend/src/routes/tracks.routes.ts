@@ -1,17 +1,21 @@
 import { Elysia, t } from 'elysia';
-import { jwtPlugin, authMiddleware } from '../middleware/auth';
+import { optionalAuthMiddleware, authMiddleware } from '../middleware/auth';
 import { trackService } from '../services/track.service';
+import { streamTokenService } from '../services/stream-token.service';
 import { success, paginated } from '../utils/response';
 import {
   CreateTrackSchema,
-  TrackQuerySchema, UpdateTrackSchema } from '../utils/validation';
+  TrackQuerySchema,
+  UpdateTrackSchema,
+} from '../utils/validation';
 
 export const trackRoutes = new Elysia({ prefix: '/tracks' })
-  .use(jwtPlugin)
+  // Public routes with optional auth (for visibility of private tracks to owners)
+  .use(optionalAuthMiddleware)
   .get(
     '/',
-    async ({ query }) => {
-      const result = await trackService.getTracks(query);
+    async ({ query, currentUserId }) => {
+      const result = await trackService.getTracks(query, currentUserId);
       return paginated(result.data, result.pagination);
     },
     {
@@ -19,70 +23,102 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       detail: {
         tags: ['Tracks'],
         summary: 'List tracks',
-        description: 'Get paginated list of public tracks with filters',
+        description:
+          'Get paginated list of tracks. Private tracks only visible to owner.',
       },
     },
   )
   .get(
     '/:id',
-    async ({ params }) => {
-      const track = await trackService.getTrackById(params.id);
+    async ({ params, currentUserId }) => {
+      const track = await trackService.getTrackById(params.id, currentUserId);
       return success(track);
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: t.Object({ id: t.String() }),
       detail: {
         tags: ['Tracks'],
         summary: 'Get track',
-        description: 'Get single track by ID',
+        description: 'Get track by ID. Private tracks only visible to owner.',
+      },
+    },
+  )
+  .get(
+    '/:id/stream-token',
+    async ({ params, currentUserId }) => {
+      // Verify access (throws if private and not owner)
+      await trackService.getTrackById(params.id, currentUserId);
+
+      const streamToken = streamTokenService.generateStreamToken(
+        params.id,
+        currentUserId,
+      );
+
+      return success({
+        streamUrl: `/tracks/${params.id}/stream?st=${streamToken}`,
+        expiresIn: 300,
+      });
+    },
+    {
+      params: t.Object({ id: t.String() }),
+      detail: {
+        tags: ['Tracks'],
+        summary: 'Get streaming token',
+        description: 'Generate short-lived signed URL for streaming (5 min)',
       },
     },
   )
   .get(
     '/:id/stream',
-    async ({ params, set, request, jwt }) => {
-      console.log('[Stream] Requested Track ID:', params.id);
-
-      // Try to get current user from JWT (optional auth for private tracks)
-      // Check both Authorization header and query param (for audio element which can't send headers)
-      let currentUserId: string | undefined;
-      try {
-        const authHeader = request.headers.get('authorization');
-        const url = new URL(request.url);
-        const queryToken = url.searchParams.get('token');
-
-        const token = authHeader?.startsWith('Bearer ')
-          ? authHeader.substring(7)
-          : queryToken;
-
-        if (token) {
-          const payload = await jwt.verify(token);
-          if (payload && typeof payload === 'object' && 'userId' in payload) {
-            currentUserId = payload.userId as string;
-          }
-        }
-      } catch {
-        // Ignore auth errors - user is just not logged in
-      }
+    async ({ params, set, request }) => {
+      const url = new URL(request.url);
+      const streamToken = url.searchParams.get('st');
 
       let track;
-      try {
-        track = await trackService.getTrackById(params.id, currentUserId);
-      } catch (error) {
-        console.error('[Stream] Error fetching track:', error);
-        throw error;
+
+      if (streamToken) {
+        const tokenData = streamTokenService.verifyStreamToken(streamToken);
+
+        if (!tokenData) {
+          set.status = 401;
+          return {
+            success: false,
+            error: {
+              code: 'INVALID_STREAM_TOKEN',
+              message: 'Invalid or expired stream token',
+            },
+          };
+        }
+
+        if (tokenData.trackId !== params.id) {
+          set.status = 403;
+          return {
+            success: false,
+            error: {
+              code: 'TOKEN_TRACK_MISMATCH',
+              message: 'Stream token not valid for this track',
+            },
+          };
+        }
+
+        track = await trackService.getTrackById(params.id, tokenData.userId);
+      } else {
+        // No token - only public tracks allowed
+        track = await trackService.getTrackById(params.id);
+        if (!track.isPublic) {
+          set.status = 401;
+          return {
+            success: false,
+            error: {
+              code: 'STREAM_TOKEN_REQUIRED',
+              message: 'Stream token required for private tracks',
+            },
+          };
+        }
       }
 
-      console.log('[Stream] Track found, audioUrl:', track.audioUrl);
-      console.log('[Stream] mimeType:', track.mimeType);
-
       const file = Bun.file(track.audioUrl);
-      const exists = await file.exists();
-      console.log('[Stream] File exists:', exists);
-
-      if (!exists) {
+      if (!(await file.exists())) {
         set.status = 404;
         return {
           success: false,
@@ -120,24 +156,20 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       return file;
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: t.Object({ id: t.String() }),
       detail: {
         tags: ['Tracks'],
         summary: 'Stream track',
-        description: 'Stream audio file with range request support',
+        description: 'Stream audio. Use ?st= with token from /stream-token.',
       },
     },
   )
+  // Protected routes - require authentication
   .use(authMiddleware)
   .post(
     '/',
     async ({ body, user }) => {
-      const { file, title, description, genre, mainArtist, isPublic, coverArt } =
-        body 
-
-      console.log('body-==--==--=-=', body);
+      const { file, title, description, genre, mainArtist, isPublic, coverArt } = body;
 
       if (!file || !(file instanceof File)) {
         throw new Error('Audio file is required');
@@ -154,7 +186,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
           isPublic: isPublic === 'true' || isPublic === true,
           file,
           coverArt,
-        }
+        },
       });
 
       return success(track);
@@ -170,7 +202,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
   )
   .patch(
     '/:id',
-    async ({ params, body, user, }) => {
+    async ({ params, body, user }) => {
       const { isPublic, ...rest } = body;
 
       const updateData = {
@@ -180,8 +212,6 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
         }),
       };
 
-      console.log('updateData', updateData)
-
       const updated = await trackService.updateTrack(
         params.id,
         user.userId,
@@ -190,9 +220,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       return success(updated);
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: t.Object({ id: t.String() }),
       body: UpdateTrackSchema,
       detail: {
         tags: ['Tracks'],
@@ -208,13 +236,11 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       return success(result);
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: t.Object({ id: t.String() }),
       detail: {
         tags: ['Tracks'],
         summary: 'Delete track',
-        description: 'Delete track and associated files (owner only)',
+        description: 'Delete track and files (owner only)',
       },
     },
   );
