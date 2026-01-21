@@ -1,2 +1,2 @@
-export * from './schema';
-export { db } from '../config/database';
+export * from './schema'
+export { db } from '../config/database'

@@ -5,9 +5,7 @@ import { usePlayer } from '@/contexts/player-context'
 import { Slider } from '@/components/ui/slider'
 import { WaveformSlider } from '@/components/ui/waveform-slider'
 import { extractColorsFromImage } from '@/lib/color-extraction'
-import {
-  formatTime,
-  getAssetUrl } from '@/lib/utils'
+import { formatTime, getAssetUrl } from '@/lib/utils'
 import { AnimatedGradient } from './animated-gradient'
 import { TrackCover } from '../tracks/track-cover'
 
@@ -26,7 +24,7 @@ export function MiniPlayer() {
     hasNext,
     hasPrevious,
     toggleMute,
-    isMuted
+    isMuted,
   } = usePlayer()
 
   const [colors, setColors] = useState({
@@ -34,7 +32,6 @@ export function MiniPlayer() {
     secondary: '#8b5cf6',
     accent: '#ec4899',
   })
-
 
   const coverUrl = getAssetUrl(currentTrack?.coverArtUrl)
 
@@ -47,8 +44,6 @@ export function MiniPlayer() {
   if (!currentTrack) {
     return null
   }
-
-
 
   return (
     <AnimatedGradient
@@ -69,9 +64,7 @@ export function MiniPlayer() {
                 className="w-12 h-12"
               />
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-white truncate">
-                  {currentTrack.title}
-                </div>
+                <div className="text-sm font-medium text-white truncate">{currentTrack.title}</div>
                 <div className="text-xs text-white/70 truncate">
                   {currentTrack.mainArtist || 'Unknown Artist'}
                 </div>
@@ -107,9 +100,7 @@ export function MiniPlayer() {
             </div>
 
             <div className="flex-1 flex items-center gap-2 min-w-0">
-              <span className="text-xs text-white/70 tabular-nums">
-                {formatTime(currentTime)}
-              </span>
+              <span className="text-xs text-white/70 tabular-nums">{formatTime(currentTime)}</span>
               <WaveformSlider
                 value={currentTime}
                 max={duration || 100}
@@ -118,9 +109,7 @@ export function MiniPlayer() {
                 className="flex-1"
                 waveformHeight={24}
               />
-              <span className="text-xs text-white/70 tabular-nums">
-                {formatTime(duration)}
-              </span>
+              <span className="text-xs text-white/70 tabular-nums">{formatTime(duration)}</span>
             </div>
 
             <div className="flex items-center gap-2">

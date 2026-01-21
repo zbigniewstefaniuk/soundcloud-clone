@@ -1,9 +1,25 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Music2, Play, Pause, Heart, Headphones, Upload, TrendingUp, Sparkles, AlertCircle, type LucideIcon } from 'lucide-react'
+import {
+  Music2,
+  Play,
+  Pause,
+  Heart,
+  Headphones,
+  Upload,
+  TrendingUp,
+  Sparkles,
+  AlertCircle,
+  type LucideIcon,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TrackCover } from '@/components/tracks/track-cover'
 import { TrackStats } from '@/components/tracks/track-stats'
-import { usePublicTracks, useBatchLikeStatus, useToggleLike, type GetTracksParams } from '@/hooks/use-tracks'
+import {
+  usePublicTracks,
+  useBatchLikeStatus,
+  useToggleLike,
+  type GetTracksParams,
+} from '@/hooks/use-tracks'
 import { usePlayer } from '@/contexts/player-context'
 import { useAccount } from '@/hooks/use-auth'
 import type { TrackWithUser } from '@/api/tracks'
@@ -84,14 +100,10 @@ function HeroSection({ isLoggedIn }: { isLoggedIn: boolean }) {
             ) : (
               <>
                 <Button size="lg" asChild>
-                  <Link to="/auth/register">
-                    Get Started Free
-                  </Link>
+                  <Link to="/auth/register">Get Started Free</Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <Link to="/auth/login">
-                    Sign In
-                  </Link>
+                  <Link to="/auth/login">Sign In</Link>
                 </Button>
               </>
             )}
@@ -245,11 +257,7 @@ function TrackCard({ track, isPlaying, isLiked, onPlay, onLike, showLikeButton }
   return (
     <div className="group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
       <div className="relative aspect-square">
-        <TrackCover
-          coverArtUrl={track.coverArtUrl}
-          title={track.title}
-          size="full"
-        />
+        <TrackCover coverArtUrl={track.coverArtUrl} title={track.title} size="full" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         {/* Play button */}
@@ -275,7 +283,7 @@ function TrackCard({ track, isPlaying, isLiked, onPlay, onLike, showLikeButton }
               'absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200',
               isLiked
                 ? 'bg-red-500 text-white'
-                : 'bg-black/40 text-white opacity-0 group-hover:opacity-100'
+                : 'bg-black/40 text-white opacity-0 group-hover:opacity-100',
             )}
           >
             <Heart className={cn('h-4 w-4', isLiked && 'fill-current')} />
@@ -290,11 +298,7 @@ function TrackCard({ track, isPlaying, isLiked, onPlay, onLike, showLikeButton }
           {track.mainArtist || track.user?.username}
         </p>
         <div className="mt-2">
-          <TrackStats
-            playCount={track.playCount}
-            likeCount={track.likeCount}
-            genre={track.genre}
-          />
+          <TrackStats playCount={track.playCount} likeCount={track.likeCount} genre={track.genre} />
         </div>
       </div>
     </div>

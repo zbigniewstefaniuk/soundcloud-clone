@@ -1,19 +1,26 @@
-import { eq, and, or, ilike, desc, asc, sql, count } from 'drizzle-orm';
-import { db } from '../config/database';
-import { tracks, users, likes } from '../db/schema';
-import { fileService } from './file.service';
-import { NotFoundError, ForbiddenError } from '../middleware/error';
-import { PAGINATION_DEFAULTS } from '../config/constants';
+import { eq, and, or, ilike, desc, asc, sql, count } from 'drizzle-orm'
+import { db } from '../config/database'
+import { tracks, users, likes } from '../db/schema'
+import { fileService } from './file.service'
+import { embeddingService } from './embedding.service'
+import { NotFoundError, ForbiddenError } from '../middleware/error'
+import { PAGINATION_DEFAULTS } from '../config/constants'
 
-import type { TrackQueryParams, CreateTrackInput, UpdateTrackInput } from '~/utils/validation';
+import type { TrackQueryParams, CreateTrackInput, UpdateTrackInput } from '~/utils/validation'
 
 export class TrackService {
-  async uploadTrack({ input, userId }: {
-    userId: string,
-    input: CreateTrackInput
-  }) {
-    console.log('Uploading track for user:', userId, input);
-    const audioUrl = await fileService.uploadAudio(input.file, userId);
+  async uploadTrack({ input, userId }: { userId: string; input: CreateTrackInput }) {
+    console.log('Uploading track for user:', userId, input)
+    const audioUrl = await fileService.uploadAudio(input.file, userId)
+
+    // Generate embedding for semantic search
+    const embedding = await embeddingService.generateTrackEmbedding({
+      title: input.title,
+      description: input.description,
+      genre: input.genre,
+      mainArtist: input.mainArtist,
+    })
+
     return await db.transaction(async (tx) => {
       const [track] = await tx
         .insert(tracks)
@@ -26,80 +33,86 @@ export class TrackService {
           audioUrl,
           fileSize: input.file.size,
           mimeType: input.file.type,
-          isPublic: input.isPublic === 'true' ? true : input.isPublic === 'false',
+          isPublic:
+            input.isPublic === 'true'
+              ? true
+              : input.isPublic === 'false'
+                ? false
+                : input.isPublic === true,
+          metadataEmbedding: embedding,
         })
-        .returning();
+        .returning()
 
       if (!track) {
-        throw new Error('Failed to create track');
+        throw new Error('Failed to create track')
       }
 
       if (input.coverArt && input.coverArt instanceof File) {
-        const coverArtUrl = await fileService.uploadCover(input.coverArt, track.id);
+        const coverArtUrl = await fileService.uploadCover(input.coverArt, track.id)
         const [updatedTrack] = await tx
           .update(tracks)
           .set({ coverArtUrl })
           .where(eq(tracks.id, track.id))
-          .returning();
-        return updatedTrack;
+          .returning()
+        return updatedTrack
       }
 
-      return track;
-    });
+      return track
+    })
   }
 
   async getTracks(query: TrackQueryParams, currentUserId?: string) {
-    const page = query.page || PAGINATION_DEFAULTS.page;
+    const page = query.page || PAGINATION_DEFAULTS.page
     const pageSize = Math.min(
       query.pageSize || PAGINATION_DEFAULTS.pageSize,
-      PAGINATION_DEFAULTS.maxPageSize
-    );
-    const offset = (page - 1) * pageSize;
+      PAGINATION_DEFAULTS.maxPageSize,
+    )
+    const offset = (page - 1) * pageSize
 
     return await db.transaction(async (tx) => {
-      const conditions = [];
+      const conditions = []
 
       if (query.userId) {
         // Filter by requested user
-        conditions.push(eq(tracks.userId, query.userId));
+        conditions.push(eq(tracks.userId, query.userId))
         // If requester is NOT the owner, only show public tracks
         if (query.userId !== currentUserId) {
-          conditions.push(eq(tracks.isPublic, true));
+          conditions.push(eq(tracks.isPublic, true))
         }
         // If requester IS the owner, show all their tracks (public + private)
       } else {
         // No userId specified = public feed, only public tracks
-        conditions.push(eq(tracks.isPublic, true));
+        conditions.push(eq(tracks.isPublic, true))
       }
 
       if (query.search) {
         conditions.push(
           or(
             ilike(tracks.title, `%${query.search}%`),
-            ilike(tracks.description, `%${query.search}%`)
-          )!
-        );
+            ilike(tracks.description, `%${query.search}%`),
+          )!,
+        )
       }
 
-      const orderFn = query.order === 'asc' ? asc : desc;
+      const orderFn = query.order === 'asc' ? asc : desc
 
       // Determine order expression - likeCount requires ordering by aggregated column
       const getOrderExpression = () => {
         if (query.sortBy === 'likeCount') {
-          return orderFn(sql`count(DISTINCT ${likes.id})`);
+          return orderFn(sql`count(DISTINCT ${likes.id})`)
         } else if (query.sortBy === 'playCount') {
-          return orderFn(tracks.playCount);
+          return orderFn(tracks.playCount)
         }
-        return orderFn(tracks.createdAt);
-      };
+        return orderFn(tracks.createdAt)
+      }
 
       // Get total count
       const [totalResult] = await tx
         .select({ count: count() })
         .from(tracks)
-        .where(conditions.length > 0 ? and(...conditions) : undefined);
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
 
-      const total = totalResult?.count || 0;
+      const total = totalResult?.count || 0
 
       // If no tracks, return empty result
       if (total === 0) {
@@ -110,7 +123,7 @@ export class TrackService {
             pageSize,
             total: 0,
           },
-        };
+        }
       }
 
       // Get tracks with user and like count
@@ -130,7 +143,7 @@ export class TrackService {
         .groupBy(tracks.id, users.id, users.username)
         .orderBy(getOrderExpression())
         .limit(pageSize)
-        .offset(offset);
+        .offset(offset)
 
       return {
         data: tracksData.map((t) => ({
@@ -143,8 +156,8 @@ export class TrackService {
           pageSize,
           total,
         },
-      };
-    });
+      }
+    })
   }
 
   async getTrackById(trackId: string, currentUserId?: string) {
@@ -162,90 +175,101 @@ export class TrackService {
       .leftJoin(likes, eq(tracks.id, likes.trackId))
       .where(eq(tracks.id, trackId))
       .groupBy(tracks.id, users.id, users.username)
-      .limit(1);
+      .limit(1)
 
     if (!result) {
-      throw new NotFoundError('Track');
+      throw new NotFoundError('Track')
     }
 
     if (!result.track.isPublic && result.track.userId !== currentUserId) {
-      throw new ForbiddenError('This track is private');
+      throw new ForbiddenError('This track is private')
     }
 
     return {
       ...result.track,
       user: result.user,
       likeCount: Number(result.likeCount) || 0,
-    };
+    }
   }
 
-  async updateTrack(
-    trackId: string,
-    userId: string,
-    input: UpdateTrackInput
-  ) {
-    const [track] = await db
-      .select()
-      .from(tracks)
-      .where(eq(tracks.id, trackId))
-      .limit(1);
+  async updateTrack(trackId: string, userId: string, input: UpdateTrackInput) {
+    const [track] = await db.select().from(tracks).where(eq(tracks.id, trackId)).limit(1)
 
     if (!track) {
-      throw new NotFoundError('Track');
+      throw new NotFoundError('Track')
     }
 
     if (track.userId !== userId) {
-      throw new ForbiddenError('You can only update your own tracks');
+      throw new ForbiddenError('You can only update your own tracks')
     }
 
-    const { coverArt, ...updateData } = input;
+    const { coverArt, ...updateData } = input
+
+    // Check if metadata that affects embeddings has changed
+    const metadataChanged =
+      (updateData.title && updateData.title !== track.title) ||
+      (updateData.description !== undefined && updateData.description !== track.description) ||
+      (updateData.genre !== undefined && updateData.genre !== track.genre) ||
+      (updateData.mainArtist !== undefined && updateData.mainArtist !== track.mainArtist)
+
+    // Regenerate embedding if metadata changed
+    let newEmbedding: number[] | undefined
+    if (metadataChanged) {
+      newEmbedding = await embeddingService.generateTrackEmbedding({
+        title: updateData.title || track.title,
+        description: updateData.description ?? track.description,
+        genre: updateData.genre ?? track.genre,
+        mainArtist: updateData.mainArtist ?? track.mainArtist,
+      })
+    }
 
     return await db.transaction(async (tx) => {
-      let coverArtUrl: string | undefined;
+      let coverArtUrl: string | undefined
       if (coverArt && coverArt instanceof File) {
-        coverArtUrl = await fileService.uploadCover(coverArt, trackId);
+        coverArtUrl = await fileService.uploadCover(coverArt, trackId)
       }
-
 
       const [updated] = await tx
         .update(tracks)
         .set({
           ...updateData,
-          isPublic: updateData.isPublic === 'true' ? true : updateData.isPublic === 'false' ? false : updateData.isPublic,
+          isPublic:
+            updateData.isPublic === 'true'
+              ? true
+              : updateData.isPublic === 'false'
+                ? false
+                : updateData.isPublic,
           ...(coverArtUrl ? { coverArtUrl } : {}),
+          ...(newEmbedding ? { metadataEmbedding: newEmbedding } : {}),
           updatedAt: new Date(),
         })
         .where(eq(tracks.id, trackId))
-        .returning();
+        .returning()
 
-      return updated;
-    });
+      return updated
+    })
   }
 
   async deleteTrack(trackId: string, userId: string) {
-    const [track] = await db
-      .select()
-      .from(tracks)
-      .where(eq(tracks.id, trackId))
-      .limit(1);
+    const [track] = await db.select().from(tracks).where(eq(tracks.id, trackId)).limit(1)
 
     if (!track) {
-      throw new NotFoundError('Track');
+      throw new NotFoundError('Track')
     }
 
     if (track.userId !== userId) {
-      throw new ForbiddenError('You can only delete your own tracks');
+      throw new ForbiddenError('You can only delete your own tracks')
     }
 
-    await fileService.deleteFile(track.audioUrl);
+    await fileService.deleteFile(track.audioUrl)
 
     if (track.coverArtUrl) {
-      await fileService.deleteFile(track.coverArtUrl);
+      await fileService.deleteFile(track.coverArtUrl)
     }
 
-    await db.delete(tracks).where(eq(tracks.id, trackId));
+    await db.delete(tracks).where(eq(tracks.id, trackId))
 
-    return { message: 'Track deleted successfully' };
+    return { message: 'Track deleted successfully' }
   }
 
   async incrementPlayCount(trackId: string) {
@@ -254,8 +278,8 @@ export class TrackService {
       .set({
         playCount: sql`${tracks.playCount} + 1`,
       })
-      .where(eq(tracks.id, trackId));
+      .where(eq(tracks.id, trackId))
   }
 }
 
-export const trackService = new TrackService();
+export const trackService = new TrackService()

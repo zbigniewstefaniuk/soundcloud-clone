@@ -1,28 +1,24 @@
-import { eq, and, count, inArray } from 'drizzle-orm';
-import { db } from '../config/database';
-import { likes, tracks, users } from '../db/schema';
-import { NotFoundError, ConflictError } from '../middleware/error';
+import { eq, and, count, inArray } from 'drizzle-orm'
+import { db } from '../config/database'
+import { likes, tracks, users } from '../db/schema'
+import { NotFoundError, ConflictError } from '../middleware/error'
 
 export class LikeService {
   async likeTrack(userId: string, trackId: string) {
-    const [track] = await db
-      .select()
-      .from(tracks)
-      .where(eq(tracks.id, trackId))
-      .limit(1);
+    const [track] = await db.select().from(tracks).where(eq(tracks.id, trackId)).limit(1)
 
     if (!track) {
-      throw new NotFoundError('Track');
+      throw new NotFoundError('Track')
     }
 
     const [existing] = await db
       .select()
       .from(likes)
       .where(and(eq(likes.userId, userId), eq(likes.trackId, trackId)))
-      .limit(1);
+      .limit(1)
 
     if (existing) {
-      throw new ConflictError('Track already liked');
+      throw new ConflictError('Track already liked')
     }
 
     const [like] = await db
@@ -31,35 +27,31 @@ export class LikeService {
         userId,
         trackId,
       })
-      .returning();
+      .returning()
 
-    return like;
+    return like
   }
 
   async unlikeTrack(userId: string, trackId: string) {
     const result = await db
       .delete(likes)
       .where(and(eq(likes.userId, userId), eq(likes.trackId, trackId)))
-      .returning();
+      .returning()
 
     if (result.length === 0) {
-      throw new NotFoundError('Like');
+      throw new NotFoundError('Like')
     }
 
-    return { message: 'Track unliked successfully' };
+    return { message: 'Track unliked successfully' }
   }
 
-  async getTrackLikes(
-    trackId: string,
-    page: number = 1,
-    pageSize: number = 20,
-  ) {
-    const offset = (page - 1) * pageSize;
+  async getTrackLikes(trackId: string, page: number = 1, pageSize: number = 20) {
+    const offset = (page - 1) * pageSize
 
     const [totalResult] = await db
       .select({ count: count() })
       .from(likes)
-      .where(eq(likes.trackId, trackId));
+      .where(eq(likes.trackId, trackId))
 
     if (!totalResult?.count) {
       return {
@@ -69,7 +61,7 @@ export class LikeService {
           pageSize,
           total: 0,
         },
-      };
+      }
     }
 
     const likesData = await db
@@ -84,7 +76,7 @@ export class LikeService {
       .leftJoin(users, eq(likes.userId, users.id))
       .where(eq(likes.trackId, trackId))
       .limit(pageSize)
-      .offset(offset);
+      .offset(offset)
 
     return {
       data: likesData,
@@ -93,16 +85,16 @@ export class LikeService {
         pageSize,
         total: totalResult.count,
       },
-    };
+    }
   }
 
   async getUserLikes(userId: string, page: number = 1, pageSize: number = 20) {
-    const offset = (page - 1) * pageSize;
+    const offset = (page - 1) * pageSize
 
     const [totalResult] = await db
       .select({ count: count() })
       .from(likes)
-      .where(eq(likes.userId, userId));
+      .where(eq(likes.userId, userId))
 
     const likesData = await db
       .select({
@@ -118,7 +110,7 @@ export class LikeService {
       .leftJoin(users, eq(tracks.userId, users.id))
       .where(eq(likes.userId, userId))
       .limit(pageSize)
-      .offset(offset);
+      .offset(offset)
 
     return {
       data: likesData.map((l) => ({
@@ -131,7 +123,7 @@ export class LikeService {
         pageSize,
         total: totalResult?.count ?? 0,
       },
-    };
+    }
   }
 
   async isLikedByUser(userId: string, trackId: string): Promise<boolean> {
@@ -139,22 +131,22 @@ export class LikeService {
       .select()
       .from(likes)
       .where(and(eq(likes.userId, userId), eq(likes.trackId, trackId)))
-      .limit(1);
+      .limit(1)
 
-    return !!like;
+    return !!like
   }
 
   async batchCheckLikes(userId: string, trackIds: string[]): Promise<Record<string, boolean>> {
-    if (trackIds.length === 0) return {};
+    if (trackIds.length === 0) return {}
 
     const likedTracks = await db
       .select({ trackId: likes.trackId })
       .from(likes)
-      .where(and(eq(likes.userId, userId), inArray(likes.trackId, trackIds)));
+      .where(and(eq(likes.userId, userId), inArray(likes.trackId, trackIds)))
 
-    const likedSet = new Set(likedTracks.map((l) => l.trackId));
-    return Object.fromEntries(trackIds.map((id) => [id, likedSet.has(id)]));
+    const likedSet = new Set(likedTracks.map((l) => l.trackId))
+    return Object.fromEntries(trackIds.map((id) => [id, likedSet.has(id)]))
   }
 }
 
-export const likeService = new LikeService();
+export const likeService = new LikeService()

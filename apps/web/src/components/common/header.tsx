@@ -1,12 +1,13 @@
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Home, LogIn, LogOut, Menu, UserPlus, X, Music2, Sun, Moon, ListMusic, User, ChevronDown } from 'lucide-react'
+import { LogOut, Music2, Sun, Moon, ListMusic, User, ChevronDown } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { useAccount } from '@/hooks/use-auth'
 import { useTheme } from '@/contexts/theme-context'
 import { usePlayer } from '@/contexts/player-context'
 import { QueueSidebar } from '@/components/player/queue-sidebar'
+import { HeaderSearch } from './header-search'
 
 export default function Header() {
   const [isQueueOpen, setIsQueueOpen] = useState(false)
@@ -18,14 +19,14 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="flex h-14 items-center px-4 gap-4">
-
-
           <Link to="/" className="flex items-center gap-2">
             <Music2 className="h-6 w-6 text-primary" />
-            <span className="font-semibold text-lg">MusicApp</span>
+            <span className="font-semibold text-lg hidden sm:inline">MusicApp</span>
           </Link>
 
-          <div className="flex-1" />
+          <div className="flex-1 flex justify-center mx-4">
+            <HeaderSearch />
+          </div>
 
           <button
             onClick={() => setIsQueueOpen(true)}
@@ -110,4 +111,3 @@ export default function Header() {
     </>
   )
 }
-

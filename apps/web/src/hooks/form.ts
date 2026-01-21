@@ -1,4 +1,4 @@
-import { createFormHook } from '@tanstack/react-form';
+import { createFormHook } from '@tanstack/react-form'
 
 import {
   Select,
@@ -8,9 +8,9 @@ import {
   Switch,
   AudioFileField,
   ImageFileField,
-} from '../components/form-components.tsx';
+} from '../components/form-components.tsx'
 
-import { fieldContext, formContext } from './form-context';
+import { fieldContext, formContext } from './form-context'
 
 export const { useAppForm } = createFormHook({
   fieldComponents: {
@@ -26,4 +26,4 @@ export const { useAppForm } = createFormHook({
   },
   fieldContext,
   formContext,
-});
+})

@@ -4,9 +4,7 @@ import { usePlayer } from '@/contexts/player-context'
 import { Slider } from '@/components/ui/slider'
 import { WaveformSlider } from '@/components/ui/waveform-slider'
 import { extractColorsFromImage } from '@/lib/color-extraction'
-import {
-  formatTime,
-  getAssetUrl } from '@/lib/utils'
+import { formatTime, getAssetUrl } from '@/lib/utils'
 import { AnimatedGradient } from './animated-gradient'
 import { TrackCover } from '../tracks/track-cover'
 
@@ -27,7 +25,7 @@ export function FullPlayer() {
     hasNext,
     hasPrevious,
     isMuted,
-    toggleMute
+    toggleMute,
   } = usePlayer()
 
   const [colors, setColors] = useState({
@@ -35,7 +33,6 @@ export function FullPlayer() {
     secondary: '#8b5cf6',
     accent: '#ec4899',
   })
-
 
   const coverUrl = getAssetUrl(currentTrack?.coverArtUrl)
 
@@ -49,10 +46,8 @@ export function FullPlayer() {
     return null
   }
 
-
-
   return (
-    <AnimatedGradient colors={colors} blur className="min-h-screen">
+    <AnimatedGradient colors={colors} className="min-h-screen">
       <div className="min-h-screen flex items-center justify-center p-8">
         <div className="w-full max-w-4xl space-y-8">
           <div className="flex justify-center">
@@ -65,12 +60,8 @@ export function FullPlayer() {
           </div>
 
           <div className="text-center space-y-2">
-            <h1 className="text-5xl font-bold text-white">
-              {currentTrack.title}
-            </h1>
-            <p className="text-2xl text-white/80">
-              {currentTrack.mainArtist || 'Unknown Artist'}
-            </p>
+            <h1 className="text-5xl font-bold text-white">{currentTrack.title}</h1>
+            <p className="text-2xl text-white/80">{currentTrack.mainArtist || 'Unknown Artist'}</p>
             {currentTrack.description && (
               <p className="text-lg text-white/60 line-clamp-2 max-w-2xl mx-auto mt-4">
                 {currentTrack.description}
@@ -144,9 +135,7 @@ export function FullPlayer() {
                 Track {queueIndex + 1} of {queue.length}
               </p>
               {hasNext && (
-                <p className="text-xs text-white/40 mt-1">
-                  Next: {queue[queueIndex + 1].title}
-                </p>
+                <p className="text-xs text-white/40 mt-1">Next: {queue[queueIndex + 1].title}</p>
               )}
             </div>
           )}

@@ -1,6 +1,6 @@
 import { api } from './client'
-import { ApiError } from './auth'
 import { env } from '@/env'
+import { ApiError } from './error'
 
 // Infer types from API responses
 export type TrackWithUser = Awaited<ReturnType<typeof getTrackById>>
@@ -36,7 +36,9 @@ export interface UpdateTrackInput {
   coverArt?: File
 }
 
-export async function getPublicTracks(params: NonNullable<Parameters<typeof api.tracks.get>[0]>['query'] = {}) {
+export async function getPublicTracks(
+  params: NonNullable<Parameters<typeof api.tracks.get>[0]>['query'] = {},
+) {
   const { data: response, error } = await api.tracks.get({ query: params })
 
   if (error) {
@@ -58,7 +60,7 @@ export async function getTrackById(id: string) {
 
 export async function getUserTracks() {
   const { data: response, error } = await api.users.me.tracks.get()
-  
+
   if (error) {
     handleError(error)
   }
@@ -111,15 +113,12 @@ export async function deleteTrack(id: string) {
   }
 }
 
-
-
 /**
  * Fetch stream token from API.
  * Used by React Query in useStreamUrl hook.
  */
 export async function fetchStreamToken(id: string): Promise<string> {
   try {
-    // @ts-expect-error - Eden types need regeneration for new endpoint
     const { data, error } = await api.tracks({ id })['stream-token'].get()
 
     if (!error && data?.data) {
@@ -153,7 +152,7 @@ export async function batchCheckLikes(trackIds: string[]): Promise<Record<string
     headers: {
       'Content-Type': 'application/json',
       ...Object.fromEntries(
-        Object.entries(await import('@/lib/auth-storage').then(m => m.authStorage.getHeaders()))
+        Object.entries(await import('@/lib/auth-storage').then((m) => m.authStorage.getHeaders())),
       ),
     },
     body: JSON.stringify({ trackIds }),
@@ -173,4 +172,4 @@ export async function getUserLikedTracks(params: { page?: number; pageSize?: num
   }
 
   return response!
-} 
+}

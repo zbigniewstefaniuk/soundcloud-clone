@@ -1,23 +1,14 @@
-import { eq, count, desc } from 'drizzle-orm';
-import { db } from '../config/database';
-import { comments, tracks, users } from '../db/schema';
-import { NotFoundError, ForbiddenError } from '../middleware/error';
+import { eq, count, desc } from 'drizzle-orm'
+import { db } from '../config/database'
+import { comments, tracks, users } from '../db/schema'
+import { NotFoundError, ForbiddenError } from '../middleware/error'
 
 export class CommentService {
-  async createComment(
-    userId: string,
-    trackId: string,
-    content: string,
-    timestamp?: number,
-  ) {
-    const [track] = await db
-      .select()
-      .from(tracks)
-      .where(eq(tracks.id, trackId))
-      .limit(1);
+  async createComment(userId: string, trackId: string, content: string, timestamp?: number) {
+    const [track] = await db.select().from(tracks).where(eq(tracks.id, trackId)).limit(1)
 
     if (!track) {
-      throw new NotFoundError('Track');
+      throw new NotFoundError('Track')
     }
 
     const [comment] = await db
@@ -28,10 +19,10 @@ export class CommentService {
         content,
         timestamp,
       })
-      .returning();
+      .returning()
 
     if (!comment) {
-      throw new NotFoundError('Comment');
+      throw new NotFoundError('Comment')
     }
 
     const [commentWithUser] = await db
@@ -45,22 +36,18 @@ export class CommentService {
       .from(comments)
       .leftJoin(users, eq(comments.userId, users.id))
       .where(eq(comments.id, comment.id))
-      .limit(1);
+      .limit(1)
 
-    return commentWithUser;
+    return commentWithUser
   }
 
-  async getTrackComments(
-    trackId: string,
-    page: number = 1,
-    pageSize: number = 20,
-  ) {
-    const offset = (page - 1) * pageSize;
+  async getTrackComments(trackId: string, page: number = 1, pageSize: number = 20) {
+    const offset = (page - 1) * pageSize
 
     const [totalResult] = await db
       .select({ count: count() })
       .from(comments)
-      .where(eq(comments.trackId, trackId));
+      .where(eq(comments.trackId, trackId))
 
     if (!totalResult?.count) {
       return {
@@ -70,7 +57,7 @@ export class CommentService {
           pageSize,
           total: 0,
         },
-      };
+      }
     }
 
     const commentsData = await db
@@ -86,7 +73,7 @@ export class CommentService {
       .where(eq(comments.trackId, trackId))
       .orderBy(desc(comments.createdAt))
       .limit(pageSize)
-      .offset(offset);
+      .offset(offset)
 
     return {
       data: commentsData.map((c) => ({
@@ -98,22 +85,18 @@ export class CommentService {
         pageSize,
         total: totalResult.count,
       },
-    };
+    }
   }
 
   async updateComment(commentId: string, userId: string, content: string) {
-    const [comment] = await db
-      .select()
-      .from(comments)
-      .where(eq(comments.id, commentId))
-      .limit(1);
+    const [comment] = await db.select().from(comments).where(eq(comments.id, commentId)).limit(1)
 
     if (!comment) {
-      throw new NotFoundError('Comment');
+      throw new NotFoundError('Comment')
     }
 
     if (comment.userId !== userId) {
-      throw new ForbiddenError('You can only update your own comments');
+      throw new ForbiddenError('You can only update your own comments')
     }
 
     const [updated] = await db
@@ -123,30 +106,26 @@ export class CommentService {
         updatedAt: new Date(),
       })
       .where(eq(comments.id, commentId))
-      .returning();
+      .returning()
 
-    return updated;
+    return updated
   }
 
   async deleteComment(commentId: string, userId: string) {
-    const [comment] = await db
-      .select()
-      .from(comments)
-      .where(eq(comments.id, commentId))
-      .limit(1);
+    const [comment] = await db.select().from(comments).where(eq(comments.id, commentId)).limit(1)
 
     if (!comment) {
-      throw new NotFoundError('Comment');
+      throw new NotFoundError('Comment')
     }
 
     if (comment.userId !== userId) {
-      throw new ForbiddenError('You can only delete your own comments');
+      throw new ForbiddenError('You can only delete your own comments')
     }
 
-    await db.delete(comments).where(eq(comments.id, commentId));
+    await db.delete(comments).where(eq(comments.id, commentId))
 
-    return { message: 'Comment deleted successfully' };
+    return { message: 'Comment deleted successfully' }
   }
 }
 
-export const commentService = new CommentService();
+export const commentService = new CommentService()

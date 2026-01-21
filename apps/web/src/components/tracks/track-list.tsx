@@ -20,14 +20,13 @@ import { EmptyState } from '@/components/common/empty-state'
 import { TrackCover } from './track-cover'
 import { TrackStats } from './track-stats'
 import type { TrackWithUser } from '@/api/tracks'
+import { usePlayer } from '@/contexts/player-context'
 
 interface TrackListContextValue {
   isOwner: boolean
   isLoggedIn: boolean
-  currentPlayingTrackId: string | null
   deletingId: string | null
   likedMap: Record<string, boolean>
-  onTogglePlay?: (track: TrackWithUser) => void
   onDelete: (trackId: string) => void
   onToggleLike: (trackId: string) => void
 }
@@ -43,16 +42,10 @@ function useTrackListContext() {
 interface TrackListProps {
   tracks: TrackWithUser[]
   isOwner?: boolean
-  onTogglePlay?: (track: TrackWithUser) => void
   currentPlayingTrackId?: string | null
 }
 
-export function TrackList({
-  tracks,
-  isOwner = false,
-  onTogglePlay,
-  currentPlayingTrackId = null,
-}: TrackListProps) {
+export function TrackList({ tracks, isOwner = false }: TrackListProps) {
   const { user } = useAccount()
   const deleteMutation = useDeleteTrack()
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -78,11 +71,7 @@ export function TrackList({
       <EmptyState
         icon={Music}
         title="No tracks"
-        description={
-          isOwner
-            ? 'Upload your first track to get started.'
-            : 'No tracks available.'
-        }
+        description={isOwner ? 'Upload your first track to get started.' : 'No tracks available.'}
       />
     )
   }
@@ -92,10 +81,8 @@ export function TrackList({
       value={{
         isOwner,
         isLoggedIn: !!user,
-        currentPlayingTrackId,
         deletingId,
         likedMap,
-        onTogglePlay,
         onDelete: handleDelete,
         onToggleLike: handleToggleLike,
       }}
@@ -112,21 +99,13 @@ export function TrackList({
 function TrackListItem({ track }: { track: TrackWithUser }) {
   return (
     <div className="flex items-center gap-4 p-2 bg-card rounded-lg hover:bg-accent/50 transition-colors">
-      <TrackCover coverArtUrl={track.coverArtUrl} title={track.title} size='lg' />
+      <TrackCover coverArtUrl={track.coverArtUrl} title={track.title} size="lg" />
 
       <div className="flex-1 min-w-0">
-        <h3 className="text-base font-medium text-foreground truncate">
-          {track.title}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {track.mainArtist || 'Unknown Artist'}
-        </p>
+        <h3 className="text-base font-medium text-foreground truncate">{track.title}</h3>
+        <p className="text-sm text-muted-foreground">{track.mainArtist || 'Unknown Artist'}</p>
         <div className="mt-1.5">
-          <TrackStats
-            playCount={track.playCount}
-            likeCount={track.likeCount}
-            genre={track.genre}
-          />
+          <TrackStats playCount={track.playCount} likeCount={track.likeCount} genre={track.genre} />
         </div>
       </div>
 
@@ -136,44 +115,40 @@ function TrackListItem({ track }: { track: TrackWithUser }) {
 }
 
 function TrackActions({ track }: { track: TrackWithUser }) {
-  const {
-    isOwner,
-    isLoggedIn,
-    currentPlayingTrackId,
-    deletingId,
-    likedMap,
-    onTogglePlay,
-    onDelete,
-    onToggleLike,
-  } = useTrackListContext()
+  const { isOwner, isLoggedIn, deletingId, likedMap, onDelete, onToggleLike } =
+    useTrackListContext()
 
-  const isPlaying = track.id === currentPlayingTrackId
+  const { isPlaying, togglePlay, playTrack, currentTrack, currentTime } = usePlayer()
+
   const isDeleting = track.id === deletingId
   const isLiked = likedMap[track.id] ?? false
 
+  const handlePlay = (track: TrackWithUser) => {
+    if (currentTrack?.id === track.id && isPlaying) {
+      togglePlay()
+      return
+    }
+    if (currentTrack?.id === track.id && !isPlaying && currentTime > 0) {
+      togglePlay()
+      return
+    }
+    playTrack(track)
+  }
+
+  const isCurrentTrack = currentTrack?.id === track.id
 
   return (
     <div className="flex items-center gap-2">
-      {onTogglePlay && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onTogglePlay(track)}
-          type="button"
-        >
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </Button>
-      )}
+      <Button variant="outline" size="sm" onClick={() => handlePlay?.(track)} type="button">
+        {isPlaying && isCurrentTrack ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+      </Button>
 
       {isLoggedIn && (
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onToggleLike(track.id)}
-          className={cn(
-            'transition-colors',
-            isLiked && 'text-red-500 hover:text-red-600'
-          )}
+          className={cn('transition-colors', isLiked && 'text-rose-500 hover:text-rose-600')}
         >
           <Heart className={cn('h-4 w-4', isLiked && 'fill-current')} />
         </Button>
@@ -216,9 +191,8 @@ function DeleteTrackDialog({ trackTitle, isDeleting, onConfirm }: DeleteTrackDia
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Track</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete "{trackTitle}"? This action cannot
-            be undone. The audio file and all associated data will be
-            permanently removed.
+            Are you sure you want to delete "{trackTitle}"? This action cannot be undone. The audio
+            file and all associated data will be permanently removed.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -87,7 +87,7 @@ function selectDiverseColors(sortedColors: ScoredColor[]): ScoredColor[] {
   for (const color of sortedColors.slice(1)) {
     if (selected.length >= 3) break
     const isDifferentEnough = selected.every(
-      (picked) => getHueDifference(picked.hue, color.hue) >= MIN_HUE_DIFFERENCE
+      (picked) => getHueDifference(picked.hue, color.hue) >= MIN_HUE_DIFFERENCE,
     )
     if (isDifferentEnough) {
       selected.push(color)

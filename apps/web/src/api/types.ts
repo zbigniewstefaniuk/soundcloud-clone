@@ -1,5 +1,5 @@
-import type { ApiError } from "./auth";
-import type { UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
+import type { UseQueryOptions, UseMutationOptions } from '@tanstack/react-query'
+import type { ApiError } from './error'
 
 /**
  * Extracts params and query options separately.
@@ -11,22 +11,22 @@ export type QueryOptionsWithParams<
   TError = ApiError,
 > =
   Parameters<TQueryFn> extends []
-  ? {
-    // No params
-    params?: never
-    options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>
-  }
-  : Parameters<TQueryFn>[0] extends undefined
-  ? {
-    // Optional param
-    params?: never
-    options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>
-  }
-  : {
-    // Required or optional-with-default param
-    params?: Parameters<TQueryFn>[0]
-    options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>
-  }
+    ? {
+        // No params
+        params?: never
+        options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>
+      }
+    : Parameters<TQueryFn>[0] extends undefined
+      ? {
+          // Optional param
+          params?: never
+          options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>
+        }
+      : {
+          // Required or optional-with-default param
+          params?: Parameters<TQueryFn>[0]
+          options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>
+        }
 
 /**
  * Combines react-query mutation options with API function params.
@@ -37,7 +37,4 @@ export type MutationOptionsWithParams<
   TData = Awaited<ReturnType<TQueryFn>>,
   TError = ApiError,
   TContext = unknown,
-> = Omit<
-  UseMutationOptions<TData, TError, Parameters<TQueryFn>[0], TContext>,
-  'mutationFn'
->
+> = Omit<UseMutationOptions<TData, TError, Parameters<TQueryFn>[0], TContext>, 'mutationFn'>

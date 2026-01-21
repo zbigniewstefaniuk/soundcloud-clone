@@ -26,7 +26,7 @@ function ProfileTracksPage() {
           <User className="h-8 w-8 text-primary" />
         </div>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">{user?.username || "My Profile"}</h1>
+          <h1 className="text-2xl font-bold">{user?.username || 'My Profile'}</h1>
           <p className="text-muted-foreground">{user?.email}</p>
         </div>
         <Link to="/tracks/upload">
@@ -71,7 +71,9 @@ function MyTracksTab() {
 
   const handleFilteredTracksChange = (filtered: TrackWithUser[]) => {
     setFilteredTracks(filtered)
-    setIsSearching(filtered.length !== tracks.length || filtered.some((t, i) => t.id !== tracks[i]?.id))
+    setIsSearching(
+      filtered.length !== tracks.length || filtered.some((t, i) => t.id !== tracks[i]?.id),
+    )
   }
 
   const handlePlay = (track: TrackWithUser) => {
@@ -159,7 +161,7 @@ function MyTracksTab() {
 
 function LikedTracksTab() {
   const { tracks, isLoading, isError, error } = useUserLikedTracks()
-  const { playTrack, currentTrack, isPlaying, togglePlay, currentTime } = usePlayer()
+  const { currentTrack } = usePlayer()
   const [filteredTracks, setFilteredTracks] = useState<TrackWithUser[]>([])
   const [isSearching, setIsSearching] = useState(false)
 
@@ -167,19 +169,9 @@ function LikedTracksTab() {
 
   const handleFilteredTracksChange = (filtered: TrackWithUser[]) => {
     setFilteredTracks(filtered)
-    setIsSearching(filtered.length !== tracks.length || filtered.some((t, i) => t.id !== tracks[i]?.id))
-  }
-
-  const handlePlay = (track: TrackWithUser) => {
-    if (currentTrack?.id === track.id && isPlaying) {
-      togglePlay()
-      return
-    }
-    if (currentTrack?.id === track.id && !isPlaying && currentTime > 0) {
-      togglePlay()
-      return
-    }
-    playTrack(track, displayTracks)
+    setIsSearching(
+      filtered.length !== tracks.length || filtered.some((t, i) => t.id !== tracks[i]?.id),
+    )
   }
 
   if (isLoading) {
@@ -242,7 +234,6 @@ function LikedTracksTab() {
         <TrackList
           tracks={displayTracks}
           isOwner={false}
-          onTogglePlay={handlePlay}
           currentPlayingTrackId={currentTrack?.id}
         />
       )}

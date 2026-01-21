@@ -35,7 +35,7 @@ export function useAccount() {
       logout,
       refetch: query.refetch,
     }),
-    [query.data, query.isLoading, query.isError, query.error, token, logout, query.refetch]
+    [query.data, query.isLoading, query.isError, query.error, token, logout, query.refetch],
   )
 }
 
@@ -85,6 +85,6 @@ export function useUserProfile(userId: string | null | undefined) {
       error: query.error,
       refetch: query.refetch,
     }),
-    [query.data, query.isLoading, query.isError, query.error, query.refetch]
+    [query.data, query.isLoading, query.isError, query.error, query.refetch],
   )
 }

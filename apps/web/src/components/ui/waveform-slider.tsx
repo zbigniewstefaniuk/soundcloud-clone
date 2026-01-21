@@ -72,7 +72,7 @@ function drawTrack(
   ctx: CanvasRenderingContext2D,
   width: number,
   waveHeight: number,
-  progress: number
+  progress: number,
 ) {
   const { height, backgroundOpacity, borderRadius } = CONFIG.track
   const y = waveHeight
@@ -96,7 +96,7 @@ function drawWave(
   width: number,
   waveHeight: number,
   progress: number,
-  phase: number
+  phase: number,
 ) {
   if (progress <= 0) return
 
@@ -153,12 +153,7 @@ function drawWave(
   ctx.restore()
 }
 
-function render(
-  state: RenderState,
-  waveHeight: number,
-  progress: number,
-  phase: number
-) {
+function render(state: RenderState, waveHeight: number, progress: number, phase: number) {
   const { ctx, width, height } = state
 
   ctx.clearRect(0, 0, width, height)
@@ -254,12 +249,9 @@ export function WaveformSlider({
       className={cn('relative cursor-pointer select-none', className)}
       style={{ height: totalHeight }}
       onClick={handleClick}
-      type='button'
+      type="button"
     >
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full"
-      />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
       <div
         className="absolute bg-white rounded-full shadow-lg pointer-events-none -translate-x-1/2 -translate-y-1/2"

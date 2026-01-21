@@ -1,7 +1,7 @@
-import { env } from './env';
-import type { CORSConfig } from '@elysiajs/cors';
+import { env } from './env'
+import type { CORSConfig } from '@elysiajs/cors'
 
-const isProduction = env.NODE_ENV === 'production';
+const isProduction = env.NODE_ENV === 'production'
 
 export const securityConfig = {
   isProduction,
@@ -18,9 +18,7 @@ export const securityConfig = {
   },
 
   cors: {
-    origin: isProduction
-      ? process.env.ALLOWED_ORIGINS?.split(',') || []
-      : true,
+    origin: isProduction ? process.env.ALLOWED_ORIGINS?.split(',') || [] : true,
     credentials: true,
     allowedHeaders: [
       'Content-Type',
@@ -39,4 +37,4 @@ export const securityConfig = {
     windowMs: 60 * 1000,
     max: isProduction ? 100 : 1000,
   },
-} as const;
+} as const

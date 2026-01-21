@@ -1,7 +1,5 @@
 import { api } from './client'
-import { handleError } from './error';
-
-
+import { handleError } from './error'
 
 export async function register(data: { username: string; email: string; password: string }) {
   const { data: response, error } = await api.auth.register.post(data)

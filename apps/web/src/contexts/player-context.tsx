@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useRef, useEffect } from 'react'
+import { createContext, use, useContext, useState, useRef, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { TrackWithUser } from '@/api/tracks'
 import { fetchStreamToken } from '@/api/tracks'
@@ -60,7 +60,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     isMuted: false,
   })
 
-  const broadcastRef = useRef<(msg: PlayerMessage) => void>(() => { })
+  const broadcastRef = useRef<(msg: PlayerMessage) => void>(() => {})
   const stateRef = useRef(state)
   stateRef.current = state
 
@@ -74,7 +74,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Execute functions (only active tab runs these)
-  const executePlayTrack = async (track: TrackWithUser, queue: TrackWithUser[], queueIndex: number) => {
+  const executePlayTrack = async (
+    track: TrackWithUser,
+    queue: TrackWithUser[],
+    queueIndex: number,
+  ) => {
     updateState({
       ...stateRef.current,
       currentTrack: track,
@@ -253,7 +257,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         volume: state.volume,
         queue: state.queue,
         queueIndex: state.queueIndex,
-      })
+      }),
     )
   }, [state.volume, state.queue, state.queueIndex])
 
@@ -419,7 +423,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function usePlayer() {
-  const context = useContext(PlayerContext)
+  const context = use(PlayerContext)
   if (!context) {
     throw new Error('usePlayer must be used within PlayerProvider')
   }

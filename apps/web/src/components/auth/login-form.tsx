@@ -1,16 +1,16 @@
-import { z } from 'zod';
-import { Button } from '../ui/button';
-import { useAppForm } from '@/hooks/form';
-import { Suspense } from 'react';
-import { useLogin } from '@/hooks/use-auth';
+import { z } from 'zod'
+import { Button } from '../ui/button'
+import { useAppForm } from '@/hooks/form'
+import { Suspense } from 'react'
+import { useLogin } from '@/hooks/use-auth'
 
 const loginSchema = z.object({
   email: z.email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
-});
+})
 
 export function LoginForm() {
-  const loginMutation = useLogin();
+  const loginMutation = useLogin()
 
   const form = useAppForm({
     defaultValues: {
@@ -22,10 +22,10 @@ export function LoginForm() {
       onChange: loginSchema,
     },
     onSubmit: async ({ value, formApi }) => {
-      loginMutation.mutate(value);
-      formApi.reset();
+      loginMutation.mutate(value)
+      formApi.reset()
     },
-  });
+  })
 
   return (
     <div className="w-full max-w-md space-y-6">
@@ -36,30 +36,20 @@ export function LoginForm() {
       <Suspense fallback={<div>Loading...</div>}>
         <form
           onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
           }}
           className="space-y-4"
         >
           <form.AppField name="email">
             {(field) => (
-              <field.TextField
-                label="Email"
-                placeholder="Enter your email"
-                type="email"
-              />
+              <field.TextField label="Email" placeholder="Enter your email" type="email" />
             )}
           </form.AppField>
 
           <form.AppField name="password">
-            {(field) => (
-              <field.TextField
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-              />
-            )}
+            {(field) => <field.TextField label="Password" type="password" placeholder="••••••••" />}
           </form.AppField>
 
           {loginMutation.error && (
@@ -72,15 +62,11 @@ export function LoginForm() {
             </div>
           )}
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loginMutation.isPending}
-          >
+          <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
             {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
       </Suspense>
     </div>
-  );
+  )
 }

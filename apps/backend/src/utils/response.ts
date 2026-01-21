@@ -1,42 +1,38 @@
 // Standardized response helpers
 
 export interface SuccessResponse<T> {
-  success: true;
-  data: T;
+  success: true
+  data: T
 }
 
 export interface ErrorResponse {
-  success: false;
+  success: false
   error: {
-    code: string;
-    message: string;
-    details?: any;
-  };
+    code: string
+    message: string
+    details?: any
+  }
 }
 
 export interface PaginatedResponse<T> {
-  success: true;
-  data: T[];
+  success: true
+  data: T[]
   pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+  }
 }
 
 export function success<T>(data: T): SuccessResponse<T> {
   return {
     success: true,
     data,
-  };
+  }
 }
 
-export function error(
-  code: string,
-  message: string,
-  details?: any
-): ErrorResponse {
+export function error(code: string, message: string, details?: any): ErrorResponse {
   return {
     success: false,
     error: {
@@ -44,16 +40,16 @@ export function error(
       message,
       details,
     },
-  };
+  }
 }
 
 export function paginated<T>(
   data: T[],
   pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-  }
+    page: number
+    pageSize: number
+    total: number
+  },
 ): PaginatedResponse<T> {
   return {
     success: true,
@@ -62,5 +58,5 @@ export function paginated<T>(
       ...pagination,
       totalPages: Math.ceil(pagination.total / pagination.pageSize),
     },
-  };
+  }
 }

@@ -29,7 +29,9 @@ export function TrackCover({ coverArtUrl, title, size = 'md', className }: Track
 
   if (coverUrl) {
     return (
-      <div className={cn('relative overflow-hidden rounded bg-muted', sizeClasses[size], className)}>
+      <div
+        className={cn('relative overflow-hidden rounded bg-muted', sizeClasses[size], className)}
+      >
         <img
           src={coverUrl}
           alt={title}
@@ -37,12 +39,10 @@ export function TrackCover({ coverArtUrl, title, size = 'md', className }: Track
           onLoad={() => setIsLoaded(true)}
           className={cn(
             'absolute inset-0 w-full h-full object-cover transition-opacity duration-300',
-            isLoaded ? 'opacity-100' : 'opacity-0'
+            isLoaded ? 'opacity-100' : 'opacity-0',
           )}
         />
-        {!isLoaded && (
-          <div className="absolute inset-0 animate-pulse bg-muted" />
-        )}
+        {!isLoaded && <div className="absolute inset-0 animate-pulse bg-muted" />}
       </div>
     )
   }
@@ -52,7 +52,7 @@ export function TrackCover({ coverArtUrl, title, size = 'md', className }: Track
       className={cn(
         'rounded bg-muted flex items-center justify-center',
         sizeClasses[size],
-        className
+        className,
       )}
     >
       <Music className={cn('text-muted-foreground', iconSizes[size])} />

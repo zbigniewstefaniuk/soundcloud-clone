@@ -22,7 +22,7 @@ function hexToRgb(hex: string): [number, number, number] {
 function interpolateColor(
   c1: [number, number, number],
   c2: [number, number, number],
-  t: number
+  t: number,
 ): [number, number, number] {
   return [
     Math.round(c1[0] + (c2[0] - c1[0]) * t),

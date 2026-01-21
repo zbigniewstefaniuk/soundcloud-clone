@@ -8,7 +8,6 @@ class AuthStorage {
   private readonly TOKEN_KEY = 'auth_token'
   private readonly USER_KEY = 'auth_user'
 
-
   private get isBrowser(): boolean {
     return typeof window !== 'undefined'
   }
@@ -68,12 +67,10 @@ class AuthStorage {
       }
     },
 
-
     set: (user: StoredUser): void => {
       if (!this.isBrowser) return
       localStorage.setItem(this.USER_KEY, JSON.stringify(user))
     },
-
 
     remove: (): void => {
       if (!this.isBrowser) return
@@ -81,23 +78,19 @@ class AuthStorage {
     },
   }
 
-
   setAuth(token: string, user: StoredUser): void {
     this.token.set(token)
     this.user.set(user)
   }
-
 
   clear(): void {
     this.token.remove()
     this.user.remove()
   }
 
-
   isAuthenticated(): boolean {
     return this.token.exists()
   }
-
 
   getHeaders(): Record<string, string> {
     const token = this.token.get()
@@ -112,4 +105,3 @@ class AuthStorage {
  * Singleton instance of AuthStorage
  */
 export const authStorage = new AuthStorage()
-

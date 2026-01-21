@@ -7,15 +7,14 @@
 body {
   @apply m-0;
   font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
-    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family:
-    source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
 :root {
@@ -89,9 +88,7 @@ code {
 }
 
 @theme inline {
-  --default-font-family:
-    "InterVariable", system-ui, -apple-system, "Roboto", sans-serif;
-
+  --default-font-family: 'InterVariable', system-ui, -apple-system, 'Roboto', sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -142,11 +139,16 @@ code {
 
   /* Tailwind v4 switched from cursor: pointer to cursor: default for the button component. */
   button:not(:disabled),
-  [role="button"]:not(:disabled) {
+  [role='button']:not(:disabled) {
     cursor: pointer;
   }
-}
 
+  button:active,
+  [role='button']:active {
+    transform: scale(0.97);
+    transition: transform 150ms ease-out;
+  }
+}
 
 .animate-waveform {
   animation: waveform-flow 8s ease-in-out infinite;

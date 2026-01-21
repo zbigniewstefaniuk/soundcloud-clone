@@ -16,7 +16,7 @@ import {
   type UpdateTrackInput,
 } from '@/api/tracks'
 import { useMemo } from 'react'
-import { toast } from 'sonner';
+import { toast } from 'sonner'
 
 const TRACKS_QUERY_KEY = ['user-tracks'] as const
 const TRACK_QUERY_KEY = (id: string) => ['track', id] as const
@@ -50,7 +50,7 @@ export function useUserTracks() {
       error: query.error,
       refetch: query.refetch,
     }),
-    [query.data, query.isLoading, query.isError, query.error, query.refetch]
+    [query.data, query.isLoading, query.isError, query.error, query.refetch],
   )
 }
 
@@ -70,7 +70,7 @@ export function useTrack(id: string | undefined) {
       error: query.error,
       refetch: query.refetch,
     }),
-    [query.data, query.isLoading, query.isError, query.error, query.refetch]
+    [query.data, query.isLoading, query.isError, query.error, query.refetch],
   )
 }
 
@@ -124,8 +124,7 @@ export interface GetTracksParams {
   order?: 'asc' | 'desc'
 }
 
-const PUBLIC_TRACKS_QUERY_KEY = (params: GetTracksParams) =>
-  ['public-tracks', params] as const
+const PUBLIC_TRACKS_QUERY_KEY = (params: GetTracksParams) => ['public-tracks', params] as const
 
 export function usePublicTracks(params: GetTracksParams = {}) {
   const query = useQuery({
@@ -143,7 +142,7 @@ export function usePublicTracks(params: GetTracksParams = {}) {
       error: query.error,
       refetch: query.refetch,
     }),
-    [query.data, query.isLoading, query.isError, query.error, query.refetch]
+    [query.data, query.isLoading, query.isError, query.error, query.refetch],
   )
 }
 
@@ -164,7 +163,7 @@ export function useBatchLikeStatus(trackIds: string[], enabled = true) {
       isLoading: query.isLoading,
       isError: query.isError,
     }),
-    [query.data, query.isLoading, query.isError]
+    [query.data, query.isLoading, query.isError],
   )
 }
 
@@ -185,29 +184,26 @@ export function useToggleLike() {
       const previousPublicTracks = queryClient.getQueriesData({ queryKey: ['public-tracks'] })
 
       // Optimistically update batch likes cache
-      queryClient.setQueriesData<Record<string, boolean>>(
-        { queryKey: ['batch-likes'] },
-        (old) => {
-          if (!old) return old
-          return { ...old, [trackId]: !isLiked }
-        }
-      )
+      queryClient.setQueriesData<Record<string, boolean>>({ queryKey: ['batch-likes'] }, (old) => {
+        if (!old) return old
+        return { ...old, [trackId]: !isLiked }
+      })
 
       // Optimistically update like counts in track queries
-      queryClient.setQueriesData<{ data: Array<{ id: string; likeCount: number }>; pagination: unknown }>(
-        { queryKey: ['public-tracks'] },
-        (old) => {
-          if (!old?.data) return old
-          return {
-            ...old,
-            data: old.data.map((track) =>
-              track.id === trackId
-                ? { ...track, likeCount: track.likeCount + (isLiked ? -1 : 1) }
-                : track
-            ),
-          }
+      queryClient.setQueriesData<{
+        data: Array<{ id: string; likeCount: number }>
+        pagination: unknown
+      }>({ queryKey: ['public-tracks'] }, (old) => {
+        if (!old?.data) return old
+        return {
+          ...old,
+          data: old.data.map((track) =>
+            track.id === trackId
+              ? { ...track, likeCount: track.likeCount + (isLiked ? -1 : 1) }
+              : track,
+          ),
         }
-      )
+      })
 
       return { previousBatchLikes, previousPublicTracks }
     },
@@ -252,6 +248,6 @@ export function useUserLikedTracks(params: { page?: number; pageSize?: number } 
       error: query.error,
       refetch: query.refetch,
     }),
-    [query.data, query.isLoading, query.isError, query.error, query.refetch]
+    [query.data, query.isLoading, query.isError, query.error, query.refetch],
   )
 }

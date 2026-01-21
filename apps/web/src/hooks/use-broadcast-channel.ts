@@ -1,9 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-export function useBroadcastChannel<T>(
-  channelName: string,
-  onMessage: (message: T) => void
-) {
+export function useBroadcastChannel<T>(channelName: string, onMessage: (message: T) => void) {
   const channelRef = useRef<BroadcastChannel | null>(null)
 
   useEffect(() => {

@@ -5,7 +5,7 @@ import { useAppForm } from '@/hooks/form'
 import { z } from 'zod'
 import { Spinner } from '@/components/ui/spinner'
 import { Suspense } from 'react'
-import { getAssetUrl } from '@/lib/utils';
+import { getAssetUrl } from '@/lib/utils'
 
 export const Route = createFileRoute('/_authenticated/tracks/$trackId/edit')({
   component: EditTrackPage,
@@ -23,14 +23,10 @@ const updateTrackSchema = z.object({
     .instanceof(File)
     .optional()
     .nullable()
+    .refine((file) => !file || file.size <= MAX_IMAGE_SIZE, 'Image must be less than 5MB')
     .refine(
-      (file) => !file || file.size <= MAX_IMAGE_SIZE,
-      'Image must be less than 5MB'
-    )
-    .refine(
-      (file) =>
-        !file || ['image/png', 'image/jpeg', 'image/jpg'].includes(file.type),
-      'Must be PNG or JPG'
+      (file) => !file || ['image/png', 'image/jpeg', 'image/jpg'].includes(file.type),
+      'Must be PNG or JPG',
     ),
 })
 
@@ -75,7 +71,7 @@ function EditTrackPage() {
     )
   }
 
-  const coverArtURL = getAssetUrl(track.coverArtUrl);
+  const coverArtURL = getAssetUrl(track.coverArtUrl)
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
@@ -106,46 +102,30 @@ function EditTrackPage() {
           >
             <form.AppField name="title">
               {(field) => (
-                <field.TextField
-                  label="Title"
-                  placeholder="Enter track title"
-                  type="text"
-                />
+                <field.TextField label="Title" placeholder="Enter track title" type="text" />
               )}
             </form.AppField>
 
             <form.AppField name="description">
-              {(field) => (
-                <field.TextArea label="Description (Optional)" rows={4} />
-              )}
+              {(field) => <field.TextArea label="Description (Optional)" rows={4} />}
             </form.AppField>
 
             <div className="grid grid-cols-2 gap-4">
               <form.AppField name="genre">
                 {(field) => (
-                  <field.TextField
-                    label="Genre"
-                    placeholder="e.g., Electronic"
-                    type="text"
-                  />
+                  <field.TextField label="Genre" placeholder="e.g., Electronic" type="text" />
                 )}
               </form.AppField>
 
               <form.AppField name="mainArtist">
                 {(field) => (
-                  <field.TextField
-                    label="Artist"
-                    placeholder="Artist name"
-                    type="text"
-                  />
+                  <field.TextField label="Artist" placeholder="Artist name" type="text" />
                 )}
               </form.AppField>
             </div>
 
             <form.AppField name="coverArt">
-              {(field) => (
-                <field.ImageFileField label="Update Cover Art (Optional)" />
-              )}
+              {(field) => <field.ImageFileField label="Update Cover Art (Optional)" />}
             </form.AppField>
 
             <form.AppField name="isPublic">
@@ -162,11 +142,7 @@ function EditTrackPage() {
               </div>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={updateMutation.isPending}
-            >
+            <Button type="submit" className="w-full" disabled={updateMutation.isPending}>
               {updateMutation.isPending ? <Spinner /> : 'Update Track'}
             </Button>
           </form>

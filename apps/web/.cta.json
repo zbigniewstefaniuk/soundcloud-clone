@@ -8,12 +8,5 @@
   "git": true,
   "version": 1,
   "framework": "react-cra",
-  "chosenAddOns": [
-    "biome",
-    "compiler",
-    "form",
-    "shadcn",
-    "t3env",
-    "tanstack-query"
-  ]
+  "chosenAddOns": ["biome", "compiler", "form", "shadcn", "t3env", "tanstack-query"]
 }

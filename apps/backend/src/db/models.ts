@@ -1,8 +1,8 @@
-import { t } from 'elysia';
-import { createInsertSchema, createSelectSchema } from 'drizzle-typebox';
+import { t } from 'elysia'
+import { createInsertSchema, createSelectSchema } from 'drizzle-typebox'
 
-import { table } from './schema';
-import { spreads } from './utils';
+import { table } from './schema'
+import { spreads } from './utils'
 
 export const db = {
   insert: spreads(
@@ -15,7 +15,7 @@ export const db = {
       likes: createInsertSchema(table.likes),
       comments: createInsertSchema(table.comments),
     },
-    'insert'
+    'insert',
   ),
   select: spreads(
     {
@@ -27,6 +27,6 @@ export const db = {
       likes: createSelectSchema(table.likes),
       comments: createSelectSchema(table.comments),
     },
-    'select'
+    'select',
   ),
-} as const;
+} as const

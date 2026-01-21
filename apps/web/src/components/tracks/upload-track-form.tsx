@@ -3,7 +3,7 @@ import { useUploadTrack } from '@/hooks/use-tracks'
 import { Button } from '@/components/ui/button'
 import { useAppForm } from '@/hooks/form'
 import { Suspense } from 'react'
-import { Spinner } from '../ui/spinner';
+import { Spinner } from '../ui/spinner'
 
 const MAX_AUDIO_SIZE = 100 * 1024 * 1024
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
@@ -14,21 +14,26 @@ const uploadTrackSchema = z.object({
     .refine((file) => file.size <= MAX_AUDIO_SIZE, 'Audio file must be less than 100MB')
     .refine(
       (file) =>
-        ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/m4a', 'audio/x-m4a', 'audio/aac', 'audio/flac', 'audio/x-wav'].includes(file.type),
-      'Must be MP3, WAV, FLAC, AAC or M4A'
+        [
+          'audio/mpeg',
+          'audio/wav',
+          'audio/flac',
+          'audio/m4a',
+          'audio/x-m4a',
+          'audio/aac',
+          'audio/flac',
+          'audio/x-wav',
+        ].includes(file.type),
+      'Must be MP3, WAV, FLAC, AAC or M4A',
     ),
   coverArt: z
     .instanceof(File)
     .optional()
     .nullable()
+    .refine((file) => !file || file.size <= MAX_IMAGE_SIZE, 'Image must be less than 5MB')
     .refine(
-      (file) => !file || file.size <= MAX_IMAGE_SIZE,
-      'Image must be less than 5MB'
-    )
-    .refine(
-      (file) =>
-        !file || ['image/png', 'image/jpeg', 'image/jpg'].includes(file.type),
-      'Must be PNG or JPG'
+      (file) => !file || ['image/png', 'image/jpeg', 'image/jpg'].includes(file.type),
+      'Must be PNG or JPG',
     ),
   title: z.string().min(1, 'Title is required').max(255, 'Title too long'),
   description: z.string().optional(),
@@ -86,7 +91,7 @@ export function UploadTrackForm() {
           }}
           className="space-y-6"
         >
-          <div className='flex gap-10 justify-between'>
+          <div className="flex gap-10 justify-between">
             <form.AppField name="file">
               {(field) => <field.AudioFileField label="Audio File" />}
             </form.AppField>
@@ -98,39 +103,23 @@ export function UploadTrackForm() {
 
           <form.AppField name="title">
             {(field) => (
-              <field.TextField
-                label="Title"
-                placeholder="Enter track title"
-                type="text"
-              />
+              <field.TextField label="Title" placeholder="Enter track title" type="text" />
             )}
           </form.AppField>
 
           <form.AppField name="description">
-            {(field) => (
-              <field.TextArea label="Description (Optional)" rows={4} />
-            )}
+            {(field) => <field.TextArea label="Description (Optional)" rows={4} />}
           </form.AppField>
 
           <div className="grid grid-cols-2 gap-4">
             <form.AppField name="genre">
               {(field) => (
-                <field.TextField
-                  label="Genre"
-                  placeholder="e.g., Electronic"
-                  type="text"
-                />
+                <field.TextField label="Genre" placeholder="e.g., Electronic" type="text" />
               )}
             </form.AppField>
 
             <form.AppField name="mainArtist">
-              {(field) => (
-                <field.TextField
-                  label="Artist"
-                  placeholder="Artist name"
-                  type="text"
-                />
-              )}
+              {(field) => <field.TextField label="Artist" placeholder="Artist name" type="text" />}
             </form.AppField>
           </div>
 
@@ -148,11 +137,7 @@ export function UploadTrackForm() {
             </div>
           )}
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={uploadMutation.isPending}
-          >
+          <Button type="submit" className="w-full" disabled={uploadMutation.isPending}>
             {uploadMutation.isPending ? <Spinner /> : 'Upload Track'}
           </Button>
         </form>

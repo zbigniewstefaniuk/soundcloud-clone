@@ -1,8 +1,8 @@
-import { eq } from 'drizzle-orm';
-import { db } from '../config/database';
-import { users, userProfiles, tracks } from '../db/schema';
-import { NotFoundError } from '../middleware/error';
-import type { UpdateProfileInput } from '~/utils/validation';
+import { eq } from 'drizzle-orm'
+import { db } from '../config/database'
+import { users, userProfiles, tracks } from '../db/schema'
+import { NotFoundError } from '../middleware/error'
+import type { UpdateProfileInput } from '~/utils/validation'
 
 export class UserService {
   async getUserProfile(userId: string) {
@@ -16,13 +16,13 @@ export class UserService {
       .from(users)
       .leftJoin(userProfiles, eq(users.id, userProfiles.userId))
       .where(eq(users.id, userId))
-      .limit(1);
+      .limit(1)
 
     if (!user) {
-      throw new NotFoundError('User');
+      throw new NotFoundError('User')
     }
 
-    return user;
+    return user
   }
 
   async updateProfile(userId: string, input: UpdateProfileInput) {
@@ -33,13 +33,13 @@ export class UserService {
         updatedAt: new Date(),
       })
       .where(eq(userProfiles.userId, userId))
-      .returning();
+      .returning()
 
     if (!updated) {
-      throw new NotFoundError('Profile');
+      throw new NotFoundError('Profile')
     }
 
-    return updated;
+    return updated
   }
 
   async updateAvatar(userId: string, avatarUrl: string) {
@@ -50,20 +50,20 @@ export class UserService {
         updatedAt: new Date(),
       })
       .where(eq(userProfiles.userId, userId))
-      .returning();
+      .returning()
 
-    return updated;
+    return updated
   }
 
   async getUserTracks(userId: string, includePrivate: boolean = false) {
     const query = db.select().from(tracks)
 
     if (!includePrivate) {
-      return query.where(eq(tracks.isPublic, true));
+      return query.where(eq(tracks.isPublic, true))
     }
 
-    return query.where(eq(tracks.userId, userId));
+    return query.where(eq(tracks.userId, userId))
   }
 }
 
-export const userService = new UserService();
+export const userService = new UserService()

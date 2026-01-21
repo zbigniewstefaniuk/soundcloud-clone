@@ -1,0 +1,2 @@
+ALTER TABLE "tracks" ADD COLUMN "metadata_embedding" vector(384);--> statement-breakpoint
+CREATE INDEX "tracks_embedding_hnsw_idx" ON "tracks" USING hnsw ("metadata_embedding" vector_cosine_ops) WHERE "tracks"."is_public" = true;

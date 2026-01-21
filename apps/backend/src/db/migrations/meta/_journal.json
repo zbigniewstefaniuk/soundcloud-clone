@@ -8,6 +8,20 @@
       "when": 1768943048438,
       "tag": "0000_misty_runaways",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769023899690,
+      "tag": "0001_add_vector_search",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769024451293,
+      "tag": "0002_third_carmella_unuscione",
+      "breakpoints": true
     }
   ]
 }

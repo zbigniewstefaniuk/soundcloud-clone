@@ -1,24 +1,17 @@
-
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea as ShadcnTextarea } from '@/components/ui/textarea';
-import * as ShadcnSelect from '@/components/ui/select';
-import { Slider as ShadcnSlider } from '@/components/ui/slider';
-import { Switch as ShadcnSwitch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import type { ZodError } from 'zod';
-import {
-  useRef,
-  useState,
-  type ComponentProps } from 'react';
-import {
-  useFieldContext,
-  useFormContext } from '@/hooks/form-context';
-import { ImageIcon,
-  Music, X } from 'lucide-react';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea as ShadcnTextarea } from '@/components/ui/textarea'
+import * as ShadcnSelect from '@/components/ui/select'
+import { Slider as ShadcnSlider } from '@/components/ui/slider'
+import { Switch as ShadcnSwitch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import type { ZodError } from 'zod'
+import { useRef, useState, type ComponentProps } from 'react'
+import { useFieldContext, useFormContext } from '@/hooks/form-context'
+import { ImageIcon, Music, X } from 'lucide-react'
 
 export function SubmitButton({ label }: { label: string }) {
-  const form = useFormContext();
+  const form = useFormContext()
   return (
     <form.Subscribe selector={(state) => state.isSubmitting}>
       {(isSubmitting) => (
@@ -27,7 +20,7 @@ export function SubmitButton({ label }: { label: string }) {
         </Button>
       )}
     </form.Subscribe>
-  );
+  )
 }
 
 function ErrorMessages({ errors }: { errors: (string | ZodError)[] }) {
@@ -35,18 +28,14 @@ function ErrorMessages({ errors }: { errors: (string | ZodError)[] }) {
     <>
       {errors.map((error, index) => (
         <div
-          key={
-            typeof error === 'string'
-              ? `${error}_${index}`
-              : `${error.message}_${index}`
-          }
+          key={typeof error === 'string' ? `${error}_${index}` : `${error.message}_${index}`}
           className="mt-1 text-sm text-red-600"
         >
           {typeof error === 'string' ? error : error.message}
         </div>
       ))}
     </>
-  );
+  )
 }
 
 export function TextField({
@@ -54,11 +43,11 @@ export function TextField({
   placeholder,
   ...rest
 }: {
-  label: string;
-  placeholder?: string;
+  label: string
+  placeholder?: string
 } & ComponentProps<typeof Input>) {
-  const field = useFieldContext<string>();
-  const errors = field.state.meta.errors as (string | ZodError)[];
+  const field = useFieldContext<string>()
+  const errors = field.state.meta.errors as (string | ZodError)[]
 
   return (
     <div>
@@ -74,18 +63,12 @@ export function TextField({
       />
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
-  );
+  )
 }
 
-export function TextArea({
-  label,
-  rows = 3,
-}: {
-  label: string;
-  rows?: number;
-}) {
-  const field = useFieldContext<string>();
-  const errors = field.state.meta.errors as (string | ZodError)[];
+export function TextArea({ label, rows = 3 }: { label: string; rows?: number }) {
+  const field = useFieldContext<string>()
+  const errors = field.state.meta.errors as (string | ZodError)[]
 
   return (
     <div>
@@ -101,7 +84,7 @@ export function TextArea({
       />
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
-  );
+  )
 }
 
 export function Select({
@@ -109,12 +92,12 @@ export function Select({
   values,
   placeholder,
 }: {
-  label: string;
-  values: Array<{ label: string; value: string }>;
-  placeholder?: string;
+  label: string
+  values: Array<{ label: string; value: string }>
+  placeholder?: string
 }) {
-  const field = useFieldContext<string>();
-  const errors = field.state.meta.errors as (string | ZodError)[];
+  const field = useFieldContext<string>()
+  const errors = field.state.meta.errors as (string | ZodError)[]
 
   return (
     <div>
@@ -139,12 +122,12 @@ export function Select({
       </ShadcnSelect.Select>
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
-  );
+  )
 }
 
 export function Slider({ label }: { label: string }) {
-  const field = useFieldContext<number>();
-  const errors = field.state.meta.errors as (string | ZodError)[];
+  const field = useFieldContext<number>()
+  const errors = field.state.meta.errors as (string | ZodError)[]
 
   return (
     <div>
@@ -159,12 +142,12 @@ export function Slider({ label }: { label: string }) {
       />
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
-  );
+  )
 }
 
 export function Switch({ label }: { label: string }) {
-  const field = useFieldContext<boolean>();
-  const errors = field.state.meta.errors as (string | ZodError)[];
+  const field = useFieldContext<boolean>()
+  const errors = field.state.meta.errors as (string | ZodError)[]
 
   return (
     <div>
@@ -179,10 +162,8 @@ export function Switch({ label }: { label: string }) {
       </div>
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
-  );
+  )
 }
-
-
 
 const ACCEPTED_AUDIO_TYPES = [
   'audio/mpeg',
@@ -281,9 +262,10 @@ export function AudioFileField({ label }: { label: string }) {
             type="button"
             className={`
               w-full border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
-              ${isDragOver
-                ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-950/30 scale-[1.02]'
-                : 'border-gray-300 hover:border-cyan-500 dark:border-gray-600'
+              ${
+                isDragOver
+                  ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-950/30 scale-[1.02]'
+                  : 'border-gray-300 hover:border-cyan-500 dark:border-gray-600'
               }
               ${dragError ? 'border-red-500 bg-red-50 dark:bg-red-950/30' : ''}
             `}
@@ -293,15 +275,15 @@ export function AudioFileField({ label }: { label: string }) {
                 isDragOver ? 'text-cyan-500' : 'text-gray-400'
               }`}
             />
-            <p className={`mt-2 text-sm ${isDragOver ? 'text-cyan-600' : 'text-gray-600 dark:text-gray-400'}`}>
+            <p
+              className={`mt-2 text-sm ${isDragOver ? 'text-cyan-600' : 'text-gray-600 dark:text-gray-400'}`}
+            >
               {isDragOver ? 'Drop your audio file here' : 'Drag & drop or click to upload'}
             </p>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
               MP3, WAV, FLAC, AAC, M4A up to 100MB
             </p>
-            {dragError && (
-              <p className="mt-2 text-sm text-red-600 font-medium">{dragError}</p>
-            )}
+            {dragError && <p className="mt-2 text-sm text-red-600 font-medium">{dragError}</p>}
           </button>
         ) : (
           <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -311,9 +293,7 @@ export function AudioFileField({ label }: { label: string }) {
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-50">
                   {fileName}
                 </p>
-                <p className="text-xs text-gray-500">
-                  {(fileSize / 1024 / 1024).toFixed(2)} MB
-                </p>
+                <p className="text-xs text-gray-500">{(fileSize / 1024 / 1024).toFixed(2)} MB</p>
               </div>
             </div>
             <button
@@ -427,9 +407,10 @@ export function ImageFileField({ label }: { label: string }) {
             type="button"
             className={`
               w-full border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
-              ${isDragOver
-                ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-950/30 scale-[1.02]'
-                : 'border-gray-300 hover:border-cyan-500 dark:border-gray-600'
+              ${
+                isDragOver
+                  ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-950/30 scale-[1.02]'
+                  : 'border-gray-300 hover:border-cyan-500 dark:border-gray-600'
               }
               ${dragError ? 'border-red-500 bg-red-50 dark:bg-red-950/30' : ''}
             `}
@@ -439,15 +420,15 @@ export function ImageFileField({ label }: { label: string }) {
                 isDragOver ? 'text-cyan-500' : 'text-gray-400'
               }`}
             />
-            <p className={`mt-2 text-sm ${isDragOver ? 'text-cyan-600' : 'text-gray-600 dark:text-gray-400'}`}>
+            <p
+              className={`mt-2 text-sm ${isDragOver ? 'text-cyan-600' : 'text-gray-600 dark:text-gray-400'}`}
+            >
               {isDragOver ? 'Drop your image here' : 'Drag & drop or click to upload'}
             </p>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
               PNG, JPG up to 5MB (Optional)
             </p>
-            {dragError && (
-              <p className="mt-2 text-sm text-red-600 font-medium">{dragError}</p>
-            )}
+            {dragError && <p className="mt-2 text-sm text-red-600 font-medium">{dragError}</p>}
           </button>
         ) : (
           <div className="relative group">

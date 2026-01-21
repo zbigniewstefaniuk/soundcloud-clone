@@ -1,19 +1,18 @@
 import { Outlet, createFileRoute } from '@tanstack/react-router'
-import { Spinner } from '@/components/ui/spinner';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { useAccount, useLogin } from '@/hooks/use-auth';
+import { Spinner } from '@/components/ui/spinner'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { useAccount, useLogin } from '@/hooks/use-auth'
 
 export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedLayout,
 })
 
 function AuthenticatedLayout() {
-  const { isAuthenticated, isLoading } =
-    useAccount()
+  const { isAuthenticated, isLoading } = useAccount()
   const { mutate: login, isPending: isLoggingIn, error: loginError } = useLogin()
-  
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -43,27 +42,15 @@ function AuthenticatedLayout() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label>Email</Label>
-              <Input
-                name="email"
-                type="email"
-                required
-                className="mt-2 w-full"
-              />
+              <Input name="email" type="email" required className="mt-2 w-full" />
             </div>
 
             <div>
               <Label>Password</Label>
-              <Input
-                name="password"
-                type="password"
-                required
-                className="mt-2 w-full"
-              />
+              <Input name="password" type="password" required className="mt-2 w-full" />
             </div>
 
-            {loginError && (
-              <p className="text-sm text-error">{loginError.message}</p>
-            )}
+            {loginError && <p className="text-sm text-error">{loginError.message}</p>}
 
             <Button type="submit" disabled={isLoggingIn} className="w-full">
               {isLoggingIn ? 'Signing in...' : 'Sign In'}

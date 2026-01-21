@@ -9,7 +9,13 @@ interface EmptyStateProps {
   children?: React.ReactNode
 }
 
-export function EmptyState({ icon: Icon, title, description, className, children }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  className,
+  children,
+}: EmptyStateProps) {
   return (
     <div className={cn('text-center py-12', className)}>
       <Icon className="mx-auto h-12 w-12 text-muted-foreground" />

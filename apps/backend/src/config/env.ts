@@ -18,22 +18,18 @@ export const env = {
   // File Upload
   MAX_FILE_SIZE: parseInt(process.env.MAX_FILE_SIZE || '10485760', 10), // 10MB
   UPLOAD_DIR: process.env.UPLOAD_DIR || './uploads',
-};
+}
 
 // Validate required environment variables
 export function validateEnv() {
-  const required = ['DATABASE_URL', 'JWT_SECRET'];
-  const missing = required.filter((key) => !env[key as keyof typeof env]);
+  const required = ['DATABASE_URL', 'JWT_SECRET']
+  const missing = required.filter((key) => !env[key as keyof typeof env])
 
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(', ')}`
-    );
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`)
   }
 
   if (env.JWT_SECRET.length < 32) {
-    console.warn(
-      'WARNING: JWT_SECRET should be at least 32 characters for security'
-    );
+    console.warn('WARNING: JWT_SECRET should be at least 32 characters for security')
   }
 }

@@ -41,9 +41,7 @@ export function QueueSidebar({ isOpen, onClose }: QueueSidebarProps) {
             <div className="flex flex-col items-center justify-center h-64 text-center px-4">
               <Music2 className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="font-medium mb-1">No tracks in queue</h3>
-              <p className="text-sm text-muted-foreground">
-                Play a track to start your queue
-              </p>
+              <p className="text-sm text-muted-foreground">Play a track to start your queue</p>
             </div>
           ) : (
             <div className="p-2">
@@ -121,9 +119,7 @@ function QueueItem({ track, isActive, isPlaying, onClick, index }: QueueItemProp
       onClick={onClick}
       className={cn(
         'w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left group',
-        isActive
-          ? 'bg-accent border border-border'
-          : 'hover:bg-accent/50'
+        isActive ? 'bg-accent border border-border' : 'hover:bg-accent/50',
       )}
     >
       <div className="relative">
@@ -136,7 +132,7 @@ function QueueItem({ track, isActive, isPlaying, onClick, index }: QueueItemProp
         <div
           className={cn(
             'absolute inset-0 bg-black/40 flex items-center justify-center rounded-md transition-opacity',
-            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
           )}
         >
           {isActive && isPlaying ? (
@@ -148,12 +144,7 @@ function QueueItem({ track, isActive, isPlaying, onClick, index }: QueueItemProp
       </div>
 
       <div className="flex-1 min-w-0">
-        <p
-          className={cn(
-            'text-sm font-medium truncate',
-            isActive && 'text-primary'
-          )}
-        >
+        <p className={cn('text-sm font-medium truncate', isActive && 'text-primary')}>
           {track.title}
         </p>
         <p className="text-xs text-muted-foreground truncate">
@@ -162,9 +153,7 @@ function QueueItem({ track, isActive, isPlaying, onClick, index }: QueueItemProp
       </div>
 
       {index !== undefined && (
-        <span className="text-xs text-muted-foreground tabular-nums pr-1">
-          {index}
-        </span>
+        <span className="text-xs text-muted-foreground tabular-nums pr-1">{index}</span>
       )}
     </button>
   )

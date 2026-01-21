@@ -1,36 +1,31 @@
-import { Elysia } from 'elysia';
-import { jwtPlugin, authMiddleware } from '../middleware/auth';
-import { authService } from '../services/auth.service';
-import { success } from '../utils/response';
-import { RegisterSchema, LoginSchema } from '../utils/validation';
+import { Elysia } from 'elysia'
+import { jwtPlugin, authMiddleware } from '../middleware/auth'
+import { authService } from '../services/auth.service'
+import { success } from '../utils/response'
+import { RegisterSchema, LoginSchema } from '../utils/validation'
 
 export const authRoutes = new Elysia({ prefix: '/auth' })
   .use(jwtPlugin)
   .post(
     '/register',
     async ({ body, jwt }) => {
-      const result = await authService.register(body, (payload) =>
-        jwt.sign(payload),
-      );
-      return success(result);
+      const result = await authService.register(body, (payload) => jwt.sign(payload))
+      return success(result)
     },
     {
       body: RegisterSchema,
       detail: {
         tags: ['Auth'],
         summary: 'Register a new user',
-        description:
-          'Create a new user account with username, email, and password',
+        description: 'Create a new user account with username, email, and password',
       },
     },
   )
   .post(
     '/login',
     async ({ body, jwt }) => {
-      const result = await authService.login(body, (payload) =>
-        jwt.sign(payload),
-      );
-      return success(result);
+      const result = await authService.login(body, (payload) => jwt.sign(payload))
+      return success(result)
     },
     {
       body: LoginSchema,
@@ -45,8 +40,8 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
   .get(
     '/me',
     async ({ user }) => {
-      const currentUser = await authService.getCurrentUser(user.userId);
-      return success(currentUser);
+      const currentUser = await authService.getCurrentUser(user.userId)
+      return success(currentUser)
     },
     {
       detail: {
@@ -55,4 +50,4 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
         description: 'Get currently authenticated user profile',
       },
     },
-  );
+  )
