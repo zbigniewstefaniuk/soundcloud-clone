@@ -22,16 +22,26 @@ export function calculatePagination(input: PaginationInput) {
   return { page, pageSize, offset }
 }
 
+export interface PaginatedResult<T> {
+  data: T[]
+  pagination: PaginationMeta
+}
+
+export function paginatedResult<T>(
+  data: T[],
+  total: number,
+  page: number,
+  pageSize: number,
+): PaginatedResult<T> {
+  return {
+    data,
+    pagination: { page, pageSize, total },
+  }
+}
+
 export function emptyPaginatedResult<T>(page: number, pageSize: number) {
   return {
     data: [] as T[],
     pagination: { page, pageSize, total: 0 },
-  }
-}
-
-export function paginatedResult<T>(data: T[], total: number, page: number, pageSize: number) {
-  return {
-    data,
-    pagination: { page, pageSize, total },
   }
 }

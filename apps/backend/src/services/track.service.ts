@@ -5,11 +5,19 @@ import { userProjection } from '../db/projections'
 import { fileService } from './file.service'
 import { embeddingService } from './embedding.service'
 import { ValidationError, NotFoundError, ForbiddenError } from '../middleware/error'
-import { calculatePagination, emptyPaginatedResult, paginatedResult } from '../utils/pagination'
+import {
+  calculatePagination,
+  emptyPaginatedResult,
+  paginatedResult,
+  type PaginatedResult,
+} from '../utils/pagination'
 import { parseBooleanOrString } from '../utils/validation'
 import { findOwnedTrackOrThrow } from '../utils/entity'
 
 import type { TrackQueryParams, CreateTrackInput, UpdateTrackInput } from '~/utils/validation'
+
+type UserProjection = { id: string; username: string }
+type TrackWithUser = typeof tracks.$inferSelect & { user: UserProjection | null; likeCount: number }
 
 export class TrackService {
   async uploadTrack({ input, userId }: { userId: string; input: CreateTrackInput }) {
@@ -59,7 +67,10 @@ export class TrackService {
     })
   }
 
-  async getTracks(query: TrackQueryParams, currentUserId?: string) {
+  async getTracks(
+    query: TrackQueryParams,
+    currentUserId?: string,
+  ): Promise<PaginatedResult<TrackWithUser>> {
     const { page, pageSize, offset } = calculatePagination(query)
 
     return await db.transaction(async (tx) => {
@@ -128,7 +139,7 @@ export class TrackService {
         .limit(pageSize)
         .offset(offset)
 
-      return paginatedResult(
+      const paginatedResults = paginatedResult(
         tracksData.map((t) => ({
           ...t.track,
           user: t.user,
@@ -138,6 +149,8 @@ export class TrackService {
         page,
         pageSize,
       )
+
+      return paginatedResults
     })
   }
 

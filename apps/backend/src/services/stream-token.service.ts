@@ -8,7 +8,7 @@ interface StreamToken {
   nonce: string
 }
 
-const TOKEN_EXPIRY_SECONDS = 300 // 5 minutes
+const TOKEN_EXPIRY_SECONDS = 3600 // 1 hour
 
 class StreamTokenService {
   private get streamSecret(): string {

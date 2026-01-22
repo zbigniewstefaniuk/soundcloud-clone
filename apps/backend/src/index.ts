@@ -67,11 +67,11 @@ const app = new Elysia()
       },
     }),
   )
-  .onError(({ error }) => {
+  .onError(({ error, set }) => {
     if (securityConfig.isProduction && error instanceof Error) {
       console.error(`[${new Date().toISOString()}] Error:`, error.message)
     }
-    return errorHandler(error)
+    return errorHandler(error, { set })
   })
   .get('/', () => ({
     message: 'Elysia Music API',

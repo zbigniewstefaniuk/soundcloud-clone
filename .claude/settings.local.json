@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run db:generate:*)",
+      "Bash(bun run:*)",
+      "Bash(bun -e:*)"
+    ]
+  }
+}

@@ -3,8 +3,11 @@ import { db } from '../config/database'
 import { comments, users } from '../db/schema'
 import { userProjection } from '../db/projections'
 import { NotFoundError } from '../middleware/error'
-import { emptyPaginatedResult, paginatedResult } from '../utils/pagination'
+import { emptyPaginatedResult, paginatedResult, type PaginatedResult } from '../utils/pagination'
 import { findTrackByIdOrThrow, findOwnedCommentOrThrow } from '../utils/entity'
+
+type UserProjection = { id: string; username: string }
+type CommentWithUser = typeof comments.$inferSelect & { user: UserProjection | null }
 
 export class CommentService {
   async createComment(userId: string, trackId: string, content: string, timestamp?: number) {
@@ -37,7 +40,11 @@ export class CommentService {
     return commentWithUser
   }
 
-  async getTrackComments(trackId: string, page = 1, pageSize = 20) {
+  async getTrackComments(
+    trackId: string,
+    page = 1,
+    pageSize = 20,
+  ): Promise<PaginatedResult<CommentWithUser>> {
     const offset = (page - 1) * pageSize
 
     const [totalResult] = await db

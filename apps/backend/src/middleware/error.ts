@@ -112,10 +112,43 @@ function parseValidationError(errorData: any) {
   return { property, message: summary || 'Validation failed' }
 }
 
+type ErrorHandlerContext = {
+  set: { status?: number | string }
+}
+
+type ErrorWithMessage = { message: string }
+type ErrorWithType = { type: string }
+type ErrorWithCode = { code: string }
+
+function hasMessage(error: unknown): error is ErrorWithMessage {
+  return typeof error === 'object' && error !== null && 'message' in error && typeof (error as ErrorWithMessage).message === 'string'
+}
+
+function hasType(error: unknown): error is ErrorWithType {
+  return typeof error === 'object' && error !== null && 'type' in error
+}
+
+function hasCode(error: unknown): error is ErrorWithCode {
+  return typeof error === 'object' && error !== null && 'code' in error
+}
+
 // Global error handler
-export function errorHandler(error: any) {
+export function errorHandler(error: unknown, { set }: ErrorHandlerContext) {
+  // Handle AppError instances (must check first - sets proper status code)
+  if (error instanceof AppError) {
+    set.status = error.statusCode
+    return {
+      success: false,
+      error: {
+        code: error.code,
+        message: error.message,
+      },
+    }
+  }
+
   // Parse validation errors from stringified format
-  if (typeof error?.message === 'string' && error.message.includes('"type":"validation"')) {
+  if (hasMessage(error) && error.message.includes('"type":"validation"')) {
+    set.status = 400
     const { message } = parseValidationError(error.message)
     return {
       success: false,
@@ -126,19 +159,9 @@ export function errorHandler(error: any) {
     }
   }
 
-  // Handle AppError instances
-  if (error instanceof AppError) {
-    return {
-      success: false,
-      error: {
-        code: error.code,
-        message: error.message,
-      },
-    }
-  }
-
   // Handle Elysia validation errors (object format)
-  if (error.type === 'validation') {
+  if (hasType(error) && error.type === 'validation') {
+    set.status = 400
     const { message } = parseValidationError(error)
     return {
       success: false,
@@ -150,7 +173,8 @@ export function errorHandler(error: any) {
   }
 
   // Handle 404
-  if (error.code === 'NOT_FOUND') {
+  if (hasCode(error) && error.code === 'NOT_FOUND') {
+    set.status = 404
     return {
       success: false,
       error: {
@@ -161,6 +185,7 @@ export function errorHandler(error: any) {
   }
 
   // Default error
+  set.status = 500
   console.error('Unhandled error:', error)
   return {
     success: false,

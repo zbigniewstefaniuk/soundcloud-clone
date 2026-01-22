@@ -60,7 +60,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
 
       return success({
         streamUrl: `/tracks/${params.id}/stream?st=${streamToken}`,
-        expiresIn: 300,
+        expiresIn: 3600,
       })
     },
     {
@@ -68,7 +68,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       detail: {
         tags: ['Tracks'],
         summary: 'Get streaming token',
-        description: 'Generate short-lived signed URL for streaming (5 min)',
+        description: 'Generate signed URL for streaming (1 hour)',
       },
     },
   )
