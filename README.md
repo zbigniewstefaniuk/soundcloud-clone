@@ -145,7 +145,7 @@ turbo run dev --filter=@repo/web
 - **Framework**: React 19
 - **Build**: Vite 7
 - **Language**: TypeScript 5
-- **Linter**: ESLint 9
+- **Linter**: oxlint
 
 ### Monorepo
 
