@@ -5,19 +5,11 @@ import { userProjection } from '../db/projections'
 import { fileService } from './file.service'
 import { embeddingService } from './embedding.service'
 import { ValidationError, NotFoundError, ForbiddenError } from '../middleware/error'
-import {
-  calculatePagination,
-  emptyPaginatedResult,
-  paginatedResult,
-  type PaginatedResult,
-} from '../utils/pagination'
+import { calculatePagination, paginatedResult } from '../utils/pagination'
 import { parseBooleanOrString } from '../utils/validation'
 import { findOwnedTrackOrThrow } from '../utils/entity'
 
 import type { TrackQueryParams, CreateTrackInput, UpdateTrackInput } from '~/utils/validation'
-
-type UserProjection = { id: string; username: string }
-type TrackWithUser = typeof tracks.$inferSelect & { user: UserProjection | null; likeCount: number }
 
 export class TrackService {
   async uploadTrack({ input, userId }: { userId: string; input: CreateTrackInput }) {
@@ -67,13 +59,10 @@ export class TrackService {
     })
   }
 
-  async getTracks(
-    query: TrackQueryParams,
-    currentUserId?: string,
-  ): Promise<PaginatedResult<TrackWithUser>> {
+  async getTracks(query: TrackQueryParams, currentUserId?: string) {
     const { page, pageSize, offset } = calculatePagination(query)
 
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       const conditions = []
 
       if (query.userId) {
@@ -118,11 +107,6 @@ export class TrackService {
 
       const total = totalResult?.count || 0
 
-      // If no tracks, return empty result
-      if (total === 0) {
-        return emptyPaginatedResult(page, pageSize)
-      }
-
       // Get tracks with user and like count
       const tracksData = await tx
         .select({
@@ -140,10 +124,12 @@ export class TrackService {
         .offset(offset)
 
       const paginatedResults = paginatedResult(
-        tracksData.map((t) => ({
-          ...t.track,
-          user: t.user,
-          likeCount: Number(t.likeCount) || 0,
+        //  we dont want to return metadataEmbedding
+        // oxlint-disable-next-line no-unused-vars
+        tracksData.map(({ track: { metadataEmbedding, ...track }, likeCount, user }) => ({
+          ...track,
+          user: user,
+          likeCount: Number(likeCount) || 0,
         })),
         total,
         page,
@@ -152,6 +138,8 @@ export class TrackService {
 
       return paginatedResults
     })
+
+    return result
   }
 
   async getTrackById(trackId: string, currentUserId?: string) {

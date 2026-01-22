@@ -38,10 +38,3 @@ export function paginatedResult<T>(
     pagination: { page, pageSize, total },
   }
 }
-
-export function emptyPaginatedResult<T>(page: number, pageSize: number) {
-  return {
-    data: [] as T[],
-    pagination: { page, pageSize, total: 0 },
-  }
-}

@@ -1,4 +1,4 @@
-import { pipeline } from '@xenova/transformers'
+import { pipeline } from '@huggingface/transformers'
 
 interface TrackMetadata {
   title: string
@@ -16,18 +16,18 @@ class EmbeddingService {
 
   /**
    * Initialize the embedding pipeline with model caching
-   * Uses Xenova/all-MiniLM-L6-v2 - 384 dimensions, ~22MB, fast inference
+   * Uses sentence-transformers/all-MiniLM-L6-v2 - 384 dimensions, ~22MB, fast inference
    */
   async initialize(): Promise<void> {
     if (this.embeddingPipeline) return
     if (this.initPromise) return this.initPromise
 
     this.initPromise = (async () => {
-      console.log('Loading embedding model (Xenova/all-MiniLM-L6-v2)...')
+      console.log('Loading embedding model (sentence-transformers/all-MiniLM-L6-v2)...')
       this.embeddingPipeline = await pipeline(
         'feature-extraction',
-        'Xenova/all-MiniLM-L6-v2',
-        { quantized: true }, // Use quantized model for faster inference
+        'sentence-transformers/all-MiniLM-L6-v2',
+        { dtype: 'fp32' }, // Use fp32 for compatibility
       )
       console.log('Embedding model loaded successfully')
     })()

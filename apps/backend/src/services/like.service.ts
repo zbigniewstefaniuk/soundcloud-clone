@@ -3,12 +3,15 @@ import { db } from '../config/database'
 import { likes, tracks, users } from '../db/schema'
 import { userProjection } from '../db/projections'
 import { NotFoundError, ConflictError } from '../middleware/error'
-import { emptyPaginatedResult, paginatedResult, type PaginatedResult } from '../utils/pagination'
+import { paginatedResult, type PaginatedResult } from '../utils/pagination'
 import { findTrackByIdOrThrow } from '../utils/entity'
 
 type UserProjection = { id: string; username: string }
 type LikeWithUser = { like: typeof likes.$inferSelect; user: UserProjection | null }
-type LikedTrackItem = Partial<typeof tracks.$inferSelect> & { user: UserProjection | null; likedAt: Date }
+type LikedTrackItem = Partial<typeof tracks.$inferSelect> & {
+  user: UserProjection | null
+  likedAt: Date
+}
 
 export class LikeService {
   async likeTrack(userId: string, trackId: string) {
@@ -60,10 +63,6 @@ export class LikeService {
       .from(likes)
       .where(eq(likes.trackId, trackId))
 
-    if (!totalResult?.count) {
-      return emptyPaginatedResult(page, pageSize)
-    }
-
     const likesData = await db
       .select({
         like: likes,
@@ -75,7 +74,7 @@ export class LikeService {
       .limit(pageSize)
       .offset(offset)
 
-    return paginatedResult(likesData, totalResult.count, page, pageSize)
+    return paginatedResult(likesData, totalResult?.count ?? 0, page, pageSize)
   }
 
   async getUserLikes(

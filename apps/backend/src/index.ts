@@ -1,3 +1,7 @@
+// Disable sharp for @xenova/transformers - not needed for text embeddings
+// This fixes "Cannot find module sharp" error when running compiled binary
+process.env.TRANSFORMERS_JS_SKIP_SHARP = '1'
+
 import { Elysia } from 'elysia'
 import { staticPlugin } from '@elysiajs/static'
 import openapi from '@elysiajs/openapi'

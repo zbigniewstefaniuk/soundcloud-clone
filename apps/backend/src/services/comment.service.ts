@@ -3,7 +3,7 @@ import { db } from '../config/database'
 import { comments, users } from '../db/schema'
 import { userProjection } from '../db/projections'
 import { NotFoundError } from '../middleware/error'
-import { emptyPaginatedResult, paginatedResult, type PaginatedResult } from '../utils/pagination'
+import { paginatedResult, type PaginatedResult } from '../utils/pagination'
 import { findTrackByIdOrThrow, findOwnedCommentOrThrow } from '../utils/entity'
 
 type UserProjection = { id: string; username: string }
@@ -52,10 +52,6 @@ export class CommentService {
       .from(comments)
       .where(eq(comments.trackId, trackId))
 
-    if (!totalResult?.count) {
-      return emptyPaginatedResult(page, pageSize)
-    }
-
     const commentsData = await db
       .select({
         comment: comments,
@@ -73,7 +69,7 @@ export class CommentService {
         ...c.comment,
         user: c.user,
       })),
-      totalResult.count,
+      totalResult?.count ?? 0,
       page,
       pageSize,
     )
