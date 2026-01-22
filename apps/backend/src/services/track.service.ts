@@ -164,10 +164,16 @@ export class TrackService {
       throw new ForbiddenError('This track is private')
     }
 
+    const { likeCount, track, user } = result
+
+    //  we dont want to return metadataEmbedding
+    // oxlint-disable-next-line no-unused-vars
+    const { metadataEmbedding, ...trackWithoutEmbedding } = track
+
     return {
-      ...result.track,
-      user: result.user,
-      likeCount: Number(result.likeCount) || 0,
+      ...trackWithoutEmbedding,
+      user,
+      likeCount: Number(likeCount) || 0,
     }
   }
 
