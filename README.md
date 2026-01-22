@@ -199,6 +199,89 @@ cd apps/backend
 bun run db:studio
 ```
 
+## Vector Search (Semantic Search)
+
+The backend includes semantic search capabilities using vector embeddings, allowing users to search tracks by meaning rather than exact keyword matches.
+
+### Technology Stack
+
+- **PostgreSQL + pgvector**: Vector storage and similarity search
+- **Hugging Face Transformers**: Local embedding generation
+- **Model**: `sentence-transformers/all-MiniLM-L6-v2` (384 dimensions, ~22MB)
+- **Index**: HNSW (Hierarchical Navigable Small World) for fast approximate nearest neighbor search
+
+### How It Works
+
+1. Track metadata (title, description, genre, artist) is combined and converted into a 384-dimensional vector embedding
+2. Search queries are similarly converted to embeddings
+3. PostgreSQL's pgvector extension performs cosine similarity search to find the most relevant tracks
+4. Hybrid search falls back to keyword matching when vector results are insufficient
+
+### Setup
+
+1. **Enable pgvector extension:**
+
+   ```bash
+   cd apps/backend
+   bun run scripts/setup-pgvector.ts
+   ```
+
+   This script checks for pgvector availability, enables the extension, and creates the necessary column and HNSW index.
+
+2. **Backfill embeddings for existing tracks:**
+
+   ```bash
+   cd apps/backend
+   bun run scripts/backfill-embeddings.ts
+   ```
+
+   This generates embeddings for all existing public tracks that don't have embeddings yet.
+
+### API Endpoint
+
+**Search tracks:**
+
+```
+GET /search/tracks?q=<query>&limit=20&threshold=0.3
+```
+
+| Parameter   | Type    | Default | Description                          |
+| ----------- | ------- | ------- | ------------------------------------ |
+| `q`         | string  | -       | Search query (1-200 characters)      |
+| `limit`     | integer | 20      | Max results (1-50)                   |
+| `threshold` | number  | 0.3     | Minimum similarity score (0-1)       |
+
+**Response:**
+
+```json
+{
+  "data": [
+    {
+      "id": "track_id",
+      "title": "Track Title",
+      "description": "Track description",
+      "genre": "Electronic",
+      "mainArtist": "Artist Name",
+      "coverArtUrl": "https://...",
+      "playCount": 100,
+      "similarity": 0.85,
+      "user": { "id": "user_id", "username": "username" },
+      "likeCount": 10
+    }
+  ]
+}
+```
+
+### Docker Setup for pgvector
+
+If using Docker, use the pgvector image:
+
+```bash
+docker run -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 pgvector/pgvector:pg16
+```
+
+Or update your `docker-compose.yml` to use `pgvector/pgvector:pg16` instead of the standard PostgreSQL image.
+
 ## Production Build
 
 ```bash
