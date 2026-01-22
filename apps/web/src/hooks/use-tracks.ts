@@ -130,20 +130,17 @@ export function usePublicTracks(params: GetTracksParams = {}) {
   const query = useQuery({
     queryKey: PUBLIC_TRACKS_QUERY_KEY(params),
     queryFn: () => getPublicTracks(params),
-    staleTime: 1000 * 60 * 2,
+    staleTime: 1000 * 60 * 1,
   })
 
-  return useMemo(
-    () => ({
-      tracks: query.data?.data ?? [],
-      pagination: query.data?.pagination ?? null,
-      isLoading: query.isLoading,
-      isError: query.isError,
-      error: query.error,
-      refetch: query.refetch,
-    }),
-    [query.data, query.isLoading, query.isError, query.error, query.refetch],
-  )
+  return {
+    tracks: query.data?.data ?? [],
+    pagination: query.data?.pagination ?? null,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
+  }
 }
 
 const BATCH_LIKES_QUERY_KEY = (trackIds: string[]) =>
@@ -157,14 +154,11 @@ export function useBatchLikeStatus(trackIds: string[], enabled = true) {
     staleTime: 1000 * 60 * 2,
   })
 
-  return useMemo(
-    () => ({
-      likedMap: query.data ?? {},
-      isLoading: query.isLoading,
-      isError: query.isError,
-    }),
-    [query.data, query.isLoading, query.isError],
-  )
+  return {
+    likedMap: query.data ?? {},
+    isLoading: query.isLoading,
+    isError: query.isError,
+  }
 }
 
 export function useToggleLike() {
@@ -239,15 +233,12 @@ export function useUserLikedTracks(params: { page?: number; pageSize?: number } 
     staleTime: 1000 * 60 * 2,
   })
 
-  return useMemo(
-    () => ({
-      tracks: query.data?.data ?? [],
-      pagination: query.data?.pagination ?? null,
-      isLoading: query.isLoading,
-      isError: query.isError,
-      error: query.error,
-      refetch: query.refetch,
-    }),
-    [query.data, query.isLoading, query.isError, query.error, query.refetch],
-  )
+  return {
+    tracks: query.data?.data ?? [],
+    pagination: query.data?.pagination ?? null,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
+  }
 }

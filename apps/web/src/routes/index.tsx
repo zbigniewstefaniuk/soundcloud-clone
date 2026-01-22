@@ -151,7 +151,7 @@ function TrackSection({ title, subtitle, icon: Icon, sortBy, pageSize = 8 }: Tra
 
   return (
     <section className="py-12 relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-b from-transparent via-primary/2 to-transparent pointer-events-none" />
       <div className="container mx-auto px-4 relative">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
