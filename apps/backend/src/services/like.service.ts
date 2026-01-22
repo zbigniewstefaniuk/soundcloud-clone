@@ -1,15 +1,14 @@
 import { eq, and, count, inArray } from 'drizzle-orm'
 import { db } from '../config/database'
 import { likes, tracks, users } from '../db/schema'
+import { userProjection } from '../db/projections'
 import { NotFoundError, ConflictError } from '../middleware/error'
+import { emptyPaginatedResult, paginatedResult } from '../utils/pagination'
+import { findTrackByIdOrThrow } from '../utils/entity'
 
 export class LikeService {
   async likeTrack(userId: string, trackId: string) {
-    const [track] = await db.select().from(tracks).where(eq(tracks.id, trackId)).limit(1)
-
-    if (!track) {
-      throw new NotFoundError('Track')
-    }
+    await findTrackByIdOrThrow(trackId)
 
     const [existing] = await db
       .select()
@@ -45,7 +44,7 @@ export class LikeService {
     return { message: 'Track unliked successfully' }
   }
 
-  async getTrackLikes(trackId: string, page: number = 1, pageSize: number = 20) {
+  async getTrackLikes(trackId: string, page = 1, pageSize = 20) {
     const offset = (page - 1) * pageSize
 
     const [totalResult] = await db
@@ -54,23 +53,13 @@ export class LikeService {
       .where(eq(likes.trackId, trackId))
 
     if (!totalResult?.count) {
-      return {
-        data: [],
-        pagination: {
-          page,
-          pageSize,
-          total: 0,
-        },
-      }
+      return emptyPaginatedResult(page, pageSize)
     }
 
     const likesData = await db
       .select({
         like: likes,
-        user: {
-          id: users.id,
-          username: users.username,
-        },
+        user: userProjection,
       })
       .from(likes)
       .leftJoin(users, eq(likes.userId, users.id))
@@ -78,17 +67,10 @@ export class LikeService {
       .limit(pageSize)
       .offset(offset)
 
-    return {
-      data: likesData,
-      pagination: {
-        page,
-        pageSize,
-        total: totalResult.count,
-      },
-    }
+    return paginatedResult(likesData, totalResult.count, page, pageSize)
   }
 
-  async getUserLikes(userId: string, page: number = 1, pageSize: number = 20) {
+  async getUserLikes(userId: string, page = 1, pageSize = 20) {
     const offset = (page - 1) * pageSize
 
     const [totalResult] = await db
@@ -100,10 +82,7 @@ export class LikeService {
       .select({
         like: likes,
         track: tracks,
-        user: {
-          id: users.id,
-          username: users.username,
-        },
+        user: userProjection,
       })
       .from(likes)
       .leftJoin(tracks, eq(likes.trackId, tracks.id))
@@ -112,18 +91,16 @@ export class LikeService {
       .limit(pageSize)
       .offset(offset)
 
-    return {
-      data: likesData.map((l) => ({
+    return paginatedResult(
+      likesData.map((l) => ({
         ...l.track,
         user: l.user,
         likedAt: l.like.createdAt,
       })),
-      pagination: {
-        page,
-        pageSize,
-        total: totalResult?.count ?? 0,
-      },
-    }
+      totalResult?.count ?? 0,
+      page,
+      pageSize,
+    )
   }
 
   async isLikedByUser(userId: string, trackId: string): Promise<boolean> {

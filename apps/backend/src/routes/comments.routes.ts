@@ -1,8 +1,9 @@
-import { Elysia, t } from 'elysia'
+import { Elysia } from 'elysia'
 import { jwtPlugin, authMiddleware } from '../middleware/auth'
 import { commentService } from '../services/comment.service'
 import { success, paginated } from '../utils/response'
 import { CreateCommentSchema, UpdateCommentSchema, PaginationSchema } from '../utils/validation'
+import { IdParamSchema } from '../utils/schemas'
 
 export const commentRoutes = new Elysia()
   .use(jwtPlugin)
@@ -13,9 +14,7 @@ export const commentRoutes = new Elysia()
       return paginated(result.data, result.pagination)
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: IdParamSchema,
       query: PaginationSchema,
       detail: {
         tags: ['Comments'],
@@ -37,9 +36,7 @@ export const commentRoutes = new Elysia()
       return success(comment)
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: IdParamSchema,
       body: CreateCommentSchema,
       detail: {
         tags: ['Comments'],
@@ -55,9 +52,7 @@ export const commentRoutes = new Elysia()
       return success(updated)
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: IdParamSchema,
       body: UpdateCommentSchema,
       detail: {
         tags: ['Comments'],
@@ -73,9 +68,7 @@ export const commentRoutes = new Elysia()
       return success(result)
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: IdParamSchema,
       detail: {
         tags: ['Comments'],
         summary: 'Delete comment',

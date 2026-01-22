@@ -1,16 +1,15 @@
 // Application constants
 
-export const ALLOWED_AUDIO_TYPES = [
+export const ALLOWED_AUDIO_TYPES: readonly string[] = [
   'audio/mpeg', // .mp3
   'audio/wav', // .wav
+  'audio/wave', // .wav
+  'audio/x-wav', // .wav
   'audio/ogg', // .ogg
   'audio/aac', // .aac
   'audio/mp4', // .m4a
   'audio/x-m4a', // .m4a
   'audio/flac', // .flac
-  'audio/wave', // .wav
-  'audio/x-wav', // .wav
-  'audio/mpeg', // .mp3
 ]
 
 export const ALLOWED_IMAGE_TYPES = [

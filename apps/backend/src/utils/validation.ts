@@ -93,3 +93,10 @@ export const TrackQuerySchema = t.Object({
 })
 
 export type TrackQueryParams = (typeof TrackQuerySchema)['static']
+
+// Helper to parse FormData boolean values (sent as strings)
+export function parseBooleanOrString(value: BooleanOrString | undefined): boolean | undefined {
+  if (value === undefined) return undefined
+  if (typeof value === 'boolean') return value
+  return value === 'true'
+}

@@ -1,9 +1,21 @@
-import { Elysia, t } from 'elysia'
+import { Elysia } from 'elysia'
 import { optionalAuthMiddleware, authMiddleware } from '../middleware/auth'
 import { trackService } from '../services/track.service'
 import { streamTokenService } from '../services/stream-token.service'
 import { success, paginated } from '../utils/response'
-import { CreateTrackSchema, TrackQuerySchema, UpdateTrackSchema } from '../utils/validation'
+import {
+  CreateTrackSchema,
+  TrackQuerySchema,
+  UpdateTrackSchema,
+  parseBooleanOrString,
+} from '../utils/validation'
+import { IdParamSchema } from '../utils/schemas'
+import {
+  InvalidStreamTokenError,
+  StreamTokenMismatchError,
+  StreamTokenRequiredError,
+  FileNotFoundOnServerError,
+} from '../middleware/error'
 
 export const trackRoutes = new Elysia({ prefix: '/tracks' })
   // Public routes with optional auth (for visibility of private tracks to owners)
@@ -30,7 +42,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       return success(track)
     },
     {
-      params: t.Object({ id: t.String() }),
+      params: IdParamSchema,
       detail: {
         tags: ['Tracks'],
         summary: 'Get track',
@@ -52,7 +64,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       })
     },
     {
-      params: t.Object({ id: t.String() }),
+      params: IdParamSchema,
       detail: {
         tags: ['Tracks'],
         summary: 'Get streaming token',
@@ -72,25 +84,11 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
         const tokenData = streamTokenService.verifyStreamToken(streamToken)
 
         if (!tokenData) {
-          set.status = 401
-          return {
-            success: false,
-            error: {
-              code: 'INVALID_STREAM_TOKEN',
-              message: 'Invalid or expired stream token',
-            },
-          }
+          throw new InvalidStreamTokenError()
         }
 
         if (tokenData.trackId !== params.id) {
-          set.status = 403
-          return {
-            success: false,
-            error: {
-              code: 'TOKEN_TRACK_MISMATCH',
-              message: 'Stream token not valid for this track',
-            },
-          }
+          throw new StreamTokenMismatchError()
         }
 
         track = await trackService.getTrackById(params.id, tokenData.userId)
@@ -98,27 +96,13 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
         // No token - only public tracks allowed
         track = await trackService.getTrackById(params.id)
         if (!track.isPublic) {
-          set.status = 401
-          return {
-            success: false,
-            error: {
-              code: 'STREAM_TOKEN_REQUIRED',
-              message: 'Stream token required for private tracks',
-            },
-          }
+          throw new StreamTokenRequiredError()
         }
       }
 
       const file = Bun.file(track.audioUrl)
       if (!(await file.exists())) {
-        set.status = 404
-        return {
-          success: false,
-          error: {
-            code: 'FILE_NOT_FOUND',
-            message: 'Audio file not found on server',
-          },
-        }
+        throw new FileNotFoundOnServerError()
       }
 
       await trackService.incrementPlayCount(params.id)
@@ -148,7 +132,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       return file
     },
     {
-      params: t.Object({ id: t.String() }),
+      params: IdParamSchema,
       detail: {
         tags: ['Tracks'],
         summary: 'Stream track',
@@ -200,7 +184,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       const updateData = {
         ...rest,
         ...(isPublic !== undefined && {
-          isPublic: isPublic === 'true' || isPublic === true,
+          isPublic: parseBooleanOrString(isPublic),
         }),
       }
 
@@ -208,7 +192,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       return success(updated)
     },
     {
-      params: t.Object({ id: t.String() }),
+      params: IdParamSchema,
       body: UpdateTrackSchema,
       detail: {
         tags: ['Tracks'],
@@ -224,7 +208,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       return success(result)
     },
     {
-      params: t.Object({ id: t.String() }),
+      params: IdParamSchema,
       detail: {
         tags: ['Tracks'],
         summary: 'Delete track',

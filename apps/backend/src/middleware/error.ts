@@ -43,6 +43,31 @@ export class ConflictError extends AppError {
   }
 }
 
+// Streaming-specific errors
+export class InvalidStreamTokenError extends AppError {
+  constructor() {
+    super(401, 'INVALID_STREAM_TOKEN', 'Invalid or expired stream token')
+  }
+}
+
+export class StreamTokenMismatchError extends AppError {
+  constructor() {
+    super(403, 'TOKEN_TRACK_MISMATCH', 'Stream token not valid for this track')
+  }
+}
+
+export class StreamTokenRequiredError extends AppError {
+  constructor() {
+    super(401, 'STREAM_TOKEN_REQUIRED', 'Stream token required for private tracks')
+  }
+}
+
+export class FileNotFoundOnServerError extends AppError {
+  constructor() {
+    super(404, 'FILE_NOT_FOUND', 'Audio file not found on server')
+  }
+}
+
 // Parse validation error object
 function parseValidationError(errorData: any) {
   // Try to parse if it's a string

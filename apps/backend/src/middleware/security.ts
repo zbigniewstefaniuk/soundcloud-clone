@@ -13,7 +13,7 @@ export const corsMiddleware = new Elysia({ name: 'cors-middleware' }).use(cors(s
 const requestCounts = new Map<string, { count: number; resetTime: number }>()
 
 export const rateLimiter = new Elysia({ name: 'rate-limiter' }).onBeforeHandle(
-  ({ request, set }) => {
+  ({ request, set }): { success: false; error: { code: string; message: string } } | void => {
     if (!securityConfig.isProduction) return
 
     const ip =

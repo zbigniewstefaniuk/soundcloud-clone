@@ -1,8 +1,9 @@
-import { Elysia, t } from 'elysia'
+import { Elysia } from 'elysia'
 import { jwtPlugin, authMiddleware } from '../middleware/auth'
 import { userService } from '../services/user.service'
 import { success } from '../utils/response'
 import { UpdateProfileSchema } from '../utils/validation'
+import { IdParamSchema } from '../utils/schemas'
 
 export const userRoutes = new Elysia({ prefix: '/users' })
   .use(jwtPlugin)
@@ -13,9 +14,7 @@ export const userRoutes = new Elysia({ prefix: '/users' })
       return success(user)
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: IdParamSchema,
       detail: {
         tags: ['Users'],
         summary: 'Get user profile',
@@ -30,9 +29,7 @@ export const userRoutes = new Elysia({ prefix: '/users' })
       return success(userTracks)
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: IdParamSchema,
       detail: {
         tags: ['Users'],
         summary: 'Get user tracks',

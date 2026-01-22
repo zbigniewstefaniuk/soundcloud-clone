@@ -1,10 +1,13 @@
 import { eq, and, or, ilike, desc, asc, sql, count } from 'drizzle-orm'
 import { db } from '../config/database'
 import { tracks, users, likes } from '../db/schema'
+import { userProjection } from '../db/projections'
 import { fileService } from './file.service'
 import { embeddingService } from './embedding.service'
-import { NotFoundError, ForbiddenError } from '../middleware/error'
-import { PAGINATION_DEFAULTS } from '../config/constants'
+import { ValidationError, NotFoundError, ForbiddenError } from '../middleware/error'
+import { calculatePagination, emptyPaginatedResult, paginatedResult } from '../utils/pagination'
+import { parseBooleanOrString } from '../utils/validation'
+import { findOwnedTrackOrThrow } from '../utils/entity'
 
 import type { TrackQueryParams, CreateTrackInput, UpdateTrackInput } from '~/utils/validation'
 
@@ -33,18 +36,13 @@ export class TrackService {
           audioUrl,
           fileSize: input.file.size,
           mimeType: input.file.type,
-          isPublic:
-            input.isPublic === 'true'
-              ? true
-              : input.isPublic === 'false'
-                ? false
-                : input.isPublic === true,
+          isPublic: parseBooleanOrString(input.isPublic) ?? false,
           metadataEmbedding: embedding,
         })
         .returning()
 
       if (!track) {
-        throw new Error('Failed to create track')
+        throw new ValidationError('Failed to create track')
       }
 
       if (input.coverArt && input.coverArt instanceof File) {
@@ -62,12 +60,7 @@ export class TrackService {
   }
 
   async getTracks(query: TrackQueryParams, currentUserId?: string) {
-    const page = query.page || PAGINATION_DEFAULTS.page
-    const pageSize = Math.min(
-      query.pageSize || PAGINATION_DEFAULTS.pageSize,
-      PAGINATION_DEFAULTS.maxPageSize,
-    )
-    const offset = (page - 1) * pageSize
+    const { page, pageSize, offset } = calculatePagination(query)
 
     return await db.transaction(async (tx) => {
       const conditions = []
@@ -116,24 +109,14 @@ export class TrackService {
 
       // If no tracks, return empty result
       if (total === 0) {
-        return {
-          data: [],
-          pagination: {
-            page,
-            pageSize,
-            total: 0,
-          },
-        }
+        return emptyPaginatedResult(page, pageSize)
       }
 
       // Get tracks with user and like count
       const tracksData = await tx
         .select({
           track: tracks,
-          user: {
-            id: users.id,
-            username: users.username,
-          },
+          user: userProjection,
           likeCount: sql<number>`count(DISTINCT ${likes.id})`,
         })
         .from(tracks)
@@ -145,18 +128,16 @@ export class TrackService {
         .limit(pageSize)
         .offset(offset)
 
-      return {
-        data: tracksData.map((t) => ({
+      return paginatedResult(
+        tracksData.map((t) => ({
           ...t.track,
           user: t.user,
           likeCount: Number(t.likeCount) || 0,
         })),
-        pagination: {
-          page,
-          pageSize,
-          total,
-        },
-      }
+        total,
+        page,
+        pageSize,
+      )
     })
   }
 
@@ -164,10 +145,7 @@ export class TrackService {
     const [result] = await db
       .select({
         track: tracks,
-        user: {
-          id: users.id,
-          username: users.username,
-        },
+        user: userProjection,
         likeCount: sql<number>`count(DISTINCT ${likes.id})`,
       })
       .from(tracks)
@@ -193,15 +171,7 @@ export class TrackService {
   }
 
   async updateTrack(trackId: string, userId: string, input: UpdateTrackInput) {
-    const [track] = await db.select().from(tracks).where(eq(tracks.id, trackId)).limit(1)
-
-    if (!track) {
-      throw new NotFoundError('Track')
-    }
-
-    if (track.userId !== userId) {
-      throw new ForbiddenError('You can only update your own tracks')
-    }
+    const track = await findOwnedTrackOrThrow(trackId, userId, 'update')
 
     const { coverArt, ...updateData } = input
 
@@ -233,12 +203,7 @@ export class TrackService {
         .update(tracks)
         .set({
           ...updateData,
-          isPublic:
-            updateData.isPublic === 'true'
-              ? true
-              : updateData.isPublic === 'false'
-                ? false
-                : updateData.isPublic,
+          isPublic: parseBooleanOrString(updateData.isPublic),
           ...(coverArtUrl ? { coverArtUrl } : {}),
           ...(newEmbedding ? { metadataEmbedding: newEmbedding } : {}),
           updatedAt: new Date(),
@@ -251,15 +216,7 @@ export class TrackService {
   }
 
   async deleteTrack(trackId: string, userId: string) {
-    const [track] = await db.select().from(tracks).where(eq(tracks.id, trackId)).limit(1)
-
-    if (!track) {
-      throw new NotFoundError('Track')
-    }
-
-    if (track.userId !== userId) {
-      throw new ForbiddenError('You can only delete your own tracks')
-    }
+    const track = await findOwnedTrackOrThrow(trackId, userId, 'delete')
 
     await fileService.deleteFile(track.audioUrl)
 

@@ -3,6 +3,7 @@ import { jwtPlugin, authMiddleware } from '../middleware/auth'
 import { likeService } from '../services/like.service'
 import { success, paginated } from '../utils/response'
 import { PaginationSchema } from '../utils/validation'
+import { IdParamSchema } from '../utils/schemas'
 
 export const likeRoutes = new Elysia()
   .use(jwtPlugin)
@@ -14,9 +15,7 @@ export const likeRoutes = new Elysia()
       return success(like)
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: IdParamSchema,
       detail: {
         tags: ['Likes'],
         summary: 'Like track',
@@ -31,9 +30,7 @@ export const likeRoutes = new Elysia()
       return success(result)
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: IdParamSchema,
       detail: {
         tags: ['Likes'],
         summary: 'Unlike track',
@@ -48,9 +45,7 @@ export const likeRoutes = new Elysia()
       return paginated(result.data, result.pagination)
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
+      params: IdParamSchema,
       query: PaginationSchema,
       detail: {
         tags: ['Likes'],

@@ -1,15 +1,14 @@
 import { eq, count, desc } from 'drizzle-orm'
 import { db } from '../config/database'
-import { comments, tracks, users } from '../db/schema'
-import { NotFoundError, ForbiddenError } from '../middleware/error'
+import { comments, users } from '../db/schema'
+import { userProjection } from '../db/projections'
+import { NotFoundError } from '../middleware/error'
+import { emptyPaginatedResult, paginatedResult } from '../utils/pagination'
+import { findTrackByIdOrThrow, findOwnedCommentOrThrow } from '../utils/entity'
 
 export class CommentService {
   async createComment(userId: string, trackId: string, content: string, timestamp?: number) {
-    const [track] = await db.select().from(tracks).where(eq(tracks.id, trackId)).limit(1)
-
-    if (!track) {
-      throw new NotFoundError('Track')
-    }
+    await findTrackByIdOrThrow(trackId)
 
     const [comment] = await db
       .insert(comments)
@@ -28,10 +27,7 @@ export class CommentService {
     const [commentWithUser] = await db
       .select({
         comment: comments,
-        user: {
-          id: users.id,
-          username: users.username,
-        },
+        user: userProjection,
       })
       .from(comments)
       .leftJoin(users, eq(comments.userId, users.id))
@@ -41,7 +37,7 @@ export class CommentService {
     return commentWithUser
   }
 
-  async getTrackComments(trackId: string, page: number = 1, pageSize: number = 20) {
+  async getTrackComments(trackId: string, page = 1, pageSize = 20) {
     const offset = (page - 1) * pageSize
 
     const [totalResult] = await db
@@ -50,23 +46,13 @@ export class CommentService {
       .where(eq(comments.trackId, trackId))
 
     if (!totalResult?.count) {
-      return {
-        data: [],
-        pagination: {
-          page,
-          pageSize,
-          total: 0,
-        },
-      }
+      return emptyPaginatedResult(page, pageSize)
     }
 
     const commentsData = await db
       .select({
         comment: comments,
-        user: {
-          id: users.id,
-          username: users.username,
-        },
+        user: userProjection,
       })
       .from(comments)
       .leftJoin(users, eq(comments.userId, users.id))
@@ -75,29 +61,19 @@ export class CommentService {
       .limit(pageSize)
       .offset(offset)
 
-    return {
-      data: commentsData.map((c) => ({
+    return paginatedResult(
+      commentsData.map((c) => ({
         ...c.comment,
         user: c.user,
       })),
-      pagination: {
-        page,
-        pageSize,
-        total: totalResult.count,
-      },
-    }
+      totalResult.count,
+      page,
+      pageSize,
+    )
   }
 
   async updateComment(commentId: string, userId: string, content: string) {
-    const [comment] = await db.select().from(comments).where(eq(comments.id, commentId)).limit(1)
-
-    if (!comment) {
-      throw new NotFoundError('Comment')
-    }
-
-    if (comment.userId !== userId) {
-      throw new ForbiddenError('You can only update your own comments')
-    }
+    await findOwnedCommentOrThrow(commentId, userId, 'update')
 
     const [updated] = await db
       .update(comments)
@@ -112,15 +88,7 @@ export class CommentService {
   }
 
   async deleteComment(commentId: string, userId: string) {
-    const [comment] = await db.select().from(comments).where(eq(comments.id, commentId)).limit(1)
-
-    if (!comment) {
-      throw new NotFoundError('Comment')
-    }
-
-    if (comment.userId !== userId) {
-      throw new ForbiddenError('You can only delete your own comments')
-    }
+    await findOwnedCommentOrThrow(commentId, userId, 'delete')
 
     await db.delete(comments).where(eq(comments.id, commentId))
 

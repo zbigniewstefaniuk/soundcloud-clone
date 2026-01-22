@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { db } from '../config/database'
 import { users, userProfiles, tracks } from '../db/schema'
 import { NotFoundError } from '../middleware/error'
@@ -55,14 +55,14 @@ export class UserService {
     return updated
   }
 
-  async getUserTracks(userId: string, includePrivate: boolean = false) {
-    const query = db.select().from(tracks)
+  async getUserTracks(userId: string, includePrivate = false) {
+    const conditions = [eq(tracks.userId, userId)]
 
     if (!includePrivate) {
-      return query.where(eq(tracks.isPublic, true))
+      conditions.push(eq(tracks.isPublic, true))
     }
 
-    return query.where(eq(tracks.userId, userId))
+    return db.select().from(tracks).where(and(...conditions))
   }
 }
 

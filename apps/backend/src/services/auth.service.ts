@@ -75,14 +75,12 @@ export class AuthService {
     // Find user by email
     const [user] = await db.select().from(users).where(eq(users.email, input.email)).limit(1)
 
-    if (!user) {
-      throw new AuthError('Invalid credentials')
-    }
+    // Always verify password to prevent timing attacks (email enumeration)
+    // Use a dummy hash when user not found to normalize response time
+    const dummyHash = '$2b$10$dummyhashfortimingsafetynormalization'
+    const isValid = await verifyPassword(input.password, user?.password ?? dummyHash)
 
-    // Verify password
-    const isValid = await verifyPassword(input.password, user.password)
-
-    if (!isValid) {
+    if (!user || !isValid) {
       throw new AuthError('Invalid credentials')
     }
 
