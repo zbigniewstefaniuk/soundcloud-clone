@@ -16,7 +16,7 @@ const CONFIG = {
   },
   wave: {
     /** Base animation speed */
-    baseSpeed: 0.015,
+    baseSpeed: 0.025,
     /** Wave opacity */
     opacity: 0.35,
     /** Step size for drawing */
