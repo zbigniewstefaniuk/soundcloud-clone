@@ -62,7 +62,7 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <main className="flex justify-center-safe min-h-dvh w-full px-8">
+    <main className="flex justify-center-safe min-h-[calc(100dvh-56px)] max-h-dvh w-full px-8">
       <Outlet />
     </main>
   )
