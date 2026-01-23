@@ -12,6 +12,7 @@ import { TrackCover } from './track-cover'
 import { cn } from '@/lib/utils'
 import type { TrackWithUser } from '@/api/tracks'
 import { useDebouncedValue } from '@tanstack/react-pacer'
+import { commandScore } from '@/helpers'
 
 interface TrackSearchProps {
   tracks: TrackWithUser[]
@@ -134,14 +135,22 @@ export function TrackSearchInput({
     }
 
     const lowerQuery = debouncedQuery.toLowerCase()
-    const filtered = tracks.filter(
-      (track) =>
-        track.title.toLowerCase().includes(lowerQuery) ||
-        track.mainArtist?.toLowerCase().includes(lowerQuery) ||
-        track.user?.username?.toLowerCase().includes(lowerQuery) ||
-        track.genre?.toLowerCase().includes(lowerQuery),
-    )
-    onFilteredTracksChange(filtered)
+
+    const results = tracks
+      .map((track) => ({
+        track,
+        score: commandScore(track.title, lowerQuery, [
+          track.title,
+          track.mainArtist ?? '',
+          track.user?.username ?? '',
+          track.genre ?? '',
+        ]),
+      }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(({ track }) => track)
+
+    onFilteredTracksChange(results)
   }, [debouncedQuery, tracks, onFilteredTracksChange])
 
   return (
