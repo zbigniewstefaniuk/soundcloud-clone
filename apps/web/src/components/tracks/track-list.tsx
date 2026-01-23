@@ -156,11 +156,15 @@ function TrackActions({ track }: { track: TrackWithUser }) {
 
       {isOwner && (
         <>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/tracks/$trackId/edit" params={{ trackId: track.id }}>
-              <Edit className="h-4 w-4" />
-            </Link>
-          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            render={
+              <Link to="/tracks/$trackId/edit" params={{ trackId: track.id }}>
+                <Edit className="h-4 w-4" />
+              </Link>
+            }
+          />
 
           <DeleteTrackDialog
             trackTitle={track.title}
@@ -182,11 +186,13 @@ interface DeleteTrackDialogProps {
 function DeleteTrackDialog({ trackTitle, isDeleting, onConfirm }: DeleteTrackDialogProps) {
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="sm" disabled={isDeleting}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </AlertDialogTrigger>
+      <AlertDialogTrigger
+        render={
+          <Button variant="destructive" size="sm" disabled={isDeleting}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        }
+      />
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Track</AlertDialogTitle>
