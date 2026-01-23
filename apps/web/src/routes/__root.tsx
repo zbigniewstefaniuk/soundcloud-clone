@@ -20,7 +20,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     <ThemeProvider>
       <PlayerProvider>
         <Header />
-        <div className="pb-24">
+        <div>
           <Outlet />
         </div>
         <MiniPlayer />

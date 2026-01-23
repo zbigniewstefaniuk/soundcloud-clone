@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX } from 'lucide-react'
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Heart, Repeat, Repeat1, Shuffle } from 'lucide-react'
 import { usePlayer } from '@/contexts/player-context'
 import { Slider } from '@/components/ui/slider'
 import { WaveformSlider } from '@/components/ui/waveform-slider'
 import { extractColorsFromImage } from '@/lib/color-extraction'
-import { formatTime, getAssetUrl } from '@/lib/utils'
+import { cn, formatTime, getAssetUrl } from '@/lib/utils'
 import { AnimatedGradient } from './animated-gradient'
 import { TrackCover } from '../tracks/track-cover'
+import { useAccount } from '@/hooks/use-auth'
+import { useBatchLikeStatus, useToggleLike } from '@/hooks/use-tracks'
 
 export function MiniPlayer() {
   const {
@@ -25,7 +27,22 @@ export function MiniPlayer() {
     hasPrevious,
     toggleMute,
     isMuted,
+    repeatMode,
+    cycleRepeatMode,
+    isShuffled,
+    toggleShuffle,
   } = usePlayer()
+
+  const { user } = useAccount()
+  const trackIds = currentTrack ? [currentTrack.id] : []
+  const { likedMap } = useBatchLikeStatus(trackIds, !!user)
+  const toggleLikeMutation = useToggleLike()
+  const isLiked = currentTrack ? (likedMap[currentTrack.id] ?? false) : false
+
+  const handleToggleLike = () => {
+    if (!user || !currentTrack) return
+    toggleLikeMutation.mutate({ trackId: currentTrack.id, isLiked })
+  }
 
   const [colors, setColors] = useState({
     primary: '#6366f1',
@@ -71,10 +88,20 @@ export function MiniPlayer() {
               </div>
             </Link>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={toggleShuffle}
+                className={cn(
+                  'p-2 rounded-full transition-colors hover:bg-white/10',
+                  isShuffled ? 'text-primary' : 'text-white/50'
+                )}
+                title={isShuffled ? 'Shuffle on' : 'Shuffle off'}
+              >
+                <Shuffle className="h-4 w-4" />
+              </button>
               <button
                 onClick={previous}
-                disabled={!hasPrevious}
+                disabled={!hasPrevious && repeatMode === 'off'}
                 className="p-2 text-white hover:bg-white/10 rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <SkipBack className="h-5 w-5" />
@@ -92,10 +119,36 @@ export function MiniPlayer() {
               </button>
               <button
                 onClick={next}
-                disabled={!hasNext}
+                disabled={!hasNext && repeatMode === 'off'}
                 className="p-2 text-white hover:bg-white/10 rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <SkipForward className="h-5 w-5" />
+              </button>
+              <button
+                onClick={handleToggleLike}
+                disabled={!user}
+                className={cn(
+                  'p-2 rounded-full transition-colors hover:bg-white/10',
+                  !user && 'opacity-30 cursor-not-allowed',
+                  isLiked ? 'text-rose-500' : 'text-white/50'
+                )}
+                title={!user ? 'Login to like' : isLiked ? 'Unlike' : 'Like'}
+              >
+                <Heart className={cn('h-4 w-4', isLiked && 'fill-current')} />
+              </button>
+              <button
+                onClick={cycleRepeatMode}
+                className={cn(
+                  'p-2 rounded-full transition-colors hover:bg-white/10',
+                  repeatMode !== 'off' ? 'text-primary' : 'text-white/50'
+                )}
+                title={`Repeat: ${repeatMode === 'off' ? 'Off' : repeatMode === 'all' ? 'All' : 'One'}`}
+              >
+                {repeatMode === 'one' ? (
+                  <Repeat1 className="h-4 w-4" />
+                ) : (
+                  <Repeat className="h-4 w-4" />
+                )}
               </button>
             </div>
 
