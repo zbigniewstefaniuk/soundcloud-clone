@@ -4,6 +4,8 @@ import type { TrackWithUser } from '@/api/tracks'
 import { fetchStreamToken } from '@/api/tracks'
 import { useBroadcastChannel } from '@/hooks/use-broadcast-channel'
 
+export type RepeatMode = 'off' | 'all' | 'one'
+
 interface PlayerState {
   currentTrack: TrackWithUser | null
   queue: TrackWithUser[]
@@ -13,6 +15,9 @@ interface PlayerState {
   isMuted: boolean
   currentTime: number
   duration: number
+  repeatMode: RepeatMode
+  isShuffled: boolean
+  originalQueue: TrackWithUser[]
 }
 
 type PlayerMessage =
@@ -24,6 +29,8 @@ type PlayerMessage =
   | { type: 'CMD_SEEK'; time: number }
   | { type: 'CMD_VOLUME'; volume: number }
   | { type: 'CMD_ADD_TO_QUEUE'; track: TrackWithUser }
+  | { type: 'CMD_SET_REPEAT_MODE'; mode: RepeatMode }
+  | { type: 'CMD_TOGGLE_SHUFFLE' }
   | { type: 'SYNC_REQUEST' }
   | { type: 'SYNC_RESPONSE'; state: PlayerState }
 
@@ -40,6 +47,9 @@ interface PlayerContextValue extends PlayerState {
   hasPrevious: boolean
   toggleMute: () => void
   mute: () => void
+  setRepeatMode: (mode: RepeatMode) => void
+  cycleRepeatMode: () => void
+  toggleShuffle: () => void
 }
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined)
@@ -58,6 +68,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     currentTime: 0,
     duration: 0,
     isMuted: false,
+    repeatMode: 'off',
+    isShuffled: false,
+    originalQueue: [],
   })
 
   const broadcastRef = useRef<(msg: PlayerMessage) => void>(() => {})
@@ -154,6 +167,48 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     updateState({ ...stateRef.current, queue: [...stateRef.current.queue, track] })
   }
 
+  const executeSetRepeatMode = (mode: RepeatMode) => {
+    updateState({ ...stateRef.current, repeatMode: mode })
+  }
+
+  const executeToggleShuffle = () => {
+    const { isShuffled, queue, originalQueue, queueIndex, currentTrack } = stateRef.current
+
+    if (isShuffled) {
+      // Restore original queue order
+      const currentTrackIndex = currentTrack
+        ? originalQueue.findIndex((t) => t.id === currentTrack.id)
+        : 0
+      updateState({
+        ...stateRef.current,
+        queue: originalQueue,
+        queueIndex: currentTrackIndex >= 0 ? currentTrackIndex : 0,
+        isShuffled: false,
+        originalQueue: [],
+      })
+    } else {
+      // Shuffle queue using Fisher-Yates, keeping current track in place
+      const shuffled = [...queue]
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      }
+      // Move current track to current position
+      if (currentTrack) {
+        const currentIdx = shuffled.findIndex((t) => t.id === currentTrack.id)
+        if (currentIdx !== -1 && currentIdx !== queueIndex) {
+          ;[shuffled[queueIndex], shuffled[currentIdx]] = [shuffled[currentIdx], shuffled[queueIndex]]
+        }
+      }
+      updateState({
+        ...stateRef.current,
+        originalQueue: queue,
+        queue: shuffled,
+        isShuffled: true,
+      })
+    }
+  }
+
   const handleBroadcastMessage = (msg: PlayerMessage) => {
     switch (msg.type) {
       case 'STATE_UPDATE':
@@ -203,6 +258,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         if (isActivePlayerRef.current) executeAddToQueue(msg.track)
         break
 
+      case 'CMD_SET_REPEAT_MODE':
+        if (isActivePlayerRef.current) executeSetRepeatMode(msg.mode)
+        break
+
+      case 'CMD_TOGGLE_SHUFFLE':
+        if (isActivePlayerRef.current) executeToggleShuffle()
+        break
+
       case 'SYNC_REQUEST':
         if (isActivePlayerRef.current && audioRef.current) {
           broadcastRef.current({
@@ -242,6 +305,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           volume: parsed.volume ?? 1,
           queue: parsed.queue ?? [],
           queueIndex: parsed.queueIndex ?? 0,
+          repeatMode: parsed.repeatMode ?? 'off',
+          isShuffled: parsed.isShuffled ?? false,
         }))
         previousVolumeRef.current = parsed.volume ?? 1
       } catch {
@@ -257,9 +322,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         volume: state.volume,
         queue: state.queue,
         queueIndex: state.queueIndex,
+        repeatMode: state.repeatMode,
+        isShuffled: state.isShuffled,
       }),
     )
-  }, [state.volume, state.queue, state.queueIndex])
+  }, [state.volume, state.queue, state.queueIndex, state.repeatMode, state.isShuffled])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -285,9 +352,25 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
 
     const handleEnded = async () => {
-      if (stateRef.current.queueIndex < stateRef.current.queue.length - 1) {
+      const { repeatMode, queueIndex, queue } = stateRef.current
+
+      if (repeatMode === 'one') {
+        // Repeat current track
+        if (audio) {
+          audio.currentTime = 0
+          audio.play()
+        }
+        return
+      }
+
+      if (queueIndex < queue.length - 1) {
+        // Has more tracks in queue
         await executeNext()
+      } else if (repeatMode === 'all' && queue.length > 0) {
+        // At end with repeat-all: loop to first track
+        await executePlayTrack(queue[0], queue, 0)
       } else {
+        // Off mode at end: stop playback
         updateState({ ...stateRef.current, isPlaying: false })
       }
     }
@@ -396,6 +479,29 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const mute = () => setVolume(0)
 
+  const setRepeatMode = (mode: RepeatMode) => {
+    if (isActivePlayerRef.current) {
+      executeSetRepeatMode(mode)
+    } else {
+      broadcast({ type: 'CMD_SET_REPEAT_MODE', mode })
+    }
+  }
+
+  const cycleRepeatMode = () => {
+    const modes: RepeatMode[] = ['off', 'all', 'one']
+    const currentIndex = modes.indexOf(state.repeatMode)
+    const nextMode = modes[(currentIndex + 1) % modes.length]
+    setRepeatMode(nextMode)
+  }
+
+  const toggleShuffle = () => {
+    if (isActivePlayerRef.current) {
+      executeToggleShuffle()
+    } else {
+      broadcast({ type: 'CMD_TOGGLE_SHUFFLE' })
+    }
+  }
+
   return (
     <PlayerContext.Provider
       value={{
@@ -412,6 +518,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         toggleMute,
         mute,
         audioRef,
+        setRepeatMode,
+        cycleRepeatMode,
+        toggleShuffle,
       }}
     >
       {children}
