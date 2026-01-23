@@ -89,7 +89,7 @@ export function TrackList({ tracks, isOwner = false }: TrackListProps) {
       }}
     >
       <ScrollArea className="h-full" viewportClassName="snap-y snap-proximity">
-        <div className="space-y-3 pr-4">
+        <div className="space-y-3 pr-4 pb-24">
           {tracks.map((track) => (
             <TrackListItem key={track.id} track={track} />
           ))}
