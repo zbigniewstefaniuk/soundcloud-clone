@@ -78,24 +78,26 @@ export function HeaderSearch() {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          className={cn(
-            'flex items-center gap-2 px-3 py-1.5 rounded-full',
-            'bg-muted/50 hover:bg-muted transition-colors',
-            'text-sm text-muted-foreground',
-            'w-64 justify-between',
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <Search className="h-4 w-4" />
-            <span>Search tracks...</span>
-          </div>
-          <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground bg-background rounded border">
-            <span className="text-xs">Ctrl</span>K
-          </kbd>
-        </button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <button
+            className={cn(
+              'flex items-center gap-2 px-3 py-1.5 rounded-full',
+              'bg-muted/50 hover:bg-muted transition-colors',
+              'text-sm text-muted-foreground',
+              'w-64 justify-between',
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              <span>Search tracks...</span>
+            </div>
+            <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground bg-background rounded border">
+              <span className="text-xs">Ctrl</span>K
+            </kbd>
+          </button>
+        }
+      />
       <PopoverContent className="w-100 p-0" align="start" sideOffset={8}>
         <Command shouldFilter={false} className="rounded-lg">
           <div className="flex items-center border-b px-3">

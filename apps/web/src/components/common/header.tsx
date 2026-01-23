@@ -58,15 +58,17 @@ export default function Header() {
 
           {!isLoading && user && (
             <Popover>
-              <PopoverTrigger asChild>
-                <button className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-accent transition-colors">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="h-4 w-4 text-primary" />
-                  </div>
-                  <span className="text-sm font-medium">{user.username}</span>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </button>
-              </PopoverTrigger>
+              <PopoverTrigger
+                render={
+                  <button className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-accent transition-colors">
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium">{user.username}</span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                }
+              />
               <PopoverContent align="end" className="w-56 p-2">
                 <div className="px-2 py-1.5 mb-2">
                   <p className="text-sm font-medium">{user.username}</p>
