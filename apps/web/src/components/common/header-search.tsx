@@ -44,8 +44,6 @@ export function HeaderSearch() {
   }, [open])
 
   const handleSelect = (result: SearchResult) => {
-    // Convert SearchResult to track format for the player
-    // Using unknown first to satisfy TypeScript since TrackWithUser may have additional fields
     const searchResultToTrack = (r: SearchResult) => ({
       id: r.id,
       title: r.title,

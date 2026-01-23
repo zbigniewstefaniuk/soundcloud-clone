@@ -1,4 +1,4 @@
-import { createContext, use, useContext, useState, useRef, useEffect } from 'react'
+import { createContext, use, useState, useRef, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { TrackWithUser } from '@/api/tracks'
 import { fetchStreamToken } from '@/api/tracks'
