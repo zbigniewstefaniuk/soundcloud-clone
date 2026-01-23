@@ -66,7 +66,7 @@ export function MiniPlayer() {
   return (
     <AnimatedGradient
       colors={colors}
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10"
+      className="fixed animate-in slide-in-from-bottom-30 fade-in-25 bottom-0 left-0 right-0 z-50 border-t border-white/10"
     >
       <div className="backdrop-blur-sm bg-black/20">
         <div className="max-w-screen-2xl mx-auto px-4 py-3">
