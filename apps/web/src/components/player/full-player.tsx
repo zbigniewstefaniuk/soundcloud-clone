@@ -18,8 +18,7 @@ import { extractColorsFromImage } from '@/lib/color-extraction'
 import { cn, formatTime, getAssetUrl } from '@/lib/utils'
 import { AnimatedGradient } from './animated-gradient'
 import { TrackCover } from '../tracks/track-cover'
-import { useAccount } from '@/hooks/use-auth'
-import { useBatchLikeStatus, useToggleLike } from '@/hooks/use-tracks'
+import { useTrackLike } from '@/hooks/use-track-like'
 
 export function FullPlayer() {
   const {
@@ -45,16 +44,7 @@ export function FullPlayer() {
     toggleShuffle,
   } = usePlayer()
 
-  const { user } = useAccount()
-  const trackIds = currentTrack ? [currentTrack.id] : []
-  const { likedMap } = useBatchLikeStatus(trackIds, !!user)
-  const toggleLikeMutation = useToggleLike()
-  const isLiked = currentTrack ? (likedMap[currentTrack.id] ?? false) : false
-
-  const handleToggleLike = () => {
-    if (!user || !currentTrack) return
-    toggleLikeMutation.mutate({ trackId: currentTrack.id, isLiked })
-  }
+  const { isLiked, toggleLike, canLike } = useTrackLike(currentTrack?.id)
 
   const [colors, setColors] = useState({
     primary: '#6366f1',
@@ -78,8 +68,9 @@ export function FullPlayer() {
     <AnimatedGradient colors={colors} className="min-h-screen">
       <div className="min-h-screen flex items-center justify-center p-8">
         <div className="w-full max-w-4xl space-y-8">
+          {/* Album art with like button */}
           <div className="flex justify-center">
-            <div className="relative">
+            <div className="relative group">
               <TrackCover
                 coverArtUrl={currentTrack.coverArtUrl}
                 title={currentTrack.title}
@@ -87,20 +78,22 @@ export function FullPlayer() {
                 className="w-96 h-96 rounded-2xl shadow-2xl"
               />
               <button
-                onClick={handleToggleLike}
-                disabled={!user}
+                onClick={toggleLike}
+                disabled={!canLike}
                 className={cn(
-                  'absolute bottom-4 right-4 p-3 rounded-full backdrop-blur-sm transition-all hover:scale-110',
-                  !user && 'opacity-30 cursor-not-allowed',
-                  isLiked ? 'bg-rose-500/20 text-rose-500' : 'bg-black/30 text-white/70 hover:text-white',
+                  'absolute bottom-4 right-4 p-3 rounded-full backdrop-blur-sm transition-all',
+                  'opacity-0 group-hover:opacity-100 hover:scale-110',
+                  !canLike && 'opacity-30 cursor-not-allowed group-hover:opacity-30',
+                  isLiked ? 'bg-destructive/20 text-destructive' : 'bg-black/30 text-white/70 hover:text-white',
                 )}
-                title={!user ? 'Login to like' : isLiked ? 'Unlike' : 'Like'}
+                title={!canLike ? 'Login to like' : isLiked ? 'Unlike' : 'Like'}
               >
                 <Heart className={cn('h-7 w-7', isLiked && 'fill-current')} />
               </button>
             </div>
           </div>
 
+          {/* Track info */}
           <div className="text-center space-y-2">
             <h1 className="text-5xl font-bold text-white">{currentTrack.title}</h1>
             <p className="text-2xl text-white/80">{currentTrack.mainArtist || 'Unknown Artist'}</p>
@@ -111,6 +104,7 @@ export function FullPlayer() {
             )}
           </div>
 
+          {/* Waveform slider */}
           <div className="space-y-2">
             <WaveformSlider
               value={currentTime}
@@ -126,6 +120,7 @@ export function FullPlayer() {
             </div>
           </div>
 
+          {/* Playback controls - symmetrical */}
           <div className="flex items-center justify-center gap-4">
             <button
               onClick={toggleShuffle}
@@ -137,7 +132,6 @@ export function FullPlayer() {
             >
               <Shuffle className="h-6 w-6" />
             </button>
-
             <button
               onClick={previous}
               disabled={!hasPrevious && repeatMode === 'off'}
@@ -147,8 +141,7 @@ export function FullPlayer() {
             </button>
             <button
               onClick={togglePlay}
-              className="w-20 h-20 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform shadow-lg"
-              style={{ color: colors.primary }}
+              className="w-20 h-20 rounded-full bg-white text-primary flex items-center justify-center hover:scale-105 transition-transform shadow-lg"
             >
               {isPlaying ? (
                 <Pause className="h-10 w-10 fill-current" />
@@ -171,21 +164,14 @@ export function FullPlayer() {
               )}
               title={`Repeat: ${repeatMode === 'off' ? 'Off' : repeatMode === 'all' ? 'All' : 'One'}`}
             >
-              {repeatMode === 'one' ? (
-                <Repeat1 className="h-6 w-6" />
-              ) : (
-                <Repeat className="h-6 w-6" />
-              )}
+              {repeatMode === 'one' ? <Repeat1 className="h-6 w-6" /> : <Repeat className="h-6 w-6" />}
             </button>
           </div>
 
+          {/* Volume control */}
           <div className="flex items-center justify-center gap-4 bg-white/10 rounded-full px-6 py-3 mx-auto max-w-md">
-            <button onClick={toggleMute} className="text-white">
-              {isMuted || volume === 0 ? (
-                <VolumeX className="h-6 w-6" />
-              ) : (
-                <Volume2 className="h-6 w-6" />
-              )}
+            <button onClick={toggleMute} className="text-white hover:text-white/80 transition-colors">
+              {isMuted || volume === 0 ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
             </button>
             <Slider
               value={[isMuted ? 0 : volume]}
@@ -196,6 +182,7 @@ export function FullPlayer() {
             />
           </div>
 
+          {/* Queue info */}
           {queue.length > 1 && (
             <div className="text-center">
               <p className="text-sm text-white/60">
