@@ -3,7 +3,7 @@ import { handleError } from './error'
 
 export type SearchResult = NonNullable<
   Awaited<ReturnType<typeof api.search.tracks.get>>['data']
->['data']
+>['data'][number]
 
 export interface SearchTracksParams {
   query: string

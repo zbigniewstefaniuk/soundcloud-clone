@@ -69,7 +69,7 @@ export function HeaderSearch() {
     const queue = results.map(searchResultToTrack)
 
     // Cast to any since the player will handle fetching the stream URL
-    playTrack(track as any, queue as any)
+    playTrack(track, queue)
     setOpen(false)
     setQuery('')
   }
@@ -96,7 +96,7 @@ export function HeaderSearch() {
           </kbd>
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" align="start" sideOffset={8}>
+      <PopoverContent className="w-100 p-0" align="start" sideOffset={8}>
         <Command shouldFilter={false} className="rounded-lg">
           <div className="flex items-center border-b px-3">
             <Search className="h-4 w-4 shrink-0 opacity-50" />
@@ -114,7 +114,7 @@ export function HeaderSearch() {
               </button>
             )}
           </div>
-          <CommandList className="max-h-[400px]">
+          <CommandList className="max-h-100">
             {query.trim().length >= 2 && !isLoading && !isDebouncing && results.length === 0 && (
               <CommandEmpty>
                 <div className="flex flex-col items-center py-6">

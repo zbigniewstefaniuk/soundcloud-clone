@@ -84,27 +84,35 @@ function HeroSection({ isLoggedIn }: { isLoggedIn: boolean }) {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {isLoggedIn ? (
               <>
-                <Button size="lg" asChild>
-                  <Link to="/tracks/upload">
-                    <Upload className="h-5 w-5 mr-2" />
-                    Upload Track
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link to="/profile/tracks">
-                    <Music2 className="h-5 w-5 mr-2" />
-                    My Tracks
-                  </Link>
-                </Button>
+                <Button
+                  size="lg"
+                  render={
+                    <Link to="/tracks/upload">
+                      <Upload className="h-5 w-5 mr-2" />
+                      Upload Track
+                    </Link>
+                  }
+                />
+
+                <Button
+                  size="lg"
+                  variant="outline"
+                  render={
+                    <Link to="/profile/tracks">
+                      <Music2 className="h-5 w-5 mr-2" />
+                      My Tracks
+                    </Link>
+                  }
+                />
               </>
             ) : (
               <>
-                <Button size="lg" asChild>
-                  <Link to="/auth/register">Get Started Free</Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link to="/auth/login">Sign In</Link>
-                </Button>
+                <Button size="lg" render={<Link to="/auth/register">Get Started Free</Link>} />
+                <Button
+                  size="lg"
+                  variant="outline"
+                  render={<Link to="/auth/login">Sign In</Link>}
+                />
               </>
             )}
           </div>
@@ -180,9 +188,7 @@ function TrackSection({ title, subtitle, icon: Icon, sortBy, pageSize = 8 }: Tra
             <Music2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No tracks yet</h3>
             <p className="text-muted-foreground mb-4">Be the first to share your music!</p>
-            <Button asChild>
-              <Link to="/tracks/upload">Upload a Track</Link>
-            </Button>
+            <Button render={<Link to="/tracks/upload">Upload a Track</Link>} />
           </div>
         )}
 

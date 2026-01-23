@@ -51,12 +51,8 @@ export default function Header() {
 
           {!isLoading && !user && (
             <div className="hidden sm:flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/auth/login">Sign in</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link to="/auth/register">Sign up</Link>
-              </Button>
+              <Button variant="ghost" size="sm" render={<Link to="/auth/login">Sign in</Link>} />
+              <Button size="sm" render={<Link to="/auth/register">Sign up</Link>} />
             </div>
           )}
 

@@ -12,7 +12,7 @@ export interface UseTrackSearchOptions {
 }
 
 export function useTrackSearch(query: string, options: UseTrackSearchOptions = {}) {
-  const { debounceMs = 300, limit = 20, threshold = 0.1, enabled = true } = options
+  const { debounceMs = 300, limit = 20, threshold = 0.15, enabled = true } = options
 
   // Simple debounce implementation
   const [debouncedQuery, setDebouncedQuery] = useState(query)
