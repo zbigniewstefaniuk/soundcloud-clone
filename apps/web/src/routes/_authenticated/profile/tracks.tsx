@@ -20,7 +20,7 @@ function ProfileTracksPage() {
   const [activeTab, setActiveTab] = useState('my-tracks')
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="container mx-auto px-4 py-8 max-w-5xl h-[calc(100vh-4rem)] flex flex-col">
       <div className="flex items-center gap-4 mb-8">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
           <User className="h-8 w-8 text-primary" />
@@ -37,8 +37,8 @@ function ProfileTracksPage() {
         </Link>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <TabsList className="mb-6 shrink-0">
           <TabsTrigger value="my-tracks" className="gap-2">
             <Music2 className="h-4 w-4" />
             My Tracks
@@ -49,11 +49,11 @@ function ProfileTracksPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="my-tracks">
+        <TabsContent value="my-tracks" className="flex-1 min-h-0">
           <MyTracksTab />
         </TabsContent>
 
-        <TabsContent value="liked-tracks">
+        <TabsContent value="liked-tracks" className="flex-1 min-h-0">
           <LikedTracksTab />
         </TabsContent>
       </Tabs>
@@ -110,14 +110,14 @@ function MyTracksTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full gap-6">
       {tracks.length > 0 && (
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 shrink-0">
           <TrackSearchInput
             tracks={tracks}
             onFilteredTracksChange={handleFilteredTracksChange}
             placeholder="Search your tracks..."
-            className="max-w-md"
+            className="w-full max-w-md"
           />
           <p className="text-sm text-muted-foreground">
             {isSearching
@@ -148,12 +148,14 @@ function MyTracksTab() {
           description="Try a different search term"
         />
       ) : (
-        <TrackList
-          tracks={displayTracks}
-          isOwner={true}
-          onTogglePlay={handlePlay}
-          currentPlayingTrackId={currentTrack?.id}
-        />
+        <div className="flex-1 min-h-0">
+          <TrackList
+            tracks={displayTracks}
+            isOwner={true}
+            onTogglePlay={handlePlay}
+            currentPlayingTrackId={currentTrack?.id}
+          />
+        </div>
       )}
     </div>
   )
@@ -196,9 +198,9 @@ function LikedTracksTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full gap-6">
       {tracks.length > 0 && (
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 shrink-0">
           <TrackSearchInput
             tracks={tracks}
             onFilteredTracksChange={handleFilteredTracksChange}
@@ -231,11 +233,13 @@ function LikedTracksTab() {
           description="Try a different search term"
         />
       ) : (
-        <TrackList
-          tracks={displayTracks}
-          isOwner={false}
-          currentPlayingTrackId={currentTrack?.id}
-        />
+        <div className="flex-1 min-h-0">
+          <TrackList
+            tracks={displayTracks}
+            isOwner={false}
+            currentPlayingTrackId={currentTrack?.id}
+          />
+        </div>
       )}
     </div>
   )

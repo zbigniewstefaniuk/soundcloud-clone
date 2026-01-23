@@ -4,6 +4,7 @@ import { Music, Trash2, Edit, Play, Pause, Heart } from 'lucide-react'
 import { useDeleteTrack, useBatchLikeStatus, useToggleLike } from '@/hooks/use-tracks'
 import { useAccount } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import {
   AlertDialog,
@@ -87,18 +88,20 @@ export function TrackList({ tracks, isOwner = false }: TrackListProps) {
         onToggleLike: handleToggleLike,
       }}
     >
-      <div className="space-y-3">
-        {tracks.map((track) => (
-          <TrackListItem key={track.id} track={track} />
-        ))}
-      </div>
+      <ScrollArea className="h-full" viewportClassName="snap-y snap-proximity">
+        <div className="space-y-3 pr-4">
+          {tracks.map((track) => (
+            <TrackListItem key={track.id} track={track} />
+          ))}
+        </div>
+      </ScrollArea>
     </TrackListContext.Provider>
   )
 }
 
 function TrackListItem({ track }: { track: TrackWithUser }) {
   return (
-    <div className="flex items-center gap-4 p-2 bg-card rounded-lg hover:bg-accent/50 transition-colors">
+    <div className="flex items-center gap-4 p-2 bg-card rounded-lg hover:bg-accent/50 transition-colors snap-start">
       <TrackCover coverArtUrl={track.coverArtUrl} title={track.title} size="lg" />
 
       <div className="flex-1 min-w-0">
