@@ -68,7 +68,6 @@ export function FullPlayer() {
     <AnimatedGradient colors={colors} className="min-h-screen">
       <div className="min-h-screen flex items-center justify-center p-8">
         <div className="w-full max-w-4xl space-y-8">
-          {/* Album art with like button */}
           <div className="flex justify-center">
             <div className="relative group">
               <TrackCover
@@ -84,7 +83,9 @@ export function FullPlayer() {
                   'absolute bottom-4 right-4 p-3 rounded-full backdrop-blur-sm transition-all',
                   'opacity-0 group-hover:opacity-100 hover:scale-110',
                   !canLike && 'opacity-30 cursor-not-allowed group-hover:opacity-30',
-                  isLiked ? 'bg-destructive/20 text-destructive' : 'bg-black/30 text-white/70 hover:text-white',
+                  isLiked
+                    ? 'bg-destructive/20 text-destructive'
+                    : 'bg-black/30 text-white/70 hover:text-white',
                 )}
                 title={!canLike ? 'Login to like' : isLiked ? 'Unlike' : 'Like'}
               >
@@ -120,7 +121,6 @@ export function FullPlayer() {
             </div>
           </div>
 
-          {/* Playback controls - symmetrical */}
           <div className="flex items-center justify-center gap-4">
             <button
               onClick={toggleShuffle}
@@ -164,14 +164,25 @@ export function FullPlayer() {
               )}
               title={`Repeat: ${repeatMode === 'off' ? 'Off' : repeatMode === 'all' ? 'All' : 'One'}`}
             >
-              {repeatMode === 'one' ? <Repeat1 className="h-6 w-6" /> : <Repeat className="h-6 w-6" />}
+              {repeatMode === 'one' ? (
+                <Repeat1 className="h-6 w-6" />
+              ) : (
+                <Repeat className="h-6 w-6" />
+              )}
             </button>
           </div>
 
           {/* Volume control */}
           <div className="flex items-center justify-center gap-4 bg-white/10 rounded-full px-6 py-3 mx-auto max-w-md">
-            <button onClick={toggleMute} className="text-white hover:text-white/80 transition-colors">
-              {isMuted || volume === 0 ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+            <button
+              onClick={toggleMute}
+              className="text-white hover:text-white/80 transition-colors"
+            >
+              {isMuted || volume === 0 ? (
+                <VolumeX className="h-6 w-6" />
+              ) : (
+                <Volume2 className="h-6 w-6" />
+              )}
             </button>
             <Slider
               value={[isMuted ? 0 : volume]}

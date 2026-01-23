@@ -71,7 +71,6 @@ export function MiniPlayer() {
       <div className="backdrop-blur-sm bg-black/20">
         <div className="max-w-screen-2xl mx-auto px-4 py-3">
           <div className="flex items-center gap-4">
-            {/* Track info with like button overlay */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <Link to="/player" className="relative shrink-0 group">
                 <TrackCover
@@ -109,7 +108,6 @@ export function MiniPlayer() {
               </Link>
             </div>
 
-            {/* Playback controls - symmetrical layout */}
             <div className="flex items-center gap-1">
               <button
                 onClick={toggleShuffle}
@@ -153,11 +151,14 @@ export function MiniPlayer() {
                 )}
                 title={`Repeat: ${repeatMode === 'off' ? 'Off' : repeatMode === 'all' ? 'All' : 'One'}`}
               >
-                {repeatMode === 'one' ? <Repeat1 className="h-4 w-4" /> : <Repeat className="h-4 w-4" />}
+                {repeatMode === 'one' ? (
+                  <Repeat1 className="h-4 w-4" />
+                ) : (
+                  <Repeat className="h-4 w-4" />
+                )}
               </button>
             </div>
 
-            {/* Waveform */}
             <div className="flex-1 flex items-center gap-2 min-w-0">
               <span className="text-xs text-white/70 tabular-nums">{formatTime(currentTime)}</span>
               <WaveformSlider
@@ -171,13 +172,16 @@ export function MiniPlayer() {
               <span className="text-xs text-white/70 tabular-nums">{formatTime(duration)}</span>
             </div>
 
-            {/* Volume */}
             <div className="flex items-center gap-2">
               <button
                 onClick={toggleMute}
                 className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"
               >
-                {isMuted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                {isMuted || volume === 0 ? (
+                  <VolumeX className="h-5 w-5" />
+                ) : (
+                  <Volume2 className="h-5 w-5" />
+                )}
               </button>
               <Slider
                 value={[isMuted ? 0 : volume]}
