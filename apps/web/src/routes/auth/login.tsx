@@ -7,12 +7,12 @@ export const Route = createFileRoute('/auth/login')({
 
 function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
         <LoginForm />
         <div className="mt-6 text-center text-sm">
-          <span className="text-gray-600">Don't have an account? </span>
-          <Link to="/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
+          <span className="text-muted-foreground">Don't have an account? </span>
+          <Link to="/auth/register" className="font-medium text-primary hover:text-primary/80">
             Create one
           </Link>
         </div>

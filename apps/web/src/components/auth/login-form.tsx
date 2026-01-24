@@ -30,10 +30,10 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-md space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Welcome back</h1>
-        <p className="text-gray-500">Enter your credentials to sign in</p>
+        <h1 className="text-3xl font-bold text-foreground">Welcome back</h1>
+        <p className="text-muted-foreground">Enter your credentials to sign in</p>
       </div>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div className="text-muted-foreground">Loading...</div>}>
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -53,8 +53,8 @@ export function LoginForm() {
           </form.AppField>
 
           {loginMutation.error && (
-            <div className="rounded-md bg-red-50 p-3">
-              <p className="text-sm text-red-800">
+            <div className="rounded-md bg-destructive/10 p-3">
+              <p className="text-sm text-destructive">
                 {loginMutation.error instanceof Error
                   ? loginMutation.error.message
                   : 'Login failed. Please check your credentials.'}

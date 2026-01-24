@@ -32,8 +32,8 @@ export function RegisterForm() {
   return (
     <div className="w-full max-w-md space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Create an account</h1>
-        <p className="text-gray-500">Enter your information to get started</p>
+        <h1 className="text-3xl font-bold text-foreground">Create an account</h1>
+        <p className="text-muted-foreground">Enter your information to get started</p>
       </div>
 
       <form
@@ -49,7 +49,7 @@ export function RegisterForm() {
         </form.AppField>
 
         <form.AppField name="email">
-          {(field) => <field.TextField label="Email" placeholder="sBw0l@example.com" />}
+          {(field) => <field.TextField label="Email" placeholder="john@example.com" />}
         </form.AppField>
 
         <form.AppField name="password">
@@ -57,8 +57,8 @@ export function RegisterForm() {
         </form.AppField>
 
         {registerMutation.error && (
-          <div className="rounded-md bg-red-50 p-3">
-            <p className="text-sm text-red-800">
+          <div className="rounded-md bg-destructive/10 p-3">
+            <p className="text-sm text-destructive">
               {registerMutation.error instanceof Error
                 ? registerMutation.error.message
                 : 'Registration failed. Please try again.'}
