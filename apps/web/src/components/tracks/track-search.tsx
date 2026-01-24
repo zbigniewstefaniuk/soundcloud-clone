@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, Music2, Play } from 'lucide-react'
+import { Search } from 'lucide-react'
 import {
   Command,
   CommandEmpty,
@@ -10,13 +10,21 @@ import {
 } from '@/components/ui/command'
 import { TrackCover } from './track-cover'
 import { cn } from '@/lib/utils'
-import type { TrackWithUser } from '@/api/tracks'
 import { useDebouncedValue } from '@tanstack/react-pacer'
 import { commandScore } from '@/helpers'
 
+export type SearchableTrack = {
+  id: string
+  title: string
+  mainArtist?: string | null
+  genre?: string | null
+  coverArtUrl?: string | null
+  user?: { username: string } | null
+}
+
 interface TrackSearchProps {
-  tracks: TrackWithUser[]
-  onSelect?: (track: TrackWithUser) => void
+  tracks: SearchableTrack[]
+  onSelect?: (track: SearchableTrack) => void
   onSearchChange?: (query: string) => void
   placeholder?: string
   className?: string
@@ -30,7 +38,7 @@ export function TrackSearch({
   className,
 }: TrackSearchProps) {
   const [query, setQuery] = useState('')
-  const [filteredTracks, setFilteredTracks] = useState<TrackWithUser[]>(tracks)
+  const [filteredTracks, setFilteredTracks] = useState<SearchableTrack[]>(tracks)
 
   useEffect(() => {
     if (!query.trim()) {
@@ -109,19 +117,19 @@ export function TrackSearch({
   )
 }
 
-interface TrackSearchInputProps {
-  tracks: TrackWithUser[]
-  onFilteredTracksChange: (tracks: TrackWithUser[]) => void
+interface TrackSearchInputProps<T extends SearchableTrack> {
+  tracks: T[]
+  onFilteredTracksChange: (tracks: T[]) => void
   placeholder?: string
   className?: string
 }
 
-export function TrackSearchInput({
+export function TrackSearchInput<T extends SearchableTrack>({
   tracks,
   onFilteredTracksChange,
   placeholder = 'Search your tracks...',
   className,
-}: TrackSearchInputProps) {
+}: TrackSearchInputProps<T>) {
   const [query, setQuery] = useState('')
 
   const [debouncedQuery] = useDebouncedValue(query, {

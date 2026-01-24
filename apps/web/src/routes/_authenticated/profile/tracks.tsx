@@ -9,7 +9,11 @@ import { Upload, Music2, Heart, User } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 import { usePlayer } from '@/contexts/player-context'
 import { useAccount } from '@/hooks/use-auth'
-import type { TrackWithUser } from '@/api/tracks'
+import {
+  normalizeUserTrack,
+  normalizeLikedTrack,
+  type TrackWithUser,
+} from '@/api/tracks'
 
 export const Route = createFileRoute('/_authenticated/profile/tracks')({
   component: ProfileTracksPage,
@@ -62,8 +66,14 @@ function ProfileTracksPage() {
 }
 
 function MyTracksTab() {
-  const { tracks, isLoading, isError, error } = useUserTracks()
-  const { playTrack, currentTrack, isPlaying, togglePlay, currentTime } = usePlayer()
+  const { user } = useAccount()
+  const { tracks: rawTracks, isLoading, isError, error } = useUserTracks()
+  const { currentTrack } = usePlayer()
+
+  const tracks: TrackWithUser[] = user
+    ? rawTracks.map((track) => normalizeUserTrack(track, user))
+    : []
+
   const [filteredTracks, setFilteredTracks] = useState<TrackWithUser[]>([])
   const [isSearching, setIsSearching] = useState(false)
 
@@ -74,18 +84,6 @@ function MyTracksTab() {
     setIsSearching(
       filtered.length !== tracks.length || filtered.some((t, i) => t.id !== tracks[i]?.id),
     )
-  }
-
-  const handlePlay = (track: TrackWithUser) => {
-    if (currentTrack?.id === track.id && isPlaying) {
-      togglePlay()
-      return
-    }
-    if (currentTrack?.id === track.id && !isPlaying && currentTime > 0) {
-      togglePlay()
-      return
-    }
-    playTrack(track, displayTracks)
   }
 
   if (isLoading) {
@@ -152,7 +150,6 @@ function MyTracksTab() {
           <TrackList
             tracks={displayTracks}
             isOwner={true}
-            onTogglePlay={handlePlay}
             currentPlayingTrackId={currentTrack?.id}
           />
         </div>
@@ -162,8 +159,13 @@ function MyTracksTab() {
 }
 
 function LikedTracksTab() {
-  const { tracks, isLoading, isError, error } = useUserLikedTracks()
+  const { tracks: rawTracks, isLoading, isError, error } = useUserLikedTracks()
   const { currentTrack } = usePlayer()
+
+  const tracks = rawTracks
+    .map(normalizeLikedTrack)
+    .filter((track): track is TrackWithUser => track !== null)
+
   const [filteredTracks, setFilteredTracks] = useState<TrackWithUser[]>([])
   const [isSearching, setIsSearching] = useState(false)
 

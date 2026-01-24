@@ -6,6 +6,58 @@ import { ApiError } from './error'
 export type TrackWithUser = Awaited<ReturnType<typeof getTrackById>>
 export type Track = TrackWithUser
 export type PublicTracksResponse = Awaited<ReturnType<typeof getPublicTracks>>
+export type UserTrack = Awaited<ReturnType<typeof getUserTracks>>[number]
+export type LikedTracksResponse = Awaited<ReturnType<typeof getUserLikedTracks>>
+export type LikedTrackItem = LikedTracksResponse['data'][number]
+
+// Type guard for complete track data
+function hasRequiredTrackFields(
+  track: LikedTrackItem,
+): track is LikedTrackItem & { id: string; userId: string; title: string; audioUrl: string } {
+  return (
+    track.id !== undefined &&
+    track.userId !== undefined &&
+    track.title !== undefined &&
+    track.audioUrl !== undefined
+  )
+}
+
+/**
+ * Normalize user's own tracks to TrackWithUser format
+ */
+export function normalizeUserTrack(
+  track: UserTrack,
+  owner: { id: string; username: string },
+): TrackWithUser {
+  return {
+    ...track,
+    user: owner,
+    likeCount: 0,
+  }
+}
+
+/**
+ * Normalize liked track to TrackWithUser format
+ * Returns null for incomplete track data
+ */
+export function normalizeLikedTrack(track: LikedTrackItem): TrackWithUser | null {
+  if (!hasRequiredTrackFields(track)) return null
+
+  return {
+    ...track,
+    description: track.description ?? null,
+    genre: track.genre ?? null,
+    mainArtist: track.mainArtist ?? null,
+    coverArtUrl: track.coverArtUrl ?? null,
+    fileSize: track.fileSize ?? 0,
+    mimeType: track.mimeType ?? 'audio/mpeg',
+    isPublic: track.isPublic ?? true,
+    playCount: track.playCount ?? 0,
+    createdAt: track.createdAt ?? new Date(),
+    updatedAt: track.updatedAt ?? new Date(),
+    likeCount: 0,
+  } as TrackWithUser
+}
 
 function handleError(error: unknown): never {
   if (error && typeof error === 'object' && 'value' in error) {
