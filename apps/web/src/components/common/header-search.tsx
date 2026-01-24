@@ -13,6 +13,30 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import type { SearchResult } from '@/api/search'
+import type { TrackWithUser } from '@/api/tracks'
+
+const MIN_QUERY_LENGTH = 2
+
+function toPlayableTrack(result: SearchResult): TrackWithUser {
+  return {
+    id: result.id,
+    title: result.title,
+    description: result.description,
+    genre: result.genre,
+    mainArtist: result.mainArtist,
+    coverArtUrl: result.coverArtUrl,
+    playCount: result.playCount,
+    likeCount: result.likeCount,
+    user: result.user,
+    userId: result.user?.id ?? '',
+    audioUrl: '',
+    fileSize: 0,
+    mimeType: 'audio/mpeg',
+    isPublic: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+}
 
 export function HeaderSearch() {
   const [open, setOpen] = useState(false)
@@ -21,7 +45,8 @@ export function HeaderSearch() {
   const { results, isLoading, isFetching, isDebouncing } = useTrackSearch(query)
   const { playTrack } = usePlayer()
 
-  // Keyboard shortcut: Cmd/Ctrl + K
+  const tracks = results.map(toPlayableTrack)
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -33,46 +58,22 @@ export function HeaderSearch() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // Focus input when popover opens
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 0)
     } else {
-      // Clear query when closing
       setQuery('')
     }
   }, [open])
 
-  const handleSelect = (result: SearchResult) => {
-    const searchResultToTrack = (r: SearchResult) => ({
-      id: r.id,
-      title: r.title,
-      description: r.description,
-      genre: r.genre,
-      mainArtist: r.mainArtist,
-      coverArtUrl: r.coverArtUrl,
-      playCount: r.playCount,
-      likeCount: r.likeCount,
-      user: r.user,
-      userId: r.user?.id ?? '',
-      audioUrl: '', // Will be fetched via stream token by the player
-      fileSize: 0,
-      mimeType: 'audio/mpeg',
-      isPublic: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    })
-
-    const track = searchResultToTrack(result)
-    const queue = results.map(searchResultToTrack)
-
-    // Cast to any since the player will handle fetching the stream URL
-    playTrack(track, queue)
+  const handleSelect = (index: number) => {
+    playTrack(tracks[index], tracks)
     setOpen(false)
     setQuery('')
   }
 
-  const showLoading = (isLoading || isFetching || isDebouncing) && query.trim().length >= 2
+  const isValidQuery = query.trim().length >= MIN_QUERY_LENGTH
+  const showLoading = (isLoading || isFetching || isDebouncing) && isValidQuery
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -115,7 +116,7 @@ export function HeaderSearch() {
             )}
           </div>
           <CommandList className="max-h-100">
-            {query.trim().length >= 2 && !isLoading && !isDebouncing && results.length === 0 && (
+            {isValidQuery && !isLoading && !isDebouncing && results.length === 0 && (
               <CommandEmpty>
                 <div className="flex flex-col items-center py-6">
                   <Music2 className="h-8 w-8 text-muted-foreground mb-2" />
@@ -124,20 +125,20 @@ export function HeaderSearch() {
                 </div>
               </CommandEmpty>
             )}
-            {query.trim().length < 2 && (
+            {!isValidQuery && (
               <div className="py-6 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Type at least 2 characters to search
+                  Type at least {MIN_QUERY_LENGTH} characters to search
                 </p>
               </div>
             )}
             {results.length > 0 && (
               <CommandGroup heading={`Results (${results.length})`}>
-                {results.map((result) => (
+                {results.map((result, index) => (
                   <CommandItem
                     key={result.id}
                     value={result.id}
-                    onSelect={() => handleSelect(result)}
+                    onSelect={() => handleSelect(index)}
                     className="flex items-center gap-3 p-2 cursor-pointer"
                   >
                     <TrackCover
