@@ -16,6 +16,7 @@ import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthenticatedTracksUploadRouteImport } from './routes/_authenticated/tracks/upload'
 import { Route as AuthenticatedProfileTracksRouteImport } from './routes/_authenticated/profile/tracks'
+import { Route as AuthenticatedProfileProfileIdIndexRouteImport } from './routes/_authenticated/profile/$profileId/index'
 import { Route as AuthenticatedTracksTrackIdEditRouteImport } from './routes/_authenticated/tracks/$trackId/edit'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -54,6 +55,12 @@ const AuthenticatedProfileTracksRoute =
     path: '/profile/tracks',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedProfileProfileIdIndexRoute =
+  AuthenticatedProfileProfileIdIndexRouteImport.update({
+    id: '/profile/$profileId/',
+    path: '/profile/$profileId/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTracksTrackIdEditRoute =
   AuthenticatedTracksTrackIdEditRouteImport.update({
     id: '/tracks/$trackId/edit',
@@ -69,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/profile/tracks': typeof AuthenticatedProfileTracksRoute
   '/tracks/upload': typeof AuthenticatedTracksUploadRoute
   '/tracks/$trackId/edit': typeof AuthenticatedTracksTrackIdEditRoute
+  '/profile/$profileId/': typeof AuthenticatedProfileProfileIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +86,7 @@ export interface FileRoutesByTo {
   '/profile/tracks': typeof AuthenticatedProfileTracksRoute
   '/tracks/upload': typeof AuthenticatedTracksUploadRoute
   '/tracks/$trackId/edit': typeof AuthenticatedTracksTrackIdEditRoute
+  '/profile/$profileId': typeof AuthenticatedProfileProfileIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +98,7 @@ export interface FileRoutesById {
   '/_authenticated/profile/tracks': typeof AuthenticatedProfileTracksRoute
   '/_authenticated/tracks/upload': typeof AuthenticatedTracksUploadRoute
   '/_authenticated/tracks/$trackId/edit': typeof AuthenticatedTracksTrackIdEditRoute
+  '/_authenticated/profile/$profileId/': typeof AuthenticatedProfileProfileIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/profile/tracks'
     | '/tracks/upload'
     | '/tracks/$trackId/edit'
+    | '/profile/$profileId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/profile/tracks'
     | '/tracks/upload'
     | '/tracks/$trackId/edit'
+    | '/profile/$profileId'
   id:
     | '__root__'
     | '/'
@@ -119,6 +131,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile/tracks'
     | '/_authenticated/tracks/upload'
     | '/_authenticated/tracks/$trackId/edit'
+    | '/_authenticated/profile/$profileId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -180,6 +193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileTracksRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/profile/$profileId/': {
+      id: '/_authenticated/profile/$profileId/'
+      path: '/profile/$profileId'
+      fullPath: '/profile/$profileId/'
+      preLoaderRoute: typeof AuthenticatedProfileProfileIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/tracks/$trackId/edit': {
       id: '/_authenticated/tracks/$trackId/edit'
       path: '/tracks/$trackId/edit'
@@ -194,12 +214,15 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProfileTracksRoute: typeof AuthenticatedProfileTracksRoute
   AuthenticatedTracksUploadRoute: typeof AuthenticatedTracksUploadRoute
   AuthenticatedTracksTrackIdEditRoute: typeof AuthenticatedTracksTrackIdEditRoute
+  AuthenticatedProfileProfileIdIndexRoute: typeof AuthenticatedProfileProfileIdIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfileTracksRoute: AuthenticatedProfileTracksRoute,
   AuthenticatedTracksUploadRoute: AuthenticatedTracksUploadRoute,
   AuthenticatedTracksTrackIdEditRoute: AuthenticatedTracksTrackIdEditRoute,
+  AuthenticatedProfileProfileIdIndexRoute:
+    AuthenticatedProfileProfileIdIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
