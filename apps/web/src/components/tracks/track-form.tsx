@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { useAppForm } from '@/hooks/form'
 import { useUploadTrack, useUpdateTrack } from '@/hooks/use-tracks'
+import { useUsers } from '@/hooks/use-users'
 
 const MAX_AUDIO_SIZE = 100 * 1024 * 1024
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
@@ -35,8 +36,8 @@ const trackMetadataSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255, 'Title too long'),
   description: z.string().optional(),
   genre: z.string().max(50, 'Genre too long').optional(),
-  mainArtist: z.string().max(100, 'Artist name too long').optional(),
   isPublic: z.boolean(),
+  collaboratorIds: z.array(z.string()).optional(),
 })
 
 const createTrackSchema = trackMetadataSchema.extend({
@@ -85,6 +86,13 @@ export function TrackForm(props: TrackFormProps) {
 
 function CreateTrackForm() {
   const uploadMutation = useUploadTrack()
+  const { data } = useUsers()
+
+  const users =
+    data?.map((user) => ({
+      label: user.username,
+      value: user.id,
+    })) ?? []
 
   const form = useAppForm({
     defaultValues: {
@@ -93,8 +101,8 @@ function CreateTrackForm() {
       title: '',
       description: '',
       genre: '',
-      mainArtist: '',
       isPublic: true,
+      collaboratorIds: [] as string[],
     },
     validators: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -109,8 +117,8 @@ function CreateTrackForm() {
         title: value.title,
         description: value.description || undefined,
         genre: value.genre || undefined,
-        mainArtist: value.mainArtist || undefined,
         isPublic: value.isPublic,
+        collaboratorIds: value.collaboratorIds,
       })
 
       formApi.reset()
@@ -153,17 +161,21 @@ function CreateTrackForm() {
             {(field) => <field.TextArea label="Description (Optional)" rows={4} />}
           </form.AppField>
 
-          <div className="grid grid-cols-2 gap-6">
-            <form.AppField name="genre">
-              {(field) => (
-                <field.TextField label="Genre" placeholder="e.g., Electronic" type="text" />
-              )}
-            </form.AppField>
+          <form.AppField name="genre">
+            {(field) => (
+              <field.TextField label="Genre" placeholder="e.g., Electronic" type="text" />
+            )}
+          </form.AppField>
 
-            <form.AppField name="mainArtist">
-              {(field) => <field.TextField label="Artist" placeholder="Artist name" type="text" />}
-            </form.AppField>
-          </div>
+          <form.AppField name="collaboratorIds">
+            {(field) => (
+              <field.MultiSelect
+                label="Collaborators (Optional)"
+                values={users}
+                placeholder="Select collaborators..."
+              />
+            )}
+          </form.AppField>
 
           <form.AppField name="isPublic">
             {(field) => <field.Switch label="Make track public" />}
@@ -196,15 +208,22 @@ interface EditTrackFormProps {
 
 function EditTrackForm({ trackId, initialData, existingCoverArtUrl }: EditTrackFormProps) {
   const updateMutation = useUpdateTrack(trackId)
+  const { data } = useUsers()
+
+  const users =
+    data?.map((user) => ({
+      label: user.username,
+      value: user.id,
+    })) ?? []
 
   const form = useAppForm({
     defaultValues: {
       title: initialData.title,
       description: initialData.description ?? '',
       genre: initialData.genre ?? '',
-      mainArtist: initialData.mainArtist ?? '',
       isPublic: initialData.isPublic,
       coverArt: null as File | null,
+      collaboratorIds: initialData.collaboratorIds ?? ([] as string[]),
     },
     validators: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -215,9 +234,9 @@ function EditTrackForm({ trackId, initialData, existingCoverArtUrl }: EditTrackF
         title: value.title,
         description: value.description || undefined,
         genre: value.genre || undefined,
-        mainArtist: value.mainArtist || undefined,
         isPublic: value.isPublic,
         coverArt: value.coverArt ?? undefined,
+        collaboratorIds: value.collaboratorIds,
       })
     },
   })
@@ -258,17 +277,21 @@ function EditTrackForm({ trackId, initialData, existingCoverArtUrl }: EditTrackF
             {(field) => <field.TextArea label="Description (Optional)" rows={4} />}
           </form.AppField>
 
-          <div className="grid grid-cols-2 gap-6">
-            <form.AppField name="genre">
-              {(field) => (
-                <field.TextField label="Genre" placeholder="e.g., Electronic" type="text" />
-              )}
-            </form.AppField>
+          <form.AppField name="genre">
+            {(field) => (
+              <field.TextField label="Genre" placeholder="e.g., Electronic" type="text" />
+            )}
+          </form.AppField>
 
-            <form.AppField name="mainArtist">
-              {(field) => <field.TextField label="Artist" placeholder="Artist name" type="text" />}
-            </form.AppField>
-          </div>
+          <form.AppField name="collaboratorIds">
+            {(field) => (
+              <field.MultiSelect
+                label="Collaborators (Optional)"
+                values={users}
+                placeholder="Select collaborators..."
+              />
+            )}
+          </form.AppField>
 
           <form.AppField name="coverArt">
             {(field) => <field.ImageFileField label="Update Cover Art (Optional)" />}

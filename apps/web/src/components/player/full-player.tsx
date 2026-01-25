@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from '@tanstack/react-router'
 import {
   Play,
   Pause,
@@ -97,7 +98,36 @@ export function FullPlayer() {
           {/* Track info */}
           <div className="text-center space-y-2">
             <h1 className="text-5xl font-bold text-white">{currentTrack.title}</h1>
-            <p className="text-2xl text-white/80">{currentTrack.mainArtist || 'Unknown Artist'}</p>
+            <p className="text-2xl text-white/80">
+              <Link
+                to="/profile/$profileId"
+                params={{ profileId: currentTrack.user?.id ?? '' }}
+                className="hover:text-white transition-colors"
+              >
+                {currentTrack.user?.username || 'Unknown Artist'}
+              </Link>
+              {currentTrack.collaborators &&
+                currentTrack.collaborators.filter((c) => c.role === 'featured').length > 0 && (
+                  <span>
+                    {' '}
+                    ft.{' '}
+                    {currentTrack.collaborators
+                      .filter((c) => c.role === 'featured')
+                      .map((c, i, arr) => (
+                        <span key={c.id}>
+                          <Link
+                            to="/profile/$profileId"
+                            params={{ profileId: c.id }}
+                            className="hover:text-white transition-colors"
+                          >
+                            {c.username}
+                          </Link>
+                          {i < arr.length - 1 && ', '}
+                        </span>
+                      ))}
+                  </span>
+                )}
+            </p>
             {currentTrack.description && (
               <p className="text-lg text-white/60 line-clamp-2 max-w-2xl mx-auto mt-4">
                 {currentTrack.description}

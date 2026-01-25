@@ -40,7 +40,6 @@ function EditTrackPage() {
           title: track.title,
           description: track.description ?? undefined,
           genre: track.genre ?? undefined,
-          mainArtist: track.mainArtist ?? undefined,
           isPublic: track.isPublic,
         }}
         existingCoverArtUrl={getAssetUrl(track.coverArtUrl) ?? undefined}

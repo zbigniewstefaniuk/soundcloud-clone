@@ -100,13 +100,17 @@ export function Select({
   const errors = field.state.meta.errors as (string | ZodError)[]
 
   return (
-    <div>
+    <>
+      <Label htmlFor={label} className="mb-2 text-xl font-bold">
+        {label}
+      </Label>
       <ShadcnSelect.Select
         name={field.name}
         value={field.state.value}
         onValueChange={(value) => value && field.handleChange(value)}
+        items={values}
       >
-        <ShadcnSelect.SelectTrigger className="w-full">
+        <ShadcnSelect.SelectTrigger className="w-full" onBlur={field.handleBlur}>
           <ShadcnSelect.SelectValue placeholder={placeholder} />
         </ShadcnSelect.SelectTrigger>
         <ShadcnSelect.SelectContent>
@@ -120,6 +124,92 @@ export function Select({
           </ShadcnSelect.SelectGroup>
         </ShadcnSelect.SelectContent>
       </ShadcnSelect.Select>
+      {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
+    </>
+  )
+}
+
+export function MultiSelect({
+  label,
+  values,
+  placeholder,
+}: {
+  label: string
+  values: Array<{ label: string; value: string }>
+  placeholder?: string
+}) {
+  const field = useFieldContext<string[]>()
+  const errors = field.state.meta.errors as (string | ZodError)[]
+  const selectedValues = field.state.value ?? []
+
+  const toggleValue = (value: string) => {
+    const newValues = selectedValues.includes(value)
+      ? selectedValues.filter((v) => v !== value)
+      : [...selectedValues, value]
+    field.handleChange(newValues)
+  }
+
+  const selectedLabels = selectedValues
+    .map((v) => values.find((item) => item.value === v)?.label)
+    .filter(Boolean)
+    .join(', ')
+
+  return (
+    <div>
+      <Label htmlFor={label} className="mb-2 text-xl font-bold">
+        {label}
+      </Label>
+      <ShadcnSelect.Select
+        name={field.name}
+        value=""
+        onValueChange={(value) => value && toggleValue(value)}
+        items={values}
+      >
+        <ShadcnSelect.SelectTrigger className="w-full" onBlur={field.handleBlur}>
+          <span className={selectedLabels ? '' : 'text-muted-foreground'}>
+            {selectedLabels || placeholder || 'Select...'}
+          </span>
+        </ShadcnSelect.SelectTrigger>
+        <ShadcnSelect.SelectContent>
+          <ShadcnSelect.SelectGroup>
+            <ShadcnSelect.SelectLabel>{label}</ShadcnSelect.SelectLabel>
+            {values.map((item) => (
+              <ShadcnSelect.SelectItem
+                key={item.value}
+                value={item.value}
+                className={selectedValues.includes(item.value) ? 'bg-accent' : ''}
+              >
+                <span className="flex items-center gap-2">
+                  {selectedValues.includes(item.value) && <span>✓</span>}
+                  {item.label}
+                </span>
+              </ShadcnSelect.SelectItem>
+            ))}
+          </ShadcnSelect.SelectGroup>
+        </ShadcnSelect.SelectContent>
+      </ShadcnSelect.Select>
+      {selectedValues.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-2">
+          {selectedValues.map((value) => {
+            const item = values.find((v) => v.value === value)
+            return (
+              <span
+                key={value}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-accent rounded-full"
+              >
+                {item?.label}
+                <button
+                  type="button"
+                  onClick={() => toggleValue(value)}
+                  className="hover:text-destructive"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )
+          })}
+        </div>
+      )}
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
   )

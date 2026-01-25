@@ -1,7 +1,14 @@
 import { sql, eq, and, or, ilike, desc } from 'drizzle-orm'
 import { db } from '../config/database'
-import { tracks, users, likes } from '../db/schema'
+import { tracks, users, likes, userProfiles } from '../db/schema'
 import { embeddingService } from './embedding.service'
+
+export interface UserSearchResult {
+  id: string
+  username: string
+  displayName: string | null
+  avatarUrl: string | null
+}
 
 export interface SearchResult {
   id: string
@@ -136,7 +143,8 @@ class SearchService {
             ilike(tracks.title, `%${query}%`),
             ilike(tracks.description, `%${query}%`),
             ilike(tracks.genre, `%${query}%`),
-            ilike(tracks.mainArtist, `%${query}%`),
+            ilike(tracks.mainArtist, `%${query}%`), // For backward compatibility with old tracks
+            ilike(users.username, `%${query}%`), // For new tracks where artist is the uploader
           ),
         ),
       )
@@ -182,6 +190,32 @@ class SearchService {
     }
 
     return combined
+  }
+
+  /**
+   * Search users by username and display name
+   */
+  async searchUsers(params: { query: string; limit?: number }): Promise<UserSearchResult[]> {
+    const { query, limit = 10 } = params
+
+    const results = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        displayName: userProfiles.displayName,
+        avatarUrl: userProfiles.avatarUrl,
+      })
+      .from(users)
+      .leftJoin(userProfiles, eq(users.id, userProfiles.userId))
+      .where(
+        or(
+          ilike(users.username, `%${query}%`),
+          ilike(userProfiles.displayName, `%${query}%`),
+        ),
+      )
+      .limit(limit)
+
+    return results
   }
 }
 

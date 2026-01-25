@@ -37,14 +37,17 @@ const BooleanOrString = t.Union([t.Boolean(), t.Literal('true'), t.Literal('fals
 
 export type BooleanOrString = (typeof BooleanOrString)['static']
 
+// FormData sends arrays as JSON strings
+const CollaboratorIds = t.Optional(t.Union([t.Array(t.String()), t.String()]))
+
 export const CreateTrackSchema = t.Object({
   title: tracks.title,
   description: t.Optional(tracks.description),
   genre: t.Optional(tracks.genre),
-  mainArtist: t.Optional(tracks.mainArtist),
   isPublic: t.Optional(BooleanOrString),
   file: t.File({ maxSize: '100m' }),
   coverArt: t.Optional(t.File({ maxSize: '10m' })),
+  collaboratorIds: CollaboratorIds,
 })
 
 export type CreateTrackInput = (typeof CreateTrackSchema)['static']
@@ -53,10 +56,10 @@ export const UpdateTrackSchema = t.Object({
   title: t.Optional(tracks.title),
   description: t.Optional(tracks.description),
   genre: t.Optional(tracks.genre),
-  mainArtist: t.Optional(tracks.mainArtist),
   isPublic: t.Optional(BooleanOrString),
   file: t.Optional(t.File({ maxSize: '100m' })),
   coverArt: t.Optional(t.File({ maxSize: '10m' })),
+  collaboratorIds: CollaboratorIds,
 })
 
 export type UpdateTrackInput = (typeof UpdateTrackSchema)['static']
@@ -99,4 +102,16 @@ export function parseBooleanOrString(value: BooleanOrString | undefined): boolea
   if (value === undefined) return undefined
   if (typeof value === 'boolean') return value
   return value === 'true'
+}
+
+// Helper to parse collaboratorIds (can be array or JSON string)
+export function parseCollaboratorIds(value: string | string[] | undefined): string[] {
+  if (!value) return []
+  if (Array.isArray(value)) return value
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
 }

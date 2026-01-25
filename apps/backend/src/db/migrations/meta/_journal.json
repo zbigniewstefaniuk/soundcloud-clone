@@ -22,6 +22,13 @@
       "when": 1769024451293,
       "tag": "0002_third_carmella_unuscione",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769351953232,
+      "tag": "0003_wide_nova",
+      "breakpoints": true
     }
   ]
 }

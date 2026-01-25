@@ -25,6 +25,21 @@ export async function getUserPublicTracks(userId: string) {
 
   return response!.data
 }
+export async function getAllUsers() {
+  const { data: response, error } = await api.users.get()
+
+  if (error) {
+    handleError(error)
+  }
+
+  return response!.data
+}
+
+export const usersApi = {
+  getUserById,
+  getUserPublicTracks,
+  getAllUsers,
+}
 
 /**
  * Normalize user's public track to TrackWithUser format
@@ -38,5 +53,6 @@ export function normalizeUserPublicTrack(
     ...track,
     user: owner,
     likeCount: 0,
+    collaborators: [],
   } as TrackWithUser
 }

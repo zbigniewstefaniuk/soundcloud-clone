@@ -106,7 +106,36 @@ function TrackListItem({ track }: { track: TrackWithUser }) {
 
       <div className="flex-1 min-w-0">
         <h3 className="text-base font-medium text-foreground truncate">{track.title}</h3>
-        <p className="text-sm text-muted-foreground">{track.mainArtist || 'Unknown Artist'}</p>
+        <p className="text-sm text-muted-foreground">
+          <Link
+            to="/profile/$profileId"
+            params={{ profileId: track.user?.id ?? '' }}
+            className="hover:text-foreground transition-colors"
+          >
+            {track.user?.username || 'Unknown Artist'}
+          </Link>
+          {track.collaborators &&
+            track.collaborators.filter((c) => c.role === 'featured').length > 0 && (
+              <span>
+                {' '}
+                ft.{' '}
+                {track.collaborators
+                  .filter((c) => c.role === 'featured')
+                  .map((c, i, arr) => (
+                    <span key={c.id}>
+                      <Link
+                        to="/profile/$profileId"
+                        params={{ profileId: c.id }}
+                        className="hover:text-foreground transition-colors"
+                      >
+                        {c.username}
+                      </Link>
+                      {i < arr.length - 1 && ', '}
+                    </span>
+                  ))}
+              </span>
+            )}
+        </p>
         <div className="mt-1.5">
           <TrackStats playCount={track.playCount} likeCount={track.likeCount} genre={track.genre} />
         </div>

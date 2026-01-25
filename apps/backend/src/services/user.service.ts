@@ -62,7 +62,14 @@ export class UserService {
       conditions.push(eq(tracks.isPublic, true))
     }
 
-    return db.select().from(tracks).where(and(...conditions))
+    return db
+      .select()
+      .from(tracks)
+      .where(and(...conditions))
+  }
+
+  async getAllUsers() {
+    return db.select().from(users)
   }
 }
 

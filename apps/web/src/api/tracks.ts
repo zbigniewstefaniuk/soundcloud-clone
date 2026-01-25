@@ -3,9 +3,12 @@ import { env } from '@/env'
 import { ApiError } from './error'
 
 // Infer types from API responses
+// TrackWithUser is the full track detail type (includes collaborators)
 export type TrackWithUser = Awaited<ReturnType<typeof getTrackById>>
 export type Track = TrackWithUser
 export type PublicTracksResponse = Awaited<ReturnType<typeof getPublicTracks>>
+// TrackListItem is for list responses that don't include collaborators
+export type TrackListItem = PublicTracksResponse['data'][number]
 export type UserTrack = Awaited<ReturnType<typeof getUserTracks>>[number]
 export type LikedTracksResponse = Awaited<ReturnType<typeof getUserLikedTracks>>
 export type LikedTrackItem = LikedTracksResponse['data'][number]
@@ -33,7 +36,19 @@ export function normalizeUserTrack(
     ...track,
     user: owner,
     likeCount: 0,
+    collaborators: [],
   }
+}
+
+/**
+ * Normalize list track to TrackWithUser format
+ * Adds empty collaborators array for player compatibility
+ */
+export function normalizeListTrack(track: TrackListItem): TrackWithUser {
+  return {
+    ...track,
+    collaborators: [],
+  } as TrackWithUser
 }
 
 /**
@@ -56,6 +71,7 @@ export function normalizeLikedTrack(track: LikedTrackItem): TrackWithUser | null
     createdAt: track.createdAt ?? new Date(),
     updatedAt: track.updatedAt ?? new Date(),
     likeCount: 0,
+    collaborators: [],
   } as TrackWithUser
 }
 
@@ -75,17 +91,17 @@ export interface UploadTrackInput {
   title: string
   description?: string
   genre?: string
-  mainArtist?: string
   isPublic: boolean
+  collaboratorIds?: string[]
 }
 
 export interface UpdateTrackInput {
   title?: string
   description?: string | null
   genre?: string | null
-  mainArtist?: string | null
   isPublic?: boolean
   coverArt?: File
+  collaboratorIds?: string[]
 }
 
 export async function getPublicTracks(
@@ -129,7 +145,10 @@ export async function uploadTrack(input: UploadTrackInput) {
     ...(input.coverArt && { coverArt: input.coverArt }),
     ...(input.description && { description: input.description }),
     ...(input.genre && { genre: input.genre }),
-    ...(input.mainArtist && { mainArtist: input.mainArtist }),
+    ...(input.collaboratorIds &&
+      input.collaboratorIds.length > 0 && {
+        collaboratorIds: JSON.stringify(input.collaboratorIds),
+      }),
   })
 
   if (error) {
@@ -145,9 +164,11 @@ export async function updateTrack(id: string, input: UpdateTrackInput) {
     ...(input.title !== undefined && { title: input.title }),
     ...(input.description !== undefined && { description: input.description || '' }),
     ...(input.genre !== undefined && { genre: input.genre || '' }),
-    ...(input.mainArtist !== undefined && { mainArtist: input.mainArtist || '' }),
     ...(input.isPublic !== undefined && { isPublic: String(input.isPublic) }),
     ...(input.coverArt && { coverArt: input.coverArt }),
+    ...(input.collaboratorIds !== undefined && {
+      collaboratorIds: JSON.stringify(input.collaboratorIds),
+    }),
   })
 
   if (error) {

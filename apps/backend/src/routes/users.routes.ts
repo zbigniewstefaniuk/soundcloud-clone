@@ -81,3 +81,17 @@ export const userRoutes = new Elysia({ prefix: '/users' })
       },
     },
   )
+  .get(
+    '/',
+    async () => {
+      const users = await userService.getAllUsers()
+      return success(users)
+    },
+    {
+      detail: {
+        tags: ['Users'],
+        summary: 'Get all users',
+        description: 'Get a list of all users',
+      },
+    },
+  )

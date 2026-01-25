@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, X, Music2, Play, Loader2 } from 'lucide-react'
-import { useTrackSearch } from '@/hooks/use-search'
+import { useNavigate } from '@tanstack/react-router'
+import { Search, X, Music2, Play, Loader2, User } from 'lucide-react'
+import { useTrackSearch, useUserSearch } from '@/hooks/use-search'
 import { usePlayer } from '@/contexts/player-context'
 import { TrackCover } from '@/components/tracks/track-cover'
+import { UserAvatar } from '@/components/profile/user-avatar'
 import {
   Command,
   CommandEmpty,
@@ -12,7 +14,7 @@ import {
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import type { SearchResult } from '@/api/search'
+import type { SearchResult, UserSearchResult } from '@/api/search'
 import type { TrackWithUser } from '@/api/tracks'
 
 const MIN_QUERY_LENGTH = 2
@@ -23,10 +25,11 @@ function toPlayableTrack(result: SearchResult): TrackWithUser {
     title: result.title,
     description: result.description,
     genre: result.genre,
-    mainArtist: result.mainArtist,
+    mainArtist: null, // Deprecated: use user.username instead
     coverArtUrl: result.coverArtUrl,
     playCount: result.playCount,
     likeCount: result.likeCount,
+    collaborators: [],
     user: result.user,
     userId: result.user?.id ?? '',
     audioUrl: '',
@@ -42,10 +45,26 @@ export function HeaderSearch() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
-  const { results, isLoading, isFetching, isDebouncing } = useTrackSearch(query)
+  const navigate = useNavigate()
+  const {
+    results: trackResults,
+    isLoading: isTrackLoading,
+    isFetching: isTrackFetching,
+    isDebouncing: isTrackDebouncing,
+  } = useTrackSearch(query)
+  const {
+    results: userResults,
+    isLoading: isUserLoading,
+    isFetching: isUserFetching,
+    isDebouncing: isUserDebouncing,
+  } = useUserSearch(query)
   const { playTrack } = usePlayer()
 
-  const tracks = results.map(toPlayableTrack)
+  const tracks = trackResults.map(toPlayableTrack)
+  const isLoading = isTrackLoading || isUserLoading
+  const isFetching = isTrackFetching || isUserFetching
+  const isDebouncing = isTrackDebouncing || isUserDebouncing
+  const hasNoResults = trackResults.length === 0 && userResults.length === 0
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -66,8 +85,14 @@ export function HeaderSearch() {
     }
   }, [open])
 
-  const handleSelect = (index: number) => {
+  const handleTrackSelect = (index: number) => {
     playTrack(tracks[index], tracks)
+    setOpen(false)
+    setQuery('')
+  }
+
+  const handleUserSelect = (userId: string) => {
+    navigate({ to: '/profile/$profileId', params: { profileId: userId } })
     setOpen(false)
     setQuery('')
   }
@@ -116,11 +141,11 @@ export function HeaderSearch() {
             )}
           </div>
           <CommandList className="max-h-100">
-            {isValidQuery && !isLoading && !isDebouncing && results.length === 0 && (
+            {isValidQuery && !isLoading && !isDebouncing && hasNoResults && (
               <CommandEmpty>
                 <div className="flex flex-col items-center py-6">
                   <Music2 className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">No tracks found</p>
+                  <p className="text-sm text-muted-foreground">No results found</p>
                   <p className="text-xs text-muted-foreground mt-1">Try a different search term</p>
                 </div>
               </CommandEmpty>
@@ -132,13 +157,42 @@ export function HeaderSearch() {
                 </p>
               </div>
             )}
-            {results.length > 0 && (
-              <CommandGroup heading={`Results (${results.length})`}>
-                {results.map((result, index) => (
+            {userResults.length > 0 && (
+              <CommandGroup heading={`Users (${userResults.length})`}>
+                {userResults.map((user: UserSearchResult) => (
+                  <CommandItem
+                    key={user.id}
+                    value={`user-${user.id}`}
+                    onSelect={() => handleUserSelect(user.id)}
+                    className="flex items-center gap-3 p-2 cursor-pointer"
+                  >
+                    <UserAvatar
+                      avatarUrl={user.avatarUrl}
+                      displayName={user.displayName}
+                      username={user.username}
+                      size="sm"
+                      className="w-10 h-10"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {user.displayName || user.username}
+                      </p>
+                      {user.displayName && (
+                        <p className="text-xs text-muted-foreground truncate">@{user.username}</p>
+                      )}
+                    </div>
+                    <User className="h-4 w-4 text-muted-foreground" />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+            {trackResults.length > 0 && (
+              <CommandGroup heading={`Tracks (${trackResults.length})`}>
+                {trackResults.map((result, index) => (
                   <CommandItem
                     key={result.id}
                     value={result.id}
-                    onSelect={() => handleSelect(index)}
+                    onSelect={() => handleTrackSelect(index)}
                     className="flex items-center gap-3 p-2 cursor-pointer"
                   >
                     <TrackCover
@@ -150,7 +204,7 @@ export function HeaderSearch() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{result.title}</p>
                       <p className="text-xs text-muted-foreground truncate">
-                        {result.mainArtist || result.user?.username}
+                        {result.user?.username || 'Unknown Artist'}
                       </p>
                       {result.genre && (
                         <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded mt-1 inline-block">

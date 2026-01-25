@@ -95,7 +95,7 @@ export function TrackSearch({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{track.title}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {track.mainArtist || track.user?.username}
+                    {track.user?.username || 'Unknown Artist'}
                   </p>
                 </div>
                 {track.genre && (

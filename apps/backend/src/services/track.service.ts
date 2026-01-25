@@ -1,19 +1,18 @@
-import { eq, and, or, ilike, desc, asc, sql, count } from 'drizzle-orm'
+import { eq, and, or, ilike, desc, asc, sql, count, inArray } from 'drizzle-orm'
 import { db } from '../config/database'
-import { tracks, users, likes } from '../db/schema'
+import { tracks, users, likes, trackCollaborators } from '../db/schema'
 import { userProjection } from '../db/projections'
 import { fileService } from './file.service'
 import { embeddingService } from './embedding.service'
 import { ValidationError, NotFoundError, ForbiddenError } from '../middleware/error'
 import { calculatePagination, paginatedResult } from '../utils/pagination'
-import { parseBooleanOrString } from '../utils/validation'
+import { parseBooleanOrString, parseCollaboratorIds } from '../utils/validation'
 import { findOwnedTrackOrThrow } from '../utils/entity'
 
 import type { TrackQueryParams, CreateTrackInput, UpdateTrackInput } from '~/utils/validation'
 
 export class TrackService {
   async uploadTrack({ input, userId }: { userId: string; input: CreateTrackInput }) {
-    console.log('Uploading track for user:', userId, input)
     const audioUrl = await fileService.uploadAudio(input.file, userId)
 
     // Generate embedding for semantic search
@@ -21,7 +20,6 @@ export class TrackService {
       title: input.title,
       description: input.description,
       genre: input.genre,
-      mainArtist: input.mainArtist,
     })
 
     return await db.transaction(async (tx) => {
@@ -32,7 +30,6 @@ export class TrackService {
           title: input.title,
           description: input.description,
           genre: input.genre,
-          mainArtist: input.mainArtist,
           audioUrl,
           fileSize: input.file.size,
           mimeType: input.file.type,
@@ -45,6 +42,10 @@ export class TrackService {
         throw new ValidationError('Failed to create track')
       }
 
+      // Handle collaborators - always add the uploader as primary collaborator
+      const collaboratorIds = parseCollaboratorIds(input.collaboratorIds)
+      await this.setCollaborators({ trackId: track.id, collaboratorIds, primaryUserId: userId, tx })
+
       if (input.coverArt && input.coverArt instanceof File) {
         const coverArtUrl = await fileService.uploadCover(input.coverArt, track.id)
         const [updatedTrack] = await tx
@@ -55,7 +56,10 @@ export class TrackService {
         return updatedTrack
       }
 
-      return track
+      // oxlint-disable-next-line no-unused-vars
+      const { metadataEmbedding, ...trackWithoutEmbedding } = track
+
+      return trackWithoutEmbedding
     })
   }
 
@@ -166,6 +170,8 @@ export class TrackService {
 
     const { likeCount, track, user } = result
 
+    const collaborators = await this.getCollaborators(trackId)
+
     //  we dont want to return metadataEmbedding
     // oxlint-disable-next-line no-unused-vars
     const { metadataEmbedding, ...trackWithoutEmbedding } = track
@@ -174,20 +180,20 @@ export class TrackService {
       ...trackWithoutEmbedding,
       user,
       likeCount: Number(likeCount) || 0,
+      collaborators,
     }
   }
 
   async updateTrack(trackId: string, userId: string, input: UpdateTrackInput) {
     const track = await findOwnedTrackOrThrow(trackId, userId, 'update')
 
-    const { coverArt, ...updateData } = input
+    const { coverArt, collaboratorIds, ...updateData } = input
 
     // Check if metadata that affects embeddings has changed
     const metadataChanged =
       (updateData.title && updateData.title !== track.title) ||
       (updateData.description !== undefined && updateData.description !== track.description) ||
-      (updateData.genre !== undefined && updateData.genre !== track.genre) ||
-      (updateData.mainArtist !== undefined && updateData.mainArtist !== track.mainArtist)
+      (updateData.genre !== undefined && updateData.genre !== track.genre)
 
     // Regenerate embedding if metadata changed
     let newEmbedding: number[] | undefined
@@ -196,7 +202,6 @@ export class TrackService {
         title: updateData.title || track.title,
         description: updateData.description ?? track.description,
         genre: updateData.genre ?? track.genre,
-        mainArtist: updateData.mainArtist ?? track.mainArtist,
       })
     }
 
@@ -204,6 +209,17 @@ export class TrackService {
       let coverArtUrl: string | undefined
       if (coverArt && coverArt instanceof File) {
         coverArtUrl = await fileService.uploadCover(coverArt, trackId)
+      }
+
+      // Handle collaborators if provided - always keep the track owner as primary
+      if (collaboratorIds !== undefined) {
+        const parsedCollaboratorIds = parseCollaboratorIds(collaboratorIds)
+        await this.setCollaborators({
+          trackId,
+          collaboratorIds: parsedCollaboratorIds,
+          primaryUserId: userId,
+          tx,
+        })
       }
 
       const [updated] = await tx
@@ -243,6 +259,83 @@ export class TrackService {
         playCount: sql`${tracks.playCount} + 1`,
       })
       .where(eq(tracks.id, trackId))
+  }
+
+  /**
+   * Set collaborators for a track.
+   * The primary user (uploader) is always added with role "primary".
+   * Other collaborators get role "featured".
+   */
+  async setCollaborators({
+    trackId,
+    collaboratorIds,
+    primaryUserId,
+    tx = db,
+  }: {
+    trackId: string
+    collaboratorIds: string[]
+    primaryUserId: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    tx?: any
+  }) {
+    // Remove existing collaborators
+    await tx.delete(trackCollaborators).where(eq(trackCollaborators.trackId, trackId))
+
+    // Deduplicate and ensure primary user is included
+    const uniqueCollaboratorIds = [...new Set(collaboratorIds.filter((id) => id !== primaryUserId))]
+
+    // Insert primary user first, then other collaborators
+    const allCollaborators = [
+      { trackId, userId: primaryUserId, role: 'primary' },
+      ...uniqueCollaboratorIds.map((userId) => ({
+        trackId,
+        userId,
+        role: 'featured',
+      })),
+    ]
+
+    await tx.insert(trackCollaborators).values(allCollaborators)
+  }
+
+  async getCollaborators(trackId: string) {
+    const result = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        role: trackCollaborators.role,
+      })
+      .from(trackCollaborators)
+      .innerJoin(users, eq(trackCollaborators.userId, users.id))
+      .where(eq(trackCollaborators.trackId, trackId))
+
+    return result
+  }
+
+  async getCollaboratorsForTracks(trackIds: string[]) {
+    if (trackIds.length === 0)
+      return new Map<string, { id: string; username: string; role: string | null }[]>()
+
+    const result = await db
+      .select({
+        trackId: trackCollaborators.trackId,
+        id: users.id,
+        username: users.username,
+        role: trackCollaborators.role,
+      })
+      .from(trackCollaborators)
+      .innerJoin(users, eq(trackCollaborators.userId, users.id))
+      .where(inArray(trackCollaborators.trackId, trackIds))
+
+    const collaboratorsMap = new Map<
+      string,
+      { id: string; username: string; role: string | null }[]
+    >()
+    for (const row of result) {
+      const existing = collaboratorsMap.get(row.trackId) || []
+      existing.push({ id: row.id, username: row.username, role: row.role })
+      collaboratorsMap.set(row.trackId, existing)
+    }
+    return collaboratorsMap
   }
 }
 

@@ -100,12 +100,42 @@ export function MiniPlayer() {
                   />
                 </button>
               </Link>
-              <Link to="/player" className="min-w-0 flex-1 hover:opacity-80 transition-opacity">
-                <div className="text-sm font-medium text-white truncate">{currentTrack.title}</div>
-                <div className="text-xs text-white/70 truncate">
-                  {currentTrack.mainArtist || 'Unknown Artist'}
+              <div className="min-w-0 flex-1">
+                <Link to="/player" className="hover:opacity-80 transition-opacity">
+                  <div className="text-sm font-medium text-white truncate">{currentTrack.title}</div>
+                </Link>
+                <div className="text-xs text-white/70 truncate flex items-center gap-1">
+                  <Link
+                    to="/profile/$profileId"
+                    params={{ profileId: currentTrack.user?.id ?? '' }}
+                    className="hover:text-white transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {currentTrack.user?.username || 'Unknown Artist'}
+                  </Link>
+                  {currentTrack.collaborators &&
+                    currentTrack.collaborators.filter((c) => c.role === 'featured').length > 0 && (
+                      <span>
+                        ft.{' '}
+                        {currentTrack.collaborators
+                          .filter((c) => c.role === 'featured')
+                          .map((c, i, arr) => (
+                            <span key={c.id}>
+                              <Link
+                                to="/profile/$profileId"
+                                params={{ profileId: c.id }}
+                                className="hover:text-white transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {c.username}
+                              </Link>
+                              {i < arr.length - 1 && ', '}
+                            </span>
+                          ))}
+                      </span>
+                    )}
                 </div>
-              </Link>
+              </div>
             </div>
 
             <div className="flex items-center gap-1">

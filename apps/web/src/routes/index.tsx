@@ -22,7 +22,7 @@ import {
 } from '@/hooks/use-tracks'
 import { usePlayer } from '@/contexts/player-context'
 import { useAccount } from '@/hooks/use-auth'
-import type { TrackWithUser } from '@/api/tracks'
+import { normalizeListTrack, type TrackWithUser } from '@/api/tracks'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/')({
@@ -132,12 +132,19 @@ interface TrackSectionProps {
 
 function TrackSection({ title, subtitle, icon: Icon, sortBy, pageSize = 8 }: TrackSectionProps) {
   const { user } = useAccount()
-  const { tracks, isLoading, isError, refetch } = usePublicTracks({
+  const {
+    tracks: rawTracks,
+    isLoading,
+    isError,
+    refetch,
+  } = usePublicTracks({
     sortBy,
     order: 'desc',
     pageSize,
   })
   const { playTrack, currentTrack, isPlaying, togglePlay } = usePlayer()
+
+  const tracks = rawTracks.map(normalizeListTrack)
 
   const trackIds = tracks.map((t) => t.id)
   const { likedMap } = useBatchLikeStatus(trackIds, !!user)
@@ -301,7 +308,7 @@ function TrackCard({ track, isPlaying, isLiked, onPlay, onLike, showLikeButton }
           {track.title}
         </h3>
         <p className="text-xs text-muted-foreground truncate mt-0.5">
-          {track.mainArtist || track.user?.username}
+          {track.user?.username || 'Unknown Artist'}
         </p>
         <div className="mt-2">
           <TrackStats playCount={track.playCount} likeCount={track.likeCount} genre={track.genre} />

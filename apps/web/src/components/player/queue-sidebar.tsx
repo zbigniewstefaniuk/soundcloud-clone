@@ -148,7 +148,7 @@ function QueueItem({ track, isActive, isPlaying, onClick, index }: QueueItemProp
           {track.title}
         </p>
         <p className="text-xs text-muted-foreground truncate">
-          {track.mainArtist || track.user?.username}
+          {track.user?.username || 'Unknown Artist'}
         </p>
       </div>
 

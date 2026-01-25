@@ -2,6 +2,7 @@ import { createFormHook } from '@tanstack/react-form'
 
 import {
   Select,
+  MultiSelect,
   SubmitButton,
   TextArea,
   TextField,
@@ -16,6 +17,7 @@ export const { useAppForm } = createFormHook({
   fieldComponents: {
     TextField,
     Select,
+    MultiSelect,
     TextArea,
     Switch,
     AudioFileField,

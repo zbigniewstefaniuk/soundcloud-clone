@@ -145,7 +145,7 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
   .post(
     '/',
     async ({ body, user }) => {
-      const { file, title, description, genre, mainArtist, isPublic, coverArt } = body
+      const { file, title, description, genre, isPublic, coverArt, collaboratorIds } = body
 
       if (!file || !(file instanceof File)) {
         throw new Error('Audio file is required')
@@ -154,14 +154,13 @@ export const trackRoutes = new Elysia({ prefix: '/tracks' })
       const track = await trackService.uploadTrack({
         userId: user.userId,
         input: {
-          ...body,
           title,
           description,
           genre,
-          mainArtist,
           isPublic,
           file,
           coverArt,
+          collaboratorIds,
         },
       })
 

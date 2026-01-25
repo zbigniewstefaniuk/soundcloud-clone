@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { getUserById, getUserPublicTracks } from '@/api/users'
+import { usersApi } from '@/api/users'
 
 export function useUserPublicProfile(userId: string | undefined) {
   const query = useQuery({
     queryKey: ['user-profile', userId] as const,
-    queryFn: () => getUserById(userId!),
+    queryFn: () => usersApi.getUserById(userId!),
     enabled: !!userId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
@@ -21,7 +21,7 @@ export function useUserPublicProfile(userId: string | undefined) {
 export function useUserPublicTracks(userId: string | undefined) {
   const query = useQuery({
     queryKey: ['user-public-tracks', userId] as const,
-    queryFn: () => getUserPublicTracks(userId!),
+    queryFn: () => usersApi.getUserPublicTracks(userId!),
     enabled: !!userId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
@@ -33,4 +33,11 @@ export function useUserPublicTracks(userId: string | undefined) {
     error: query.error,
     refetch: query.refetch,
   }
+}
+
+export const useUsers = () => {
+  return useQuery({
+    queryKey: ['users'] as const,
+    queryFn: () => usersApi.getAllUsers(),
+  })
 }

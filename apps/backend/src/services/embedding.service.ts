@@ -4,7 +4,6 @@ interface TrackMetadata {
   title: string
   description?: string | null
   genre?: string | null
-  mainArtist?: string | null
 }
 
 // Type for the feature extraction pipeline result
@@ -37,7 +36,7 @@ class EmbeddingService {
 
   /**
    * Generate embedding for track metadata
-   * Combines title, description, genre, and mainArtist into single text
+   * Combines title, description, and genre into single text
    */
   async generateTrackEmbedding(track: TrackMetadata): Promise<number[]> {
     await this.initialize()
@@ -47,7 +46,6 @@ class EmbeddingService {
     const textParts = [
       track.title,
       track.title, // Repeat title for weighting
-      track.mainArtist,
       track.genre,
       track.description,
     ].filter((part): part is string => Boolean(part))

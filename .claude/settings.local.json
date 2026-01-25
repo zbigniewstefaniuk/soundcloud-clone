@@ -3,7 +3,8 @@
     "allow": [
       "Bash(bun run db:generate:*)",
       "Bash(bun run:*)",
-      "Bash(bun -e:*)"
+      "Bash(bun -e:*)",
+      "Bash(npx tsc --noEmit)"
     ]
   }
 }

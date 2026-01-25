@@ -122,6 +122,24 @@ export const comments = pgTable('comments', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
+export const trackCollaborators = pgTable(
+  'track_collaborators',
+  {
+    id: varchar('id')
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    trackId: varchar('track_id')
+      .notNull()
+      .references(() => tracks.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: varchar('role', { length: 50 }), // e.g., "featured", "producer", "remix"
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex('track_collaborator_idx').on(table.trackId, table.userId)],
+)
+
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(userProfiles, {
     fields: [users.id],
@@ -130,6 +148,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   tracks: many(tracks),
   likes: many(likes),
   comments: many(comments),
+  collaborations: many(trackCollaborators),
 }))
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -146,6 +165,7 @@ export const tracksRelations = relations(tracks, ({ one, many }) => ({
   }),
   likes: many(likes),
   comments: many(comments),
+  collaborators: many(trackCollaborators),
 }))
 
 export const likesRelations = relations(likes, ({ one }) => ({
@@ -170,6 +190,17 @@ export const commentsRelations = relations(comments, ({ one }) => ({
   }),
 }))
 
+export const trackCollaboratorsRelations = relations(trackCollaborators, ({ one }) => ({
+  track: one(tracks, {
+    fields: [trackCollaborators.trackId],
+    references: [tracks.id],
+  }),
+  user: one(users, {
+    fields: [trackCollaborators.userId],
+    references: [users.id],
+  }),
+}))
+
 // Export table object for drizzle-typebox
 export const table = {
   users,
@@ -177,6 +208,7 @@ export const table = {
   tracks,
   likes,
   comments,
+  trackCollaborators,
 } as const
 
 export type Table = typeof table
@@ -188,9 +220,11 @@ export const schema = {
   tracks,
   likes,
   comments,
+  trackCollaborators,
   usersRelations,
   userProfilesRelations,
   tracksRelations,
   likesRelations,
   commentsRelations,
+  trackCollaboratorsRelations,
 } as const
