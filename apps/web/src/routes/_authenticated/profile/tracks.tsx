@@ -9,11 +9,7 @@ import { Upload, Music2, Heart, User } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 import { usePlayer } from '@/contexts/player-context'
 import { useAccount } from '@/hooks/use-auth'
-import {
-  normalizeUserTrack,
-  normalizeLikedTrack,
-  type TrackWithUser,
-} from '@/api/tracks'
+import { normalizeUserTrack, normalizeLikedTrack, type TrackWithUser } from '@/api/tracks'
 
 export const Route = createFileRoute('/_authenticated/profile/tracks')({
   component: ProfileTracksPage,
@@ -148,7 +144,7 @@ function MyTracksTab() {
       ) : (
         <div className="flex-1 min-h-0">
           <TrackList
-            tracks={displayTracks}
+            tracks={displayTracks.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())}
             isOwner={true}
             currentPlayingTrackId={currentTrack?.id}
           />
