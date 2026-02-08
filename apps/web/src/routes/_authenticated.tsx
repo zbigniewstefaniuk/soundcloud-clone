@@ -35,8 +35,8 @@ function AuthenticatedLayout() {
     }
 
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg shadow-primary/10">
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="w-full max-w-md rounded-lg text-muted-foreground bg-card p-8 shadow-lg shadow-primary/10">
           <h2 className="mb-6 text-2xl font-bold">Sign In Required</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
