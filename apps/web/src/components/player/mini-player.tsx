@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   Play,
@@ -15,10 +14,11 @@ import {
 import { usePlayer } from '@/contexts/player-context'
 import { Slider } from '@/components/ui/slider'
 import { WaveformSlider } from '@/components/ui/waveform-slider'
-import { extractColorsFromImage } from '@/lib/color-extraction'
-import { cn, formatTime, getAssetUrl } from '@/lib/utils'
+import { cn, formatTime } from '@/lib/utils'
+import { useCoverColors } from '@/hooks/use-cover-colors'
 import { AnimatedGradient } from './animated-gradient'
 import { TrackCover } from '../tracks/track-cover'
+import { ArtistName } from '../tracks/artist-name'
 import { useTrackLike } from '@/hooks/use-track-like'
 
 export function MiniPlayer() {
@@ -44,20 +44,7 @@ export function MiniPlayer() {
   } = usePlayer()
 
   const { isLiked, toggleLike, canLike } = useTrackLike(currentTrack?.id)
-
-  const [colors, setColors] = useState({
-    primary: '#6366f1',
-    secondary: '#8b5cf6',
-    accent: '#ec4899',
-  })
-
-  const coverUrl = getAssetUrl(currentTrack?.coverArtUrl)
-
-  useEffect(() => {
-    if (coverUrl) {
-      extractColorsFromImage(coverUrl).then(setColors)
-    }
-  }, [coverUrl])
+  const colors = useCoverColors(currentTrack?.coverArtUrl)
 
   if (!currentTrack) {
     return null
@@ -71,70 +58,46 @@ export function MiniPlayer() {
       <div className="backdrop-blur-sm bg-black/20">
         <div className="max-w-screen-2xl mx-auto px-4 py-3">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <Link to="/player" className="relative shrink-0 group">
+            <div className="group flex items-center gap-3 flex-1 min-w-0">
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  toggleLike()
+                }}
+                disabled={!canLike}
+                className={cn(
+                  'flex items-center justify-center',
+                  'opacity-0 group-hover:opacity-100 transition-opacity rounded-lg',
+                  !canLike && 'cursor-not-allowed',
+                )}
+                title={!canLike ? 'Login to like' : isLiked ? 'Unlike' : 'Like'}
+              >
+                <Heart
+                  className={cn(
+                    'h-5 w-5 transition-colors',
+                    isLiked ? 'text-destructive fill-current' : 'text-white',
+                  )}
+                />
+              </button>
+              <Link to="/player" className="shrink-0 group">
                 <TrackCover
                   coverArtUrl={currentTrack.coverArtUrl}
                   title={currentTrack.title}
                   size="sm"
                   className="w-12 h-12"
                 />
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    toggleLike()
-                  }}
-                  disabled={!canLike}
-                  className={cn(
-                    'absolute inset-0 flex items-center justify-center',
-                    'bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg',
-                    !canLike && 'cursor-not-allowed',
-                  )}
-                  title={!canLike ? 'Login to like' : isLiked ? 'Unlike' : 'Like'}
-                >
-                  <Heart
-                    className={cn(
-                      'h-5 w-5 transition-colors',
-                      isLiked ? 'text-destructive fill-current' : 'text-white',
-                    )}
-                  />
-                </button>
               </Link>
               <div className="min-w-0 flex-1">
                 <Link to="/player" className="hover:opacity-80 transition-opacity">
-                  <div className="text-sm font-medium text-white truncate">{currentTrack.title}</div>
+                  <div className="text-sm font-medium text-white truncate">
+                    {currentTrack.title}
+                  </div>
                 </Link>
-                <div className="text-xs text-white/70 truncate flex items-center gap-1">
-                  <Link
-                    to="/profile/$profileId"
-                    params={{ profileId: currentTrack.user?.id ?? '' }}
-                    className="hover:text-white transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {currentTrack.user?.username || 'Unknown Artist'}
-                  </Link>
-                  {currentTrack.collaborators &&
-                    currentTrack.collaborators.filter((c) => c.role === 'featured').length > 0 && (
-                      <span>
-                        ft.{' '}
-                        {currentTrack.collaborators
-                          .filter((c) => c.role === 'featured')
-                          .map((c, i, arr) => (
-                            <span key={c.id}>
-                              <Link
-                                to="/profile/$profileId"
-                                params={{ profileId: c.id }}
-                                className="hover:text-white transition-colors"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {c.username}
-                              </Link>
-                              {i < arr.length - 1 && ', '}
-                            </span>
-                          ))}
-                      </span>
-                    )}
-                </div>
+                <ArtistName
+                  user={currentTrack.user}
+                  collaborators={currentTrack.collaborators}
+                  className="text-xs text-white/70 truncate"
+                />
               </div>
             </div>
 
@@ -197,7 +160,7 @@ export function MiniPlayer() {
                 onValueChange={seek}
                 isPlaying={isPlaying}
                 className="flex-1"
-                waveformHeight={24}
+                waveformHeight={4}
               />
               <span className="text-xs text-white/70 tabular-nums">{formatTime(duration)}</span>
             </div>

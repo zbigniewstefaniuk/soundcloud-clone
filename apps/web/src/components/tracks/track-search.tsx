@@ -16,7 +16,6 @@ import { commandScore } from '@/helpers'
 export type SearchableTrack = {
   id: string
   title: string
-  mainArtist?: string | null
   genre?: string | null
   coverArtUrl?: string | null
   user?: { username: string } | null
@@ -50,7 +49,6 @@ export function TrackSearch({
     const filtered = tracks.filter(
       (track) =>
         track.title.toLowerCase().includes(lowerQuery) ||
-        track.mainArtist?.toLowerCase().includes(lowerQuery) ||
         track.user?.username?.toLowerCase().includes(lowerQuery) ||
         track.genre?.toLowerCase().includes(lowerQuery),
     )
@@ -149,7 +147,6 @@ export function TrackSearchInput<T extends SearchableTrack>({
         track,
         score: commandScore(track.title, lowerQuery, [
           track.title,
-          track.mainArtist ?? '',
           track.user?.username ?? '',
           track.genre ?? '',
         ]),

@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react'
-import { Link } from '@tanstack/react-router'
 import {
   Play,
   Pause,
@@ -15,10 +13,11 @@ import {
 import { usePlayer } from '@/contexts/player-context'
 import { Slider } from '@/components/ui/slider'
 import { WaveformSlider } from '@/components/ui/waveform-slider'
-import { extractColorsFromImage } from '@/lib/color-extraction'
-import { cn, formatTime, getAssetUrl } from '@/lib/utils'
+import { cn, formatTime } from '@/lib/utils'
+import { useCoverColors } from '@/hooks/use-cover-colors'
 import { AnimatedGradient } from './animated-gradient'
 import { TrackCover } from '../tracks/track-cover'
+import { ArtistName } from '../tracks/artist-name'
 import { useTrackLike } from '@/hooks/use-track-like'
 
 export function FullPlayer() {
@@ -46,20 +45,7 @@ export function FullPlayer() {
   } = usePlayer()
 
   const { isLiked, toggleLike, canLike } = useTrackLike(currentTrack?.id)
-
-  const [colors, setColors] = useState({
-    primary: '#6366f1',
-    secondary: '#8b5cf6',
-    accent: '#ec4899',
-  })
-
-  const coverUrl = getAssetUrl(currentTrack?.coverArtUrl)
-
-  useEffect(() => {
-    if (coverUrl) {
-      extractColorsFromImage(coverUrl).then(setColors)
-    }
-  }, [coverUrl])
+  const colors = useCoverColors(currentTrack?.coverArtUrl)
 
   if (!currentTrack) {
     return null
@@ -95,39 +81,13 @@ export function FullPlayer() {
             </div>
           </div>
 
-          {/* Track info */}
           <div className="text-center space-y-2">
             <h1 className="text-5xl font-bold text-white">{currentTrack.title}</h1>
-            <p className="text-2xl text-white/80">
-              <Link
-                to="/profile/$profileId"
-                params={{ profileId: currentTrack.user?.id ?? '' }}
-                className="hover:text-white transition-colors"
-              >
-                {currentTrack.user?.username || 'Unknown Artist'}
-              </Link>
-              {currentTrack.collaborators &&
-                currentTrack.collaborators.filter((c) => c.role === 'featured').length > 0 && (
-                  <span>
-                    {' '}
-                    ft.{' '}
-                    {currentTrack.collaborators
-                      .filter((c) => c.role === 'featured')
-                      .map((c, i, arr) => (
-                        <span key={c.id}>
-                          <Link
-                            to="/profile/$profileId"
-                            params={{ profileId: c.id }}
-                            className="hover:text-white transition-colors"
-                          >
-                            {c.username}
-                          </Link>
-                          {i < arr.length - 1 && ', '}
-                        </span>
-                      ))}
-                  </span>
-                )}
-            </p>
+            <ArtistName
+              user={currentTrack.user}
+              collaborators={currentTrack.collaborators}
+              className="text-2xl text-white/80"
+            />
             {currentTrack.description && (
               <p className="text-lg text-white/60 line-clamp-2 max-w-2xl mx-auto mt-4">
                 {currentTrack.description}
@@ -135,7 +95,6 @@ export function FullPlayer() {
             )}
           </div>
 
-          {/* Waveform slider */}
           <div className="space-y-2">
             <WaveformSlider
               value={currentTime}
@@ -202,7 +161,6 @@ export function FullPlayer() {
             </button>
           </div>
 
-          {/* Volume control */}
           <div className="flex items-center justify-center gap-4 bg-white/10 rounded-full px-6 py-3 mx-auto max-w-md">
             <button
               onClick={toggleMute}
@@ -223,7 +181,6 @@ export function FullPlayer() {
             />
           </div>
 
-          {/* Queue info */}
           {queue.length > 1 && (
             <div className="text-center">
               <p className="text-sm text-white/60">

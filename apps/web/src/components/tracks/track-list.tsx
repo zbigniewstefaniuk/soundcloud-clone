@@ -1,6 +1,7 @@
 import { useState, createContext, useContext } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Music, Trash2, Edit, Play, Pause, Heart } from 'lucide-react'
+import { ArtistName } from './artist-name'
 import { useDeleteTrack, useBatchLikeStatus, useToggleLike } from '@/hooks/use-tracks'
 import { useAccount } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -106,36 +107,11 @@ function TrackListItem({ track }: { track: TrackWithUser }) {
 
       <div className="flex-1 min-w-0">
         <h3 className="text-base font-medium text-foreground truncate">{track.title}</h3>
-        <p className="text-sm text-muted-foreground">
-          <Link
-            to="/profile/$profileId"
-            params={{ profileId: track.user?.id ?? '' }}
-            className="hover:text-foreground transition-colors"
-          >
-            {track.user?.username || 'Unknown Artist'}
-          </Link>
-          {track.collaborators &&
-            track.collaborators.filter((c) => c.role === 'featured').length > 0 && (
-              <span>
-                {' '}
-                ft.{' '}
-                {track.collaborators
-                  .filter((c) => c.role === 'featured')
-                  .map((c, i, arr) => (
-                    <span key={c.id}>
-                      <Link
-                        to="/profile/$profileId"
-                        params={{ profileId: c.id }}
-                        className="hover:text-foreground transition-colors"
-                      >
-                        {c.username}
-                      </Link>
-                      {i < arr.length - 1 && ', '}
-                    </span>
-                  ))}
-              </span>
-            )}
-        </p>
+        <ArtistName
+          user={track.user}
+          collaborators={track.collaborators}
+          className="text-sm text-muted-foreground"
+        />
         <div className="mt-1.5">
           <TrackStats playCount={track.playCount} likeCount={track.likeCount} genre={track.genre} />
         </div>
@@ -150,28 +126,24 @@ function TrackActions({ track }: { track: TrackWithUser }) {
   const { isOwner, isLoggedIn, deletingId, likedMap, onDelete, onToggleLike } =
     useTrackListContext()
 
-  const { isPlaying, togglePlay, playTrack, currentTrack, currentTime } = usePlayer()
+  const { isPlaying, togglePlay, playTrack, currentTrack } = usePlayer()
 
   const isDeleting = track.id === deletingId
   const isLiked = likedMap[track.id] ?? false
 
-  const handlePlay = (track: TrackWithUser) => {
-    if (currentTrack?.id === track.id && isPlaying) {
-      togglePlay()
-      return
-    }
-    if (currentTrack?.id === track.id && !isPlaying && currentTime > 0) {
-      togglePlay()
-      return
-    }
-    playTrack(track)
-  }
-
   const isCurrentTrack = currentTrack?.id === track.id
+
+  const handlePlay = () => {
+    if (isCurrentTrack) {
+      togglePlay()
+    } else {
+      playTrack(track)
+    }
+  }
 
   return (
     <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" onClick={() => handlePlay?.(track)} type="button">
+      <Button variant="outline" size="sm" onClick={handlePlay} type="button">
         {isPlaying && isCurrentTrack ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
       </Button>
 
